@@ -10,6 +10,7 @@ import {
   LogOut,
   Menu,
   Store,
+  Tag,
   User,
   X,
 } from "lucide-react";
@@ -130,6 +131,9 @@ export function MobileMenu({ session }: { session: SessionInfo | null }) {
             </MenuLink>
             <MenuLink href="/isletme" icon={<Store className="size-4" />} onClick={close}>
               İşletmeniz için Salonor
+            </MenuLink>
+            <MenuLink href="/fiyatlandirma" icon={<Tag className="size-4" />} onClick={close}>
+              Fiyatlar
             </MenuLink>
             <div className="my-2 border-t border-line" />
             {session ? (

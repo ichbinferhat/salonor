@@ -127,6 +127,8 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* Mobilde yatay taşmayı engelle (sticky header'ı bozmaz — clip, hidden değil) */
+  overflow-x: clip;
 }
 
 ::selection {
