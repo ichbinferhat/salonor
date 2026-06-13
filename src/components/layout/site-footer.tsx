@@ -31,10 +31,11 @@ const COLUMNS: { title: string; links: [label: string, href: string][] }[] = [
   {
     title: "Salonor",
     links: [
-      ["Hakkımızda", "#"],
-      ["Yardım merkezi", "#"],
-      ["Gizlilik & KVKK", "#"],
-      ["Kullanım şartları", "#"],
+      ["Hakkımızda", "/hakkimizda"],
+      ["Yardım & SSS", "/sss"],
+      ["Gizlilik & KVKK", "/kvkk"],
+      ["Kullanım şartları", "/kullanim-sartlari"],
+      ["İletişim", "/iletisim"],
     ],
   },
 ];
@@ -62,6 +63,13 @@ const SOCIALS: { label: string; href: string; path: string }[] = [
   },
 ];
 
+const SOCIAL_TINT: Record<string, string> = {
+  Instagram: "text-[#E1306C] hover:bg-[#E1306C] hover:text-white",
+  X: "text-white hover:bg-white hover:text-ink",
+  Facebook: "text-[#1877F2] hover:bg-[#1877F2] hover:text-white",
+  YouTube: "text-[#FF0000] hover:bg-[#FF0000] hover:text-white",
+};
+
 export function SiteFooter() {
   return (
     <footer className="mt-auto bg-ink-strong text-white">
@@ -78,9 +86,11 @@ export function SiteFooter() {
                 key={s.label}
                 href={s.href}
                 aria-label={s.label}
-                className="rounded-full border border-white/15 p-2.5 text-white/70 transition-colors hover:border-white/40 hover:text-white"
+                className={`flex size-10 items-center justify-center rounded-full bg-white/10 transition-all hover:scale-110 ${
+                  SOCIAL_TINT[s.label] ?? "text-white"
+                }`}
               >
-                <svg viewBox="0 0 24 24" fill="currentColor" className="size-4" aria-hidden>
+                <svg viewBox="0 0 24 24" fill="currentColor" className="size-[18px]" aria-hidden>
                   <path d={s.path} />
                 </svg>
               </a>
