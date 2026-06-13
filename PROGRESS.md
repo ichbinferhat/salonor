@@ -3,6 +3,17 @@
 Fresha tarzı kuaför/güzellik randevu pazaryeri. Türkçe içerik, marka: **Salonor**.
 Tam yetki: onay beklemeden inşa et, sonunda Vercel'e deploy et (`vercel --prod`, hesap bağlı).
 
+## ✅ DURUM: CANLIDA — https://salonor.vercel.app (2026-06-13 deploy edildi, READY)
+- Tüm rotalar (public + owner panel + customer hesap) canlıda 200 doğrulandı.
+- ⚠️ DB CLAIM DEADLINE: Prisma Postgres ~2026-06-13T23:06Z silinecek. Claim linki
+  (ücretsiz, kalıcı yapar): https://create-db.prisma.io/claim?projectID=proj_cmqbjda0j0l4k01dstgyqk0ip
+- ⚠️ VERCEL ENV NOTU: Bu ortamda `vercel env add` değeri yakalayamıyor (stdin boş gidiyor,
+  --value yok sayılıyor → boş kaydediyor). ÇÖZÜM: Vercel REST API ile yaz. Token:
+  C:/Users/ASUS/AppData/Roaming/xdg.data/com.vercel.cli/auth.json (.token).
+  projectId=prj_b1eLkqmUoMY1YV5H3EfxsG1ptfq5, teamId=team_hC0GLwYVroG9Ima2bmHYocjm.
+  POST https://api.vercel.com/v10/projects/{proj}/env?teamId={team} body
+  {key,value,type:"encrypted",target:["production","preview","development"]}.
+
 ## Kritik bilgiler
 - **DB:** Prisma Postgres (create-db, eu-central-1). URL `.env` içinde.
   **Claim linki (24 saat içinde tıklanmalı, yoksa DB silinir):**
