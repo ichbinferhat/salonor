@@ -24,7 +24,7 @@ type Props = {
   className?: string;
 };
 
-type Anchor = { top: number; left?: number; right?: number };
+type Anchor = { top: number; left?: number; right?: number; maxHeight: number };
 
 export function SearchBar({
   categories,
@@ -39,10 +39,9 @@ export function SearchBar({
   const [sehir, setSehir] = useState(defaults.sehir ?? "");
   const [ilce, setIlce] = useState(defaults.ilce ?? "");
 
-  const [panel, setPanel] = useState<"type" | "loc" | null>(null);
+  const [panel, setPanel] = useState<"type" | "loc" | null>(null); // masaüstü popover
   const [anchor, setAnchor] = useState<Anchor | null>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [sheetView, setSheetView] = useState<"main" | "type" | "loc">("main");
+  const [picker, setPicker] = useState<"type" | "loc" | null>(null); // mobil tam ekran seçici
   const [mounted, setMounted] = useState(false);
 
   const typeBtnRef = useRef<HTMLButtonElement>(null);
@@ -60,8 +59,10 @@ export function SearchBar({
       const btn = panel === "type" ? typeBtnRef.current : locBtnRef.current;
       if (!btn) return;
       const r = btn.getBoundingClientRect();
-      if (panel === "type") setAnchor({ top: r.bottom + 10, left: r.left });
-      else setAnchor({ top: r.bottom + 10, right: window.innerWidth - r.right });
+      const top = r.bottom + 10;
+      const maxHeight = window.innerHeight - top - 16;
+      if (panel === "type") setAnchor({ top, left: r.left, maxHeight });
+      else setAnchor({ top, right: window.innerWidth - r.right, maxHeight });
     };
     place();
     window.addEventListener("resize", place);
@@ -77,20 +78,20 @@ export function SearchBar({
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
         setPanel(null);
-        setSheetOpen(false);
+        setPicker(null);
       }
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
-  // Mobil sheet açıkken arka plan kaymasın
+  // Mobil seçici açıkken arka plan kaymasın
   useEffect(() => {
-    document.body.style.overflow = sheetOpen ? "hidden" : "";
+    document.body.style.overflow = picker ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [sheetOpen]);
+  }, [picker]);
 
   const catName = kategori
     ? categories.find((c) => c.slug === kategori)?.name ?? "Tüm hizmetler"
@@ -105,21 +106,21 @@ export function SearchBar({
     if (sehir) params.set("sehir", sehir);
     if (ilce) params.set("ilce", ilce);
     setPanel(null);
-    setSheetOpen(false);
+    setPicker(null);
     router.push(`/arama${params.size ? `?${params}` : ""}`);
   }
 
   function pickCategory(slug: string) {
     setKategori(slug);
     setPanel(null);
-    setSheetView("main");
+    setPicker(null);
   }
 
   function pickLocation(city: string, district: string) {
     setSehir(city);
     setIlce(district);
     setPanel(null);
-    setSheetView("main");
+    setPicker(null);
   }
 
   return (
@@ -127,7 +128,6 @@ export function SearchBar({
       {/* ───────── Masaüstü: segmentli pill ───────── */}
       <div className="mx-auto hidden w-full max-w-3xl lg:block">
         <div className="flex items-center rounded-full border border-line bg-surface p-2 shadow-pop">
-          {/* TÜR */}
           <Segment
             buttonRef={typeBtnRef}
             active={panel === "type"}
@@ -141,7 +141,6 @@ export function SearchBar({
 
           <Divider />
 
-          {/* SALON ADI */}
           <label className="flex min-w-0 flex-1 cursor-text items-center gap-3 rounded-full px-4 py-2 transition-colors hover:bg-cream">
             <Search className="size-5 shrink-0 text-ink-soft" />
             <span className="min-w-0 flex-1">
@@ -162,7 +161,6 @@ export function SearchBar({
 
           <Divider />
 
-          {/* KONUM */}
           <Segment
             buttonRef={locBtnRef}
             active={panel === "loc"}
@@ -174,7 +172,6 @@ export function SearchBar({
             className="min-w-[164px]"
           />
 
-          {/* Ara */}
           <button
             type="button"
             onClick={submit}
@@ -199,12 +196,13 @@ export function SearchBar({
             />
             {anchor && (
               <div
-                className="anim-rise absolute overflow-hidden rounded-3xl border border-line bg-surface py-1.5 shadow-pop"
+                className="anim-rise absolute flex flex-col overflow-hidden rounded-3xl border border-line bg-surface py-1.5 shadow-pop"
                 style={{
                   top: anchor.top,
                   left: anchor.left,
                   right: anchor.right,
                   width: panel === "type" ? 320 : 372,
+                  maxHeight: anchor.maxHeight,
                 }}
               >
                 {panel === "type" ? (
@@ -225,125 +223,108 @@ export function SearchBar({
           document.body
         )}
 
-      {/* ───────── Mobil: tetikleyici ───────── */}
-      <button
-        type="button"
-        onClick={() => {
-          setSheetView("main");
-          setSheetOpen(true);
-        }}
-        className="flex w-full items-center gap-3 rounded-full border border-line bg-surface p-2 pl-5 text-left shadow-pop lg:hidden"
-      >
-        <Search className="size-5 shrink-0 text-accent" />
-        <span className="min-w-0 flex-1 py-0.5">
-          <span className="block truncate text-[15px] font-bold text-ink">
-            {q || catName}
+      {/* ───────── Mobil: 3 alan da görünür ───────── */}
+      <div className="overflow-hidden rounded-3xl border border-line bg-surface text-left shadow-pop lg:hidden">
+        <button
+          type="button"
+          onClick={() => setPicker("type")}
+          className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors active:bg-cream"
+        >
+          <Scissors className="size-5 shrink-0 text-ink-soft" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-[11px] font-bold uppercase tracking-wide text-ink-mute">
+              Tür
+            </span>
+            <span className="block truncate text-[15px] font-semibold text-ink">
+              {catName}
+            </span>
           </span>
-          <span className="block truncate text-xs text-ink-mute">
-            {sehir ? locLabel : "Tüm Türkiye"} · {catName}
-          </span>
-        </span>
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-accent text-white">
-          <Search className="size-5" />
-        </span>
-      </button>
+          <ChevronDown className="size-4 shrink-0 -rotate-90 text-ink-mute" />
+        </button>
 
-      {/* ───────── Mobil: tam ekran sheet ───────── */}
+        <label className="flex items-center gap-3 border-t border-line px-4 py-3">
+          <Search className="size-5 shrink-0 text-ink-soft" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-[11px] font-bold uppercase tracking-wide text-ink-mute">
+              Salon adı
+            </span>
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && submit()}
+              placeholder="Salon, hizmet ara…"
+              className="w-full bg-transparent text-[15px] font-semibold text-ink placeholder:font-medium placeholder:text-ink-mute focus:outline-none"
+              aria-label="Salon veya hizmet"
+            />
+          </span>
+        </label>
+
+        <button
+          type="button"
+          onClick={() => setPicker("loc")}
+          className="flex w-full items-center gap-3 border-t border-line px-4 py-3 text-left transition-colors active:bg-cream"
+        >
+          <MapPin className="size-5 shrink-0 text-ink-soft" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-[11px] font-bold uppercase tracking-wide text-ink-mute">
+              Konum
+            </span>
+            <span className="block truncate text-[15px] font-semibold text-ink">
+              {locLabel}
+            </span>
+          </span>
+          <ChevronDown className="size-4 shrink-0 -rotate-90 text-ink-mute" />
+        </button>
+
+        <div className="border-t border-line p-2">
+          <button
+            type="button"
+            onClick={submit}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-accent font-semibold text-white transition-all hover:bg-accent-deep active:scale-[0.99]"
+          >
+            <Search className="size-5" />
+            Ara
+          </button>
+        </div>
+      </div>
+
+      {/* ───────── Mobil: tam ekran seçici (Tür / Konum) ───────── */}
       {mounted &&
-        sheetOpen &&
+        picker &&
         createPortal(
           <div className="fixed inset-0 z-[80] flex flex-col bg-cream lg:hidden">
-            {/* Başlık */}
             <div className="flex items-center justify-between border-b border-line bg-surface px-4 py-3">
-              {sheetView === "main" ? (
-                <span className="font-display text-lg font-bold text-ink">Ara</span>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setSheetView("main")}
-                  className="flex items-center gap-1.5 font-display text-lg font-bold text-ink"
-                >
-                  <ChevronLeft className="size-5" />
-                  {sheetView === "type" ? "Hizmet türü" : "Konum"}
-                </button>
-              )}
               <button
                 type="button"
-                onClick={() => setSheetOpen(false)}
+                onClick={() => setPicker(null)}
+                className="flex items-center gap-1.5 font-display text-lg font-bold text-ink"
+              >
+                <ChevronLeft className="size-5" />
+                {picker === "type" ? "Hizmet türü" : "Konum"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setPicker(null)}
                 className="flex size-10 items-center justify-center rounded-full text-ink transition-colors hover:bg-cream"
                 aria-label="Kapat"
               >
                 <X className="size-5" />
               </button>
             </div>
-
-            {/* İçerik */}
-            <div className="flex-1 overflow-y-auto">
-              {sheetView === "main" && (
-                <div className="space-y-3 p-4">
-                  <SheetField
-                    icon={<Scissors className="size-5" />}
-                    label="Tür"
-                    value={catName}
-                    onClick={() => setSheetView("type")}
-                  />
-                  <div className="rounded-2xl border border-line bg-surface px-4 py-3">
-                    <span className="block text-[11px] font-bold uppercase tracking-wide text-ink-mute">
-                      Salon adı
-                    </span>
-                    <div className="mt-0.5 flex items-center gap-2">
-                      <Search className="size-5 shrink-0 text-ink-soft" />
-                      <input
-                        value={q}
-                        onChange={(e) => setQ(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && submit()}
-                        placeholder="Salon, hizmet ara…"
-                        className="w-full bg-transparent text-[15px] font-semibold text-ink placeholder:font-medium placeholder:text-ink-mute focus:outline-none"
-                      />
-                    </div>
-                  </div>
-                  <SheetField
-                    icon={<MapPin className="size-5" />}
-                    label="Konum"
-                    value={locLabel}
-                    onClick={() => setSheetView("loc")}
-                  />
-                </div>
-              )}
-
-              {sheetView === "type" && (
-                <div className="p-2">
-                  <CategoryList
-                    categories={categories}
-                    value={kategori}
-                    onSelect={pickCategory}
-                  />
-                </div>
-              )}
-
-              {sheetView === "loc" && (
-                <div className="p-2">
-                  <LocationList
-                    value={{ city: sehir, district: ilce }}
-                    onSelect={pickLocation}
-                  />
-                </div>
+            <div className="flex-1 overflow-y-auto p-2">
+              {picker === "type" ? (
+                <CategoryList
+                  categories={categories}
+                  value={kategori}
+                  onSelect={pickCategory}
+                />
+              ) : (
+                <LocationList
+                  value={{ city: sehir, district: ilce }}
+                  onSelect={pickLocation}
+                />
               )}
             </div>
-
-            {/* Alt: Ara */}
-            {sheetView === "main" && (
-              <div className="border-t border-line bg-surface p-4">
-                <button
-                  type="button"
-                  onClick={submit}
-                  className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-accent text-base font-semibold text-white transition-all hover:bg-accent-deep active:scale-[0.99]"
-                >
-                  <Search className="size-5" />
-                  Ara
-                </button>
-              </div>
-            )}
           </div>,
           document.body
         )}
@@ -401,35 +382,6 @@ function Divider() {
   return <span className="mx-0.5 h-9 w-px shrink-0 bg-line" aria-hidden />;
 }
 
-function SheetField({
-  icon,
-  label,
-  value,
-  onClick,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 text-left"
-    >
-      <span className="shrink-0 text-ink-soft">{icon}</span>
-      <span className="min-w-0 flex-1">
-        <span className="block text-[11px] font-bold uppercase tracking-wide text-ink-mute">
-          {label}
-        </span>
-        <span className="block truncate text-[15px] font-semibold text-ink">{value}</span>
-      </span>
-      <ChevronDown className="size-4 shrink-0 -rotate-90 text-ink-mute" />
-    </button>
-  );
-}
-
 function CategoryList({
   categories,
   value,
@@ -440,7 +392,7 @@ function CategoryList({
   onSelect: (slug: string) => void;
 }) {
   return (
-    <ul className="no-scrollbar max-h-[min(58vh,22rem)] overflow-y-auto px-1.5 pb-1.5 pt-1.5">
+    <ul className="no-scrollbar overflow-y-auto px-1.5 pb-1.5 pt-1.5">
       <li>
         <button
           type="button"

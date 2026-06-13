@@ -25,7 +25,7 @@ const CATEGORY_ORDER = [
 const POPULAR_CITIES = ["İstanbul", "Ankara", "İzmir", "Antalya", "Bursa"];
 
 const CARD_CLS =
-  "w-[70vw] max-w-[300px] shrink-0 snap-start sm:w-[290px] sm:max-w-none";
+  "w-[72vw] max-w-[300px] shrink-0 snap-start sm:w-[240px] sm:max-w-none lg:w-[256px]";
 
 export default async function HomePage() {
   const [categories, featured, newest, bizCount, serviceCount, reviewCount, quotes] =
@@ -76,7 +76,7 @@ export default async function HomePage() {
           <div className="absolute right-[18%] top-24 size-72 rounded-full bg-[#ff5fa2]/12 blur-3xl" />
         </div>
 
-        <div className="container-x flex min-h-[88svh] flex-col items-center justify-center py-16 text-center">
+        <div className="container-x flex flex-col items-center pb-14 pt-10 text-center sm:pb-16 sm:pt-14 lg:pt-16">
           <p className="anim-rise mb-5 inline-flex items-center gap-2 rounded-full border border-line bg-surface/80 px-4 py-1.5 text-sm font-semibold text-ink-soft shadow-card backdrop-blur">
             <ShieldCheck className="size-4 text-mint" />
             Türkiye’nin randevu platformu
