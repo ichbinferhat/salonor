@@ -3,10 +3,13 @@
 Fresha tarzı kuaför/güzellik randevu pazaryeri. Türkçe içerik, marka: **Salonor**.
 Tam yetki: onay beklemeden inşa et, sonunda Vercel'e deploy et (`vercel --prod`, hesap bağlı).
 
-## ✅ DURUM: CANLIDA — https://salonor.vercel.app (2026-06-13 deploy edildi, READY)
+## ✅ DURUM: CANLIDA — https://salonor.vercel.app (2026-06-13, READY)
 - Tüm rotalar (public + owner panel + customer hesap) canlıda 200 doğrulandı.
-- ⚠️ DB CLAIM DEADLINE: Prisma Postgres ~2026-06-13T23:06Z silinecek. Claim linki
-  (ücretsiz, kalıcı yapar): https://create-db.prisma.io/claim?projectID=proj_cmqbjda0j0l4k01dstgyqk0ip
+- **DB: Supabase Postgres'e taşındı** (proje `hncfqwyajobywlrshaaz`, ap-northeast-1/Tokyo).
+  Kalıcı — eski geçici Prisma Postgres terk edildi, claim derdi yok.
+  Vercel app: transaction pooler (6543). Yerel push/seed: session pooler (5432).
+  Bağlantı dizesi + şifre yerel `.env`'de (gitignore'lu) ve Vercel env'de — bu dosyaya YAZMA.
+  Şifre Ferhat'tan geldi (Supabase Settings→Database→Reset ile yenilenebilir).
 - ⚠️ VERCEL ENV NOTU: Bu ortamda `vercel env add` değeri yakalayamıyor (stdin boş gidiyor,
   --value yok sayılıyor → boş kaydediyor). ÇÖZÜM: Vercel REST API ile yaz. Token:
   C:/Users/ASUS/AppData/Roaming/xdg.data/com.vercel.cli/auth.json (.token).
@@ -15,9 +18,8 @@ Tam yetki: onay beklemeden inşa et, sonunda Vercel'e deploy et (`vercel --prod`
   {key,value,type:"encrypted",target:["production","preview","development"]}.
 
 ## Kritik bilgiler
-- **DB:** Prisma Postgres (create-db, eu-central-1). URL `.env` içinde.
-  **Claim linki (24 saat içinde tıklanmalı, yoksa DB silinir):**
-  https://create-db.prisma.io/claim?projectID=proj_cmqbjda0j0l4k01dstgyqk0ip
+- **DB:** Supabase Postgres (proje `hncfqwyajobywlrshaaz`, Tokyo). Bağlantı `.env` (gitignore) + Vercel env'de.
+  Tablo değişikliği: `.env`'i session pooler (5432) yapıp `npx prisma db push`. Vercel app 6543 kullanır.
 - **Demo hesaplar (seed):** musteri@salonor.com / salonor123 (CUSTOMER), isletme@salonor.com / salonor123 (OWNER — "Nova Saç Atölyesi" Kadıköy)
 - **Sürümler:** Next.js 16.2.9 (Turbopack varsayılan, `params`/`cookies` async-only, middleware yerine `src/proxy.ts` + `export function proxy`), Prisma 7.8 (generator `prisma-client`, çıktı `src/generated/prisma`, CLI config `prisma.config.ts` + dotenv), Tailwind v4 (CSS-first `@theme`), zod 4, maplibre-gl 5.
 - Build lint çalıştırmaz (sadece TS). `npm run build` Turbopack.
