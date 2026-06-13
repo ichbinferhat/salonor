@@ -1,0 +1,207 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  CUSTOMER
+  OWNER
+  ADMIN
+}
+
+enum AppointmentStatus {
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+model User {
+  id           String        @id @default(cuid())
+  name         String
+  email        String        @unique
+  phone        String?
+  passwordHash String
+  role         Role          @default(CUSTOMER)
+  image        String?
+  createdAt    DateTime      @default(now())
+  business     Business?
+  appointments Appointment[]
+  reviews      Review[]
+  favorites    Favorite[]
+}
+
+model Category {
+  id         String     @id @default(cuid())
+  slug       String     @unique
+  name       String
+  emoji      String
+  image      String
+  businesses Business[]
+}
+
+model Business {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String
+  phone       String
+  address     String
+  district    String
+  city        String
+  lat         Float
+  lng         Float
+  coverImage  String
+  featured    Boolean  @default(false)
+  ratingAvg   Float    @default(0)
+  ratingCount Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  ownerId    String @unique
+  owner      User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  images            BusinessImage[]
+  hours             WorkingHour[]
+  staff             Staff[]
+  serviceCategories ServiceCategory[]
+  services          Service[]
+  appointments      Appointment[]
+  reviews           Review[]
+  favorites         Favorite[]
+
+  @@index([city])
+  @@index([categoryId])
+}
+
+model BusinessImage {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  url        String
+  sort       Int      @default(0)
+}
+
+model WorkingHour {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  weekday    Int
+  openMin    Int
+  closeMin   Int
+  closed     Boolean  @default(false)
+
+  @@unique([businessId, weekday])
+}
+
+model ServiceCategory {
+  id         String    @id @default(cuid())
+  businessId String
+  business   Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name       String
+  sort       Int       @default(0)
+  services   Service[]
+}
+
+model Service {
+  id          String            @id @default(cuid())
+  businessId  String
+  business    Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  categoryId  String
+  category    ServiceCategory   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  durationMin Int
+  priceTl     Int
+  sort        Int               @default(0)
+  staff       StaffService[]
+  items       AppointmentItem[]
+}
+
+model Staff {
+  id           String         @id @default(cuid())
+  businessId   String
+  business     Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name         String
+  title        String
+  image        String
+  active       Boolean        @default(true)
+  services     StaffService[]
+  appointments Appointment[]
+}
+
+model StaffService {
+  staffId   String
+  staff     Staff   @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  serviceId String
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([staffId, serviceId])
+}
+
+model Appointment {
+  id           String            @id @default(cuid())
+  code         String            @unique
+  businessId   String
+  business     Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customerId   String?
+  customer     User?             @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerName String?
+  staffId      String
+  staff        Staff             @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  date         String
+  startMin     Int
+  endMin       Int
+  status       AppointmentStatus @default(CONFIRMED)
+  totalTl      Int
+  note         String?
+  createdAt    DateTime          @default(now())
+  items        AppointmentItem[]
+  review       Review?
+
+  @@index([businessId, date])
+  @@index([staffId, date])
+  @@index([customerId])
+}
+
+model AppointmentItem {
+  id            String      @id @default(cuid())
+  appointmentId String
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  serviceId     String?
+  service       Service?    @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  name          String
+  durationMin   Int
+  priceTl       Int
+}
+
+model Review {
+  id            String       @id @default(cuid())
+  businessId    String
+  business      Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customerId    String
+  customer      User         @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  appointmentId String?      @unique
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  rating        Int
+  comment       String
+  reply         String?
+  createdAt     DateTime     @default(now())
+
+  @@index([businessId, createdAt])
+}
+
+model Favorite {
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@id([userId, businessId])
+}

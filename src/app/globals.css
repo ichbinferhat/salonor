@@ -1,0 +1,139 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bricolage), var(--font-hanken), ui-sans-serif, sans-serif;
+}
+
+@theme {
+  /* Mürekkep (koyu lacivert) skalası */
+  --color-ink: #131b2e;
+  --color-ink-strong: #0b1222;
+  --color-ink-soft: #4a5470;
+  --color-ink-mute: #79819b;
+
+  /* Menekşe vurgu */
+  --color-accent: #6c4df6;
+  --color-accent-deep: #5435e6;
+  --color-accent-soft: #efebfe;
+  --color-accent-faint: #f7f5ff;
+
+  /* Zemin & çizgiler */
+  --color-cream: #faf9f7;
+  --color-surface: #ffffff;
+  --color-line: #e9e7f1;
+  --color-line-strong: #d8d5e6;
+
+  /* Durum renkleri */
+  --color-mint: #0e9f6e;
+  --color-mint-soft: #e6f7f0;
+  --color-honey: #b45309;
+  --color-honey-soft: #fdf1df;
+  --color-rose: #e11d48;
+  --color-rose-soft: #fde8ed;
+  --color-sea: #1d6fd8;
+  --color-sea-soft: #e8f1fe;
+}
+
+@utility container-x {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 76rem;
+  padding-inline: 1rem;
+  @media (width >= 40rem) {
+    padding-inline: 1.5rem;
+  }
+  @media (width >= 64rem) {
+    padding-inline: 2rem;
+  }
+}
+
+@utility shadow-card {
+  box-shadow:
+    0 1px 2px rgb(19 27 46 / 0.05),
+    0 10px 28px -14px rgb(19 27 46 / 0.14);
+}
+
+@utility shadow-pop {
+  box-shadow:
+    0 2px 6px rgb(19 27 46 / 0.07),
+    0 24px 56px -20px rgb(19 27 46 / 0.28);
+}
+
+@utility shadow-header {
+  box-shadow: 0 1px 0 rgb(19 27 46 / 0.06), 0 6px 20px -12px rgb(19 27 46 / 0.1);
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Sayfa girişlerinde yumuşak yükselme animasyonu */
+@utility anim-rise {
+  animation: rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@utility anim-fade {
+  animation: fade 0.9s ease both;
+}
+@utility d-1 {
+  animation-delay: 80ms;
+}
+@utility d-2 {
+  animation-delay: 160ms;
+}
+@utility d-3 {
+  animation-delay: 240ms;
+}
+@utility d-4 {
+  animation-delay: 320ms;
+}
+@utility d-5 {
+  animation-delay: 420ms;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+/* Form elemanlarında tutarlı odak halkası */
+:where(input, select, textarea, button, a):focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}

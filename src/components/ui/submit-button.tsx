@@ -1,0 +1,25 @@
+"use client";
+
+import { useFormStatus } from "react-dom";
+import { Button } from "./button";
+import type { ComponentProps } from "react";
+
+export function SubmitButton({
+  children,
+  pendingText = "Kaydediliyor...",
+  ...props
+}: ComponentProps<typeof Button> & { pendingText?: string }) {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" disabled={pending} {...props}>
+      {pending ? (
+        <>
+          <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+          {pendingText}
+        </>
+      ) : (
+        children
+      )}
+    </Button>
+  );
+}
