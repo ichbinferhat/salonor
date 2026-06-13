@@ -152,6 +152,7 @@ model Appointment {
   customerId   String?
   customer     User?             @relation(fields: [customerId], references: [id], onDelete: SetNull)
   customerName String?
+  customerPhone String?
   staffId      String
   staff        Staff             @relation(fields: [staffId], references: [id], onDelete: Cascade)
   date         String

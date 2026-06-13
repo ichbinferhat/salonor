@@ -29,9 +29,17 @@ export async function createAppointmentAction(opts: {
   date: string;
   startMin: number;
   note?: string;
+  customerName?: string;
+  customerPhone?: string;
 }): Promise<BookingResult> {
   const session = await getSession();
-  if (!session) return { ok: false, error: "Devam etmek için giriş yapmalısın." };
+  const custName = (opts.customerName ?? "").trim();
+  const custPhone = (opts.customerPhone ?? "").trim();
+  if (!session) {
+    if (custName.length < 3) return { ok: false, error: "Lütfen adını ve soyadını gir." };
+    if (custPhone.replace(/\D/g, "").length < 10)
+      return { ok: false, error: "Geçerli bir telefon numarası gir." };
+  }
 
   if (!opts.serviceIds.length) return { ok: false, error: "En az bir hizmet seçmelisin." };
   if (opts.date < todayStr()) return { ok: false, error: "Geçmiş bir tarihe randevu alınamaz." };
@@ -74,7 +82,9 @@ export async function createAppointmentAction(opts: {
     data: {
       code,
       businessId: opts.businessId,
-      customerId: session.userId,
+      customerId: session?.userId ?? null,
+      customerName: custName || session?.name || null,
+      customerPhone: custPhone || null,
       staffId,
       date: opts.date,
       startMin: opts.startMin,

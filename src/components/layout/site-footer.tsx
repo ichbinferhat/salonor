@@ -24,6 +24,7 @@ const COLUMNS: { title: string; links: [label: string, href: string][] }[] = [
     title: "İşletmeler için",
     links: [
       ["Salonor Business", "/isletme"],
+      ["Fiyatlandırma", "/fiyatlandirma"],
       ["İşletmenizi ekleyin", "/isletme/kayit"],
       ["İşletme girişi", "/giris"],
     ],

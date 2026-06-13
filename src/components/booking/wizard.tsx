@@ -9,13 +9,10 @@ import {
   ChevronLeft,
   Clock,
   Sparkles,
-  UserRound,
 } from "lucide-react";
 import {
   fetchSlotsAction,
   createAppointmentAction,
-  inlineLoginAction,
-  inlineRegisterAction,
 } from "@/server/actions/booking";
 import type { Slot } from "@/lib/slots";
 import { minToHHMM, formatDateTr, formatDateShortTr, WEEKDAYS_SHORT_TR, weekdayOf } from "@/lib/datetime";
@@ -60,7 +57,6 @@ export function BookingWizard({
   staff,
   days,
   initialServiceId,
-  isAuthed: initialAuthed,
   userName: initialUserName,
 }: Props) {
   const allServices = useMemo(
@@ -82,9 +78,9 @@ export function BookingWizard({
   const [slots, setSlots] = useState<Slot[] | null>(null);
   const [time, setTime] = useState<number | null>(null);
   const [note, setNote] = useState("");
+  const [custName, setCustName] = useState(initialUserName ?? "");
+  const [custPhone, setCustPhone] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [authed, setAuthed] = useState(initialAuthed);
-  const [userName, setUserName] = useState(initialUserName);
   const [success, setSuccess] = useState<{ code: string } | null>(null);
   const [isPending, startTransition] = useTransition();
   const [isBooking, startBooking] = useTransition();
@@ -129,6 +125,14 @@ export function BookingWizard({
 
   function confirm() {
     if (time === null) return;
+    if (custName.trim().length < 3) {
+      setError("Lütfen adını ve soyadını gir.");
+      return;
+    }
+    if (custPhone.replace(/\D/g, "").length < 10) {
+      setError("Geçerli bir telefon numarası gir.");
+      return;
+    }
     setError(null);
     startBooking(async () => {
       const res = await createAppointmentAction({
@@ -138,6 +142,8 @@ export function BookingWizard({
         date,
         startMin: time,
         note,
+        customerName: custName,
+        customerPhone: custPhone,
       });
       if (res.ok) setSuccess({ code: res.code });
       else setError(res.error);
@@ -371,46 +377,57 @@ export function BookingWizard({
           {step === 3 && (
             <div className="anim-rise max-w-xl">
               <h1 className="mb-5 font-display text-2xl font-extrabold text-ink">
-                {authed ? "Randevunu onayla" : "Az kaldı — giriş yap"}
+                Randevunu onayla
               </h1>
 
-              {!authed ? (
-                <InlineAuth
-                  onDone={(name) => {
-                    setAuthed(true);
-                    setUserName(name);
-                  }}
-                />
-              ) : (
-                <div className="space-y-5">
-                  <div className="rounded-[20px] border border-line bg-surface p-5 shadow-card">
-                    <p className="text-sm text-ink-soft">
-                      <UserRound className="mr-1.5 inline size-4" />
-                      {userName} adına rezervasyon
-                    </p>
-                    <div className="mt-3 border-t border-line pt-3">
-                      <p className="font-bold text-ink">{formatDateTr(date)}</p>
-                      <p className="text-ink-soft">
-                        {time !== null && minToHHMM(time)} ·{" "}
-                        {staffChoice
-                          ? eligibleStaff.find((s) => s.id === staffChoice)?.name
-                          : "Müsait personel"}
-                      </p>
-                    </div>
-                    <ul className="mt-3 space-y-1.5 border-t border-line pt-3 text-sm">
-                      {selectedServices.map((s) => (
-                        <li key={s.id} className="flex justify-between text-ink-soft">
-                          <span>{s.name}</span>
-                          <span className="font-semibold text-ink">{formatTl(s.priceTl)}</span>
-                        </li>
-                      ))}
-                      <li className="flex justify-between border-t border-line pt-2 font-bold text-ink">
-                        <span>Toplam · {formatDuration(totalDur)}</span>
-                        <span>{formatTl(totalTl)}</span>
+              <div className="space-y-5">
+                <div className="rounded-[20px] border border-line bg-surface p-5 shadow-card">
+                  <p className="font-bold text-ink">{formatDateTr(date)}</p>
+                  <p className="text-ink-soft">
+                    {time !== null && minToHHMM(time)} ·{" "}
+                    {staffChoice
+                      ? eligibleStaff.find((s) => s.id === staffChoice)?.name
+                      : "Müsait personel"}
+                  </p>
+                  <ul className="mt-3 space-y-1.5 border-t border-line pt-3 text-sm">
+                    {selectedServices.map((s) => (
+                      <li key={s.id} className="flex justify-between text-ink-soft">
+                        <span>{s.name}</span>
+                        <span className="font-semibold text-ink">{formatTl(s.priceTl)}</span>
                       </li>
-                    </ul>
-                  </div>
+                    ))}
+                    <li className="flex justify-between border-t border-line pt-2 font-bold text-ink">
+                      <span>Toplam · {formatDuration(totalDur)}</span>
+                      <span>{formatTl(totalTl)}</span>
+                    </li>
+                  </ul>
+                </div>
 
+                <div className="space-y-3.5 rounded-[20px] border border-line bg-surface p-5 shadow-card">
+                  <p className="text-sm font-bold text-ink">İletişim bilgilerin</p>
+                  <div>
+                    <Label htmlFor="cust-name">Ad Soyad</Label>
+                    <Input
+                      id="cust-name"
+                      value={custName}
+                      onChange={(e) => setCustName(e.target.value)}
+                      placeholder="Adın Soyadın"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="cust-phone">Telefon</Label>
+                    <Input
+                      id="cust-phone"
+                      type="tel"
+                      inputMode="tel"
+                      value={custPhone}
+                      onChange={(e) => setCustPhone(e.target.value)}
+                      placeholder="05XX XXX XX XX"
+                    />
+                    <p className="mt-1.5 text-xs text-ink-mute">
+                      Randevu onayı ve hatırlatma için SMS/WhatsApp göndereceğiz.
+                    </p>
+                  </div>
                   <div>
                     <Label htmlFor="note">Not (isteğe bağlı)</Label>
                     <Textarea
@@ -420,23 +437,23 @@ export function BookingWizard({
                       placeholder="Salona iletmek istediğin bir not var mı?"
                     />
                   </div>
-
-                  <FormError message={error} />
-
-                  <Button
-                    variant="accent"
-                    size="xl"
-                    className="w-full"
-                    onClick={confirm}
-                    disabled={isBooking}
-                  >
-                    {isBooking ? "Onaylanıyor..." : `Randevuyu onayla — ${formatTl(totalTl)}`}
-                  </Button>
-                  <p className="text-center text-xs text-ink-mute">
-                    Ödeme salonda yapılır. Ücretsiz iptal hakkın var.
-                  </p>
                 </div>
-              )}
+
+                <FormError message={error} />
+
+                <Button
+                  variant="accent"
+                  size="xl"
+                  className="w-full"
+                  onClick={confirm}
+                  disabled={isBooking}
+                >
+                  {isBooking ? "Onaylanıyor..." : `Randevuyu onayla — ${formatTl(totalTl)}`}
+                </Button>
+                <p className="text-center text-xs text-ink-mute">
+                  Ödeme salonda yapılır. Ücretsiz iptal hakkın var.
+                </p>
+              </div>
             </div>
           )}
         </div>
@@ -559,73 +576,6 @@ function SlotGroups({
             </div>
           )
       )}
-    </div>
-  );
-}
-
-/* ─── Akış içi giriş/kayıt ─── */
-function InlineAuth({ onDone }: { onDone: (name: string) => void }) {
-  const [tab, setTab] = useState<"login" | "register">("login");
-  const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
-
-  function submit(formData: FormData) {
-    setError(null);
-    startTransition(async () => {
-      const res =
-        tab === "login"
-          ? await inlineLoginAction({
-              email: String(formData.get("email") ?? ""),
-              password: String(formData.get("password") ?? ""),
-            })
-          : await inlineRegisterAction({
-              name: String(formData.get("name") ?? ""),
-              email: String(formData.get("email") ?? ""),
-              password: String(formData.get("password") ?? ""),
-            });
-      if (res.ok) onDone(res.name);
-      else setError(res.error);
-    });
-  }
-
-  return (
-    <div className="rounded-[20px] border border-line bg-surface p-6 shadow-card">
-      <div className="mb-5 grid grid-cols-2 rounded-full bg-cream p-1">
-        {(["login", "register"] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`rounded-full py-2 text-sm font-bold transition-colors ${
-              tab === t ? "bg-ink text-white" : "text-ink-soft"
-            }`}
-          >
-            {t === "login" ? "Giriş yap" : "Hızlı kayıt"}
-          </button>
-        ))}
-      </div>
-      <form action={submit} className="space-y-3.5">
-        {tab === "register" && (
-          <div>
-            <Label htmlFor="ba-name">Ad Soyad</Label>
-            <Input id="ba-name" name="name" required placeholder="Adın Soyadın" />
-          </div>
-        )}
-        <div>
-          <Label htmlFor="ba-email">E-posta</Label>
-          <Input id="ba-email" name="email" type="email" required placeholder="ornek@eposta.com" />
-        </div>
-        <div>
-          <Label htmlFor="ba-password">Şifre</Label>
-          <Input id="ba-password" name="password" type="password" required minLength={6} placeholder="••••••••" />
-        </div>
-        <FormError message={error} />
-        <Button type="submit" variant="primary" size="lg" className="w-full" disabled={isPending}>
-          {isPending ? "Lütfen bekle..." : tab === "login" ? "Giriş yap ve devam et" : "Kayıt ol ve devam et"}
-        </Button>
-      </form>
-      <p className="mt-3 text-center text-xs text-ink-mute">
-        Demo: musteri@salonor.com · salonor123
-      </p>
     </div>
   );
 }
