@@ -56,7 +56,7 @@ export function SalonCard({
             {salon.name}
           </h3>
           <span className="flex shrink-0 items-center gap-1 text-sm font-bold text-ink">
-            <Star className="size-3.5 fill-ink text-ink" />
+            <Star className="size-3.5 fill-gold text-gold" />
             {salon.ratingAvg.toFixed(1)}
           </span>
         </div>

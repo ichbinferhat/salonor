@@ -10,7 +10,7 @@ function Star({ className = "" }: { className?: string }) {
 export function RatingStars({
   value,
   size = "md",
-  tone = "ink",
+  tone = "gold",
   className = "",
 }: {
   value: number;
@@ -20,8 +20,8 @@ export function RatingStars({
 }) {
   const px = size === "lg" ? "size-5" : size === "sm" ? "size-3.5" : "size-4";
   const pct = Math.max(0, Math.min(100, (value / 5) * 100));
-  const empty = tone === "gold" ? "text-honey/25" : "text-line-strong";
-  const full = tone === "gold" ? "text-honey" : "text-ink";
+  const empty = tone === "gold" ? "text-gold/25" : "text-line-strong";
+  const full = tone === "gold" ? "text-gold" : "text-ink";
   return (
     <span className={`relative inline-flex ${className}`} aria-label={`${value} / 5 puan`}>
       <span className={`flex ${empty}`}>

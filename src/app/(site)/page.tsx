@@ -25,7 +25,7 @@ const CATEGORY_ORDER = [
 const POPULAR_CITIES = ["İstanbul", "Ankara", "İzmir", "Antalya", "Bursa"];
 
 const CARD_CLS =
-  "w-[78vw] max-w-[340px] shrink-0 snap-center sm:w-[300px] sm:max-w-none sm:snap-start";
+  "w-[70vw] max-w-[300px] shrink-0 snap-start sm:w-[290px] sm:max-w-none";
 
 export default async function HomePage() {
   const [categories, featured, newest, bizCount, serviceCount, reviewCount, quotes] =

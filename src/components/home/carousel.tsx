@@ -23,8 +23,8 @@ export function Carousel({
     });
 
   return (
-    <section>
-      <div className="container-x mb-5 flex items-end justify-between gap-4">
+    <section className="container-x">
+      <div className="mb-5 flex items-end justify-between gap-4">
         <div className="min-w-0">
           <h2 className="font-display text-2xl font-bold tracking-tight text-ink sm:text-[28px]">
             {title}
@@ -59,9 +59,10 @@ export function Carousel({
         </div>
       </div>
 
+      {/* Başlıkla aynı sol hizada; yalnızca sağa taşar (peek) */}
       <div
         ref={ref}
-        className="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto px-[11vw] pb-2 sm:gap-5 sm:scroll-pl-6 sm:px-6 lg:scroll-pl-8 lg:px-8"
+        className="no-scrollbar -mr-4 flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 pr-4 sm:-mr-6 sm:gap-5 sm:pr-6 lg:-mr-8 lg:pr-8"
       >
         {children}
       </div>

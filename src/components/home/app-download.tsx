@@ -87,12 +87,12 @@ function ProfileScreen({ image }: { image?: string }) {
           <Image src={image} alt="" fill sizes="240px" className="object-cover" />
         )}
         <span className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full bg-white/85 backdrop-blur-sm">
-          <Star className="size-3.5 fill-ink text-ink" />
+          <Star className="size-3.5 fill-gold text-gold" />
         </span>
       </div>
       <div className="flex-1 p-3">
         <div className="flex items-center gap-1 text-[11px] font-bold text-ink">
-          <Star className="size-3 fill-ink text-ink" /> 4.9
+          <Star className="size-3 fill-gold text-gold" /> 4.9
           <span className="font-medium text-ink-mute">(312)</span>
         </div>
         <p className="mt-1 font-display text-sm font-bold leading-tight text-ink">

@@ -24,6 +24,8 @@ type Props = {
   className?: string;
 };
 
+type Anchor = { top: number; left?: number; right?: number };
+
 export function SearchBar({
   categories,
   defaults = {},
@@ -38,24 +40,36 @@ export function SearchBar({
   const [ilce, setIlce] = useState(defaults.ilce ?? "");
 
   const [panel, setPanel] = useState<"type" | "loc" | null>(null);
+  const [anchor, setAnchor] = useState<Anchor | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetView, setSheetView] = useState<"main" | "type" | "loc">("main");
   const [mounted, setMounted] = useState(false);
 
-  const pillRef = useRef<HTMLDivElement>(null);
+  const typeBtnRef = useRef<HTMLButtonElement>(null);
+  const locBtnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => setMounted(true), []);
 
-  // Masaüstü: dışarı tıklayınca popover kapansın
+  // Masaüstü popover'ın konumunu tetikleyici düğmeye göre hesapla
   useEffect(() => {
-    if (!panel) return;
-    function onDown(e: MouseEvent) {
-      if (pillRef.current && !pillRef.current.contains(e.target as Node)) {
-        setPanel(null);
-      }
+    if (!panel) {
+      setAnchor(null);
+      return;
     }
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
+    const place = () => {
+      const btn = panel === "type" ? typeBtnRef.current : locBtnRef.current;
+      if (!btn) return;
+      const r = btn.getBoundingClientRect();
+      if (panel === "type") setAnchor({ top: r.bottom + 10, left: r.left });
+      else setAnchor({ top: r.bottom + 10, right: window.innerWidth - r.right });
+    };
+    place();
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
   }, [panel]);
 
   // Esc ile kapat
@@ -111,10 +125,11 @@ export function SearchBar({
   return (
     <div className={`w-full ${className}`}>
       {/* ───────── Masaüstü: segmentli pill ───────── */}
-      <div ref={pillRef} className="relative mx-auto hidden w-full max-w-3xl lg:block">
+      <div className="mx-auto hidden w-full max-w-3xl lg:block">
         <div className="flex items-center rounded-full border border-line bg-surface p-2 shadow-pop">
           {/* TÜR */}
           <Segment
+            buttonRef={typeBtnRef}
             active={panel === "type"}
             onClick={() => setPanel(panel === "type" ? null : "type")}
             icon={<Scissors className="size-5" />}
@@ -149,6 +164,7 @@ export function SearchBar({
 
           {/* KONUM */}
           <Segment
+            buttonRef={locBtnRef}
             active={panel === "loc"}
             onClick={() => setPanel(panel === "loc" ? null : "loc")}
             icon={<MapPin className="size-5" />}
@@ -168,25 +184,46 @@ export function SearchBar({
             Ara
           </button>
         </div>
-
-        {/* Popover: Tür */}
-        {panel === "type" && (
-          <Popover className="left-0 w-[20rem]">
-            <CategoryList
-              categories={categories}
-              value={kategori}
-              onSelect={pickCategory}
-            />
-          </Popover>
-        )}
-
-        {/* Popover: Konum */}
-        {panel === "loc" && (
-          <Popover className="right-[7.5rem] w-[23rem]">
-            <LocationList value={{ city: sehir, district: ilce }} onSelect={pickLocation} />
-          </Popover>
-        )}
       </div>
+
+      {/* Masaüstü popover (portal + backdrop) */}
+      {mounted &&
+        panel &&
+        createPortal(
+          <div className="fixed inset-0 z-[70] hidden lg:block">
+            <button
+              type="button"
+              aria-label="Kapat"
+              onClick={() => setPanel(null)}
+              className="absolute inset-0 cursor-default bg-ink/20 backdrop-blur-[2px]"
+            />
+            {anchor && (
+              <div
+                className="anim-rise absolute overflow-hidden rounded-3xl border border-line bg-surface py-1.5 shadow-pop"
+                style={{
+                  top: anchor.top,
+                  left: anchor.left,
+                  right: anchor.right,
+                  width: panel === "type" ? 320 : 372,
+                }}
+              >
+                {panel === "type" ? (
+                  <CategoryList
+                    categories={categories}
+                    value={kategori}
+                    onSelect={pickCategory}
+                  />
+                ) : (
+                  <LocationList
+                    value={{ city: sehir, district: ilce }}
+                    onSelect={pickLocation}
+                  />
+                )}
+              </div>
+            )}
+          </div>,
+          document.body
+        )}
 
       {/* ───────── Mobil: tetikleyici ───────── */}
       <button
@@ -324,6 +361,7 @@ function Segment({
   value,
   chevron = false,
   className = "",
+  buttonRef,
 }: {
   active: boolean;
   onClick: () => void;
@@ -332,9 +370,11 @@ function Segment({
   value: string;
   chevron?: boolean;
   className?: string;
+  buttonRef?: React.Ref<HTMLButtonElement>;
 }) {
   return (
     <button
+      ref={buttonRef}
       type="button"
       onClick={onClick}
       className={`flex items-center gap-3 rounded-full px-4 py-2 text-left transition-colors ${
@@ -359,22 +399,6 @@ function Segment({
 
 function Divider() {
   return <span className="mx-0.5 h-9 w-px shrink-0 bg-line" aria-hidden />;
-}
-
-function Popover({
-  className = "",
-  children,
-}: {
-  className?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      className={`anim-rise absolute top-full z-50 mt-3 overflow-hidden rounded-3xl border border-line bg-surface py-1.5 shadow-pop ${className}`}
-    >
-      {children}
-    </div>
-  );
 }
 
 function SheetField({

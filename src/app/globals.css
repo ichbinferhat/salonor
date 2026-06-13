@@ -19,10 +19,13 @@
   --color-accent-faint: #f7f5ff;
 
   /* Zemin & çizgiler */
-  --color-cream: #faf9f7;
+  --color-cream: #f4f2fb;
   --color-surface: #ffffff;
   --color-line: #e9e7f1;
   --color-line-strong: #d8d5e6;
+
+  /* Puan yıldızı (altın) */
+  --color-gold: #f5a623;
 
   /* Durum renkleri */
   --color-mint: #0e9f6e;

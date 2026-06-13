@@ -63,9 +63,9 @@ export function BusinessPromo() {
 
 function RatingStarsGold() {
   return (
-    <span className="flex text-honey" aria-hidden>
+    <span className="flex text-gold" aria-hidden>
       {[0, 1, 2, 3, 4].map((i) => (
-        <Star key={i} className="size-4 fill-honey" />
+        <Star key={i} className="size-4 fill-gold" />
       ))}
     </span>
   );

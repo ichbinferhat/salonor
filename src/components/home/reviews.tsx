@@ -21,7 +21,7 @@ export function Reviews({ reviews }: { reviews: ReviewItem[] }) {
       {reviews.map((r) => (
         <figure
           key={r.id}
-          className="flex h-full w-[80vw] max-w-[360px] shrink-0 snap-center flex-col rounded-[24px] border border-line bg-surface p-6 shadow-card sm:w-[340px] sm:max-w-none sm:snap-start"
+          className="flex h-full w-[78vw] max-w-[340px] shrink-0 snap-start flex-col rounded-[24px] border border-line bg-surface p-6 shadow-card sm:w-[330px] sm:max-w-none"
         >
           <RatingStars value={r.rating} tone="gold" size="md" />
           <Link
