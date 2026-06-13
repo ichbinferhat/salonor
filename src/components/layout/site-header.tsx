@@ -8,7 +8,7 @@ export async function SiteHeader() {
   const info = session ? { name: session.name, role: session.role } : null;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line/70 bg-cream/85 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-line bg-surface/90 backdrop-blur-md shadow-header">
       <div className="container-x flex h-16 items-center justify-between gap-4">
         <Logo />
 

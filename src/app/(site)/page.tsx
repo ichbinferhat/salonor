@@ -6,7 +6,6 @@ import { Carousel } from "@/components/home/carousel";
 import { StatsBand } from "@/components/home/stats-band";
 import { BusinessPromo } from "@/components/home/business-promo";
 import { Reviews } from "@/components/home/reviews";
-import { AppDownload } from "@/components/home/app-download";
 import { ServicesDirectory } from "@/components/home/services-directory";
 import { SalonCard } from "@/components/salon-card";
 import { RatingStars } from "@/components/ui/rating-stars";
@@ -182,9 +181,6 @@ export default async function HomePage() {
       <section className="pb-20">
         <Reviews reviews={quotes} />
       </section>
-
-      {/* ───────────────── Uygulama indir ───────────────── */}
-      <AppDownload image={featured[0]?.coverImage} />
 
       {/* ───────────────── Tüm hizmetler dizini ───────────────── */}
       <ServicesDirectory />
