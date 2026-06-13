@@ -196,7 +196,7 @@ export function SearchBar({
             />
             {anchor && (
               <div
-                className="anim-rise absolute flex flex-col overflow-hidden rounded-3xl border border-line bg-surface py-1.5 shadow-pop"
+                className="anim-rise absolute overflow-y-auto rounded-3xl border border-line bg-surface py-1.5 shadow-pop"
                 style={{
                   top: anchor.top,
                   left: anchor.left,

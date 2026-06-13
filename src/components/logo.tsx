@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 
 export function Logo({
@@ -14,6 +16,11 @@ export function Logo({
   return (
     <Link
       href={href}
+      onClick={() => {
+        if (typeof window !== "undefined" && window.location.pathname === href) {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      }}
       className={`inline-flex items-baseline gap-0.5 font-display font-extrabold tracking-tight ${text} ${
         tone === "white" ? "text-white" : "text-ink"
       }`}

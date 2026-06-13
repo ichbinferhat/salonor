@@ -43,7 +43,7 @@ export function LocationList({
           setQuery={setQuery}
           placeholder="İl ara… (ör. İstanbul)"
         />
-        <ul className="no-scrollbar max-h-[min(58vh,21rem)] overflow-y-auto px-1.5 pb-1.5">
+        <ul className="px-1.5 pb-1.5">
           <li>
             <button
               type="button"
@@ -111,7 +111,7 @@ export function LocationList({
         setQuery={setQuery}
         placeholder={`${province} içinde ilçe ara…`}
       />
-      <ul className="no-scrollbar max-h-[min(52vh,19rem)] overflow-y-auto px-1.5 pb-1.5">
+      <ul className="px-1.5 pb-1.5">
         <li>
           <button
             type="button"
@@ -162,7 +162,7 @@ function SearchBox({
   placeholder: string;
 }) {
   return (
-    <div className="px-3 pb-2 pt-2">
+    <div className="sticky top-0 z-10 bg-surface px-3 pb-2 pt-2">
       <div className="flex items-center gap-2 rounded-full bg-cream px-3.5 py-2.5">
         <Search className="size-4 shrink-0 text-ink-mute" />
         <input
