@@ -3,6 +3,7 @@ import { SearchX } from "lucide-react";
 import { db } from "@/lib/db";
 import type { Prisma } from "@/generated/prisma/client";
 import { SalonCard } from "@/components/salon-card";
+import { SearchBar } from "@/components/search/search-bar";
 import { SearchControls } from "@/components/search/search-controls";
 import { SalonMapPanel } from "@/components/search/salon-map-panel";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ export const metadata: Metadata = { title: "Salon ara" };
 type SearchParams = {
   q?: string;
   sehir?: string;
+  ilce?: string;
   kategori?: string;
   sirala?: string;
 };
@@ -19,7 +21,7 @@ type SearchParams = {
 export default async function SearchPage(props: {
   searchParams: Promise<SearchParams>;
 }) {
-  const { q, sehir, kategori, sirala } = await props.searchParams;
+  const { q, sehir, ilce, kategori, sirala } = await props.searchParams;
 
   const where: Prisma.BusinessWhereInput = {
     ...(q
@@ -32,6 +34,7 @@ export default async function SearchPage(props: {
         }
       : {}),
     ...(sehir ? { city: sehir } : {}),
+    ...(ilce ? { district: ilce } : {}),
     ...(kategori ? { category: { slug: kategori } } : {}),
   };
 
@@ -47,36 +50,48 @@ export default async function SearchPage(props: {
     db.category.findMany(),
   ]);
 
+  const orderedCategories = [...categories];
+  const searchCategories = orderedCategories.map((c) => ({
+    slug: c.slug,
+    name: c.name,
+    emoji: c.emoji,
+  }));
+
   const categoryName = kategori
     ? categories.find((c) => c.slug === kategori)?.name
     : undefined;
 
-  const heading = [categoryName ?? "Tüm salonlar", sehir].filter(Boolean).join(" · ");
+  const place = [ilce, sehir].filter(Boolean).join(", ");
+  const heading = [categoryName ?? "Tüm salonlar", place].filter(Boolean).join(" · ");
 
   return (
-    <div className="container-x py-8">
-      <div className="mb-6">
-        <h1 className="font-display text-3xl font-extrabold tracking-tight text-ink">
-          {heading}
-        </h1>
-        <p className="mt-1 text-ink-soft">
-          {salons.length} sonuç {q ? `· "${q}" için` : ""}
-        </p>
+    <div className="container-x py-6 sm:py-8">
+      {/* Premium arama çubuğu */}
+      <div className="mb-7">
+        <SearchBar
+          key={`${q ?? ""}|${sehir ?? ""}|${ilce ?? ""}|${kategori ?? ""}`}
+          variant="page"
+          categories={searchCategories}
+          defaults={{ q, sehir, ilce, kategori }}
+        />
+      </div>
+
+      <div className="mb-5">
+        <SearchControls categories={searchCategories} />
       </div>
 
       <div className="mb-6">
-        <SearchControls
-          categories={categories.map((c) => ({
-            slug: c.slug,
-            name: c.name,
-            emoji: c.emoji,
-          }))}
-        />
+        <h1 className="font-display text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">
+          {heading}
+        </h1>
+        <p className="mt-1 text-ink-soft">
+          {salons.length} sonuç {q ? `· “${q}” için` : ""}
+        </p>
       </div>
 
       <div className="grid items-start gap-6 lg:grid-cols-[1fr_420px]">
         {salons.length > 0 ? (
-          <div className="grid gap-5 sm:grid-cols-2">
+          <div className="grid gap-x-5 gap-y-8 sm:grid-cols-2">
             {salons.map((s, i) => (
               <SalonCard key={s.id} salon={s} priority={i < 4} />
             ))}

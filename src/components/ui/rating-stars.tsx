@@ -6,27 +6,31 @@ function Star({ className = "" }: { className?: string }) {
   );
 }
 
-/** Fresha tarzı: koyu mürekkep renkli yıldızlar */
+/** Puan yıldızları — koyu mürekkep (varsayılan) veya altın tonunda */
 export function RatingStars({
   value,
   size = "md",
+  tone = "ink",
   className = "",
 }: {
   value: number;
   size?: "sm" | "md" | "lg";
+  tone?: "ink" | "gold";
   className?: string;
 }) {
   const px = size === "lg" ? "size-5" : size === "sm" ? "size-3.5" : "size-4";
   const pct = Math.max(0, Math.min(100, (value / 5) * 100));
+  const empty = tone === "gold" ? "text-honey/25" : "text-line-strong";
+  const full = tone === "gold" ? "text-honey" : "text-ink";
   return (
     <span className={`relative inline-flex ${className}`} aria-label={`${value} / 5 puan`}>
-      <span className="flex text-line-strong">
+      <span className={`flex ${empty}`}>
         {[0, 1, 2, 3, 4].map((i) => (
           <Star key={i} className={px} />
         ))}
       </span>
       <span
-        className="absolute inset-0 flex overflow-hidden text-ink"
+        className={`absolute inset-0 flex overflow-hidden ${full}`}
         style={{ width: `${pct}%` }}
       >
         {[0, 1, 2, 3, 4].map((i) => (
