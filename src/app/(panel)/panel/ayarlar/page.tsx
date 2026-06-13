@@ -41,6 +41,8 @@ export default async function SettingsPage() {
               address: business.address,
               district: business.district,
               city: business.city,
+              lat: business.lat,
+              lng: business.lng,
             }}
           />
         </section>

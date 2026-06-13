@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { updateBusinessAction, type ActionState } from "@/server/actions/business";
 import { Input, Label, Textarea, FormError, FormSuccess } from "@/components/ui/form";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { LocationPicker } from "@/components/onboarding/location-picker";
 
 export function BusinessProfileForm({
   defaults,
@@ -15,9 +16,12 @@ export function BusinessProfileForm({
     address: string;
     district: string;
     city: string;
+    lat: number;
+    lng: number;
   };
 }) {
   const [state, action] = useActionState<ActionState, FormData>(updateBusinessAction, undefined);
+  const [coords, setCoords] = useState({ lat: defaults.lat, lng: defaults.lng });
 
   return (
     <form action={action} className="space-y-4">
@@ -49,6 +53,21 @@ export function BusinessProfileForm({
           <Input id="bp-district" name="district" defaultValue={defaults.district} />
         </div>
       </div>
+
+      <div>
+        <Label>Harita konumu</Label>
+        <LocationPicker
+          lat={coords.lat}
+          lng={coords.lng}
+          onChange={(lat, lng) => setCoords({ lat, lng })}
+        />
+        <p className="mt-1.5 text-xs text-ink-mute">
+          Müşterilerin seni haritada bulur. İşaretçiyi sürükle veya haritaya tıkla.
+        </p>
+      </div>
+      <input type="hidden" name="lat" value={coords.lat} />
+      <input type="hidden" name="lng" value={coords.lng} />
+
       <FormError message={state?.error} />
       {state?.ok && <FormSuccess message="İşletme bilgilerin güncellendi." />}
       <SubmitButton>Değişiklikleri kaydet</SubmitButton>

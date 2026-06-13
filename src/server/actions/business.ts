@@ -342,12 +342,25 @@ export async function updateBusinessAction(_p: ActionState, formData: FormData):
   const address = String(formData.get("address") ?? "").trim();
   const district = String(formData.get("district") ?? "").trim();
   const city = String(formData.get("city") ?? "").trim();
+  const lat = Number(formData.get("lat"));
+  const lng = Number(formData.get("lng"));
 
   if (name.length < 2) return { error: "İşletme adı gerekli." };
 
+  const validCoords =
+    Number.isFinite(lat) && Number.isFinite(lng) && lat !== 0 && lng !== 0;
+
   await db.business.update({
     where: { id: business.id },
-    data: { name, description, phone, address, district, city },
+    data: {
+      name,
+      description,
+      phone,
+      address,
+      district,
+      city,
+      ...(validCoords ? { lat, lng } : {}),
+    },
   });
 
   revalidatePath("/panel/ayarlar");
