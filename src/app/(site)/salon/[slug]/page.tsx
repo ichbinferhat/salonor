@@ -61,7 +61,7 @@ export default async function SalonPage(props: { params: Promise<{ slug: string 
     getSession(),
   ]);
 
-  if (!business) notFound();
+  if (!business || !business.active) notFound();
 
   const [isFavorite, ratingDist] = await Promise.all([
     session

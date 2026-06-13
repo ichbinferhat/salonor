@@ -24,6 +24,7 @@ export default async function SearchPage(props: {
   const { q, sehir, ilce, kategori, sirala } = await props.searchParams;
 
   const where: Prisma.BusinessWhereInput = {
+    active: true,
     ...(q
       ? {
           OR: [

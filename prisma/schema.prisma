@@ -57,6 +57,7 @@ model Business {
   lng         Float
   coverImage  String
   featured    Boolean  @default(false)
+  active      Boolean  @default(true)
   ratingAvg   Float    @default(0)
   ratingCount Int      @default(0)
   createdAt   DateTime @default(now())

@@ -31,12 +31,13 @@ export default async function HomePage() {
     await Promise.all([
       db.category.findMany(),
       db.business.findMany({
-        where: { featured: true },
+        where: { featured: true, active: true },
         include: { category: true },
         orderBy: { ratingAvg: "desc" },
         take: 8,
       }),
       db.business.findMany({
+        where: { active: true },
         include: { category: true },
         orderBy: { createdAt: "desc" },
         take: 8,
