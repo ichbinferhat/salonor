@@ -6,7 +6,7 @@ import { StoreBadges } from "./store-badges";
 /** "Salonor uygulamasını indirin" bölümü — iki telefon mockup'ı + QR + rozetler. */
 export function AppDownload({ image }: { image?: string }) {
   return (
-    <section className="container-x pb-20">
+    <section id="uygulama" className="container-x scroll-mt-20 pb-20">
       <div className="relative overflow-hidden rounded-[32px] border border-line bg-surface px-6 py-12 shadow-card sm:px-10 lg:px-14 lg:py-0">
         <div
           className="pointer-events-none absolute -left-24 -top-24 size-80 rounded-full bg-accent/10 blur-3xl"
