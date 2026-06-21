@@ -2,10 +2,12 @@ import { db } from "@/lib/db";
 import { getOwnerBusiness } from "@/lib/owner";
 import { todayStr, weekdayOf } from "@/lib/datetime";
 import { CalendarBoard } from "@/components/panel/calendar-board";
+import { getDictionary } from "@/i18n";
 
 export default async function CalendarPage(props: {
   searchParams: Promise<{ gun?: string }>;
 }) {
+  const dict = await getDictionary();
   const business = (await getOwnerBusiness())!;
   const { gun } = await props.searchParams;
 
@@ -62,7 +64,7 @@ export default async function CalendarPage(props: {
           startMin: a.startMin,
           endMin: a.endMin,
           status: a.status,
-          customerLabel: a.customer?.name ?? a.customerName ?? "Müşteri",
+          customerLabel: a.customer?.name ?? a.customerName ?? dict.panelCore.fallbackCustomer,
           services: a.items.map((i) => i.name).join(", "),
           totalTl: a.totalTl,
           code: a.code,

@@ -2,9 +2,14 @@ import Image from "next/image";
 import { QrCode, Star, MapPin, Check, Smartphone } from "lucide-react";
 import { PhoneMock } from "./phone-mock";
 import { StoreBadges } from "./store-badges";
+import { getDictionary } from "@/i18n";
+import { interpolate } from "@/i18n/interpolate";
+import type { Dictionary } from "@/i18n/types";
 
 /** "Salonor uygulamasını indirin" bölümü — iki telefon mockup'ı + QR + rozetler. */
-export function AppDownload({ image }: { image?: string }) {
+export async function AppDownload({ image }: { image?: string }) {
+  const dict = await getDictionary();
+  const a = dict.home.appDownload;
   return (
     <section id="uygulama" className="container-x scroll-mt-20 pb-20">
       <div className="relative overflow-hidden rounded-[32px] border border-line bg-surface px-6 py-12 shadow-card sm:px-10 lg:px-14 lg:py-0">
@@ -28,21 +33,16 @@ export function AppDownload({ image }: { image?: string }) {
               Android
             </p>
             <h2 className="font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
-              Salonor’u cebine al
+              {a.heading}
             </h2>
             <p className="mt-4 max-w-md text-lg text-ink-soft">
-              Randevularını yönet, favori salonlarını takip et ve yeni yerleri
-              keşfet — hepsi tek dokunuşla, her an yanında.
+              {a.desc}
             </p>
 
             <ul className="mt-6 space-y-2.5">
-              {[
-                "Tek dokunuşla yeniden randevu",
-                "Randevu hatırlatmaları ve bildirimler",
-                "Sana özel salon önerileri",
-              ].map((t) => (
-                <li key={t} className="flex items-center gap-2.5 text-ink">
-                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-mint-soft">
+              {[a.feat1, a.feat2, a.feat3].map((t) => (
+                <li key={t} className="flex items-center gap-2.5 font-medium text-ink">
+                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-mint-soft ring-1 ring-mint/15">
                     <Check className="size-3.5 text-mint" />
                   </span>
                   {t}
@@ -51,12 +51,12 @@ export function AppDownload({ image }: { image?: string }) {
             </ul>
 
             <div className="mt-8 flex flex-wrap items-center gap-5">
-              <div className="flex items-center gap-3 rounded-2xl border border-line bg-cream p-3">
-                <span className="flex size-20 items-center justify-center rounded-xl bg-surface">
+              <div className="flex items-center gap-3 rounded-2xl border border-line bg-cream p-3 transition-all hover:-translate-y-0.5 hover:shadow-pop">
+                <span className="flex size-20 items-center justify-center rounded-xl bg-surface shadow-card ring-1 ring-line">
                   <QrCode className="size-16 text-ink" />
                 </span>
                 <span className="max-w-[7rem] text-sm font-semibold leading-snug text-ink-soft">
-                  Kamerayla tara, hemen indir
+                  {a.qrText}
                 </span>
               </div>
               <StoreBadges />
@@ -66,10 +66,10 @@ export function AppDownload({ image }: { image?: string }) {
           {/* Sağ: telefonlar */}
           <div className="relative mx-auto h-[420px] w-full max-w-sm lg:h-[540px]">
             <PhoneMock className="absolute left-1/2 top-6 w-48 -translate-x-[78%] -rotate-6 sm:w-52">
-              <MapScreen />
+              <MapScreen dict={dict} />
             </PhoneMock>
             <PhoneMock className="absolute left-1/2 top-0 w-52 -translate-x-[12%] rotate-3 sm:w-60">
-              <ProfileScreen image={image} />
+              <ProfileScreen image={image} dict={dict} />
             </PhoneMock>
           </div>
         </div>
@@ -79,7 +79,8 @@ export function AppDownload({ image }: { image?: string }) {
 }
 
 /* ── Telefon ekranı: salon profili ── */
-function ProfileScreen({ image }: { image?: string }) {
+function ProfileScreen({ image, dict }: { image?: string; dict: Dictionary }) {
+  const a = dict.home.appDownload;
   return (
     <div className="flex h-full flex-col">
       <div className="relative h-2/5 w-full bg-cream">
@@ -102,9 +103,9 @@ function ProfileScreen({ image }: { image?: string }) {
 
         <div className="mt-3 space-y-2">
           {[
-            ["Saç Kesimi", "₺450"],
-            ["Fön & Şekil", "₺300"],
-            ["Saç Boyama", "₺900"],
+            [a.mockHaircut, "₺450"],
+            [a.mockBlowDry, "₺300"],
+            [a.mockColor, "₺900"],
           ].map(([s, p]) => (
             <div
               key={s}
@@ -117,7 +118,7 @@ function ProfileScreen({ image }: { image?: string }) {
         </div>
 
         <div className="mt-3 flex h-8 items-center justify-center rounded-full bg-accent text-[12px] font-bold text-white">
-          Hemen rezerve et
+          {a.bookNow}
         </div>
       </div>
     </div>
@@ -125,7 +126,8 @@ function ProfileScreen({ image }: { image?: string }) {
 }
 
 /* ── Telefon ekranı: harita ── */
-function MapScreen() {
+function MapScreen({ dict }: { dict: Dictionary }) {
+  const a = dict.home.appDownload;
   return (
     <div className="relative h-full w-full bg-[#eef1f6]">
       {/* sahte yollar */}
@@ -152,8 +154,8 @@ function MapScreen() {
         </span>
       ))}
       <div className="absolute bottom-3 left-3 right-3 rounded-xl bg-white p-2 shadow-card">
-        <p className="text-[11px] font-bold text-ink">Yakınındaki 14 salon</p>
-        <p className="text-[10px] text-ink-mute">Haritada keşfet →</p>
+        <p className="text-[11px] font-bold text-ink">{interpolate(a.nearbyCount, { n: 14 })}</p>
+        <p className="text-[10px] text-ink-mute">{a.exploreMap}</p>
       </div>
     </div>
   );

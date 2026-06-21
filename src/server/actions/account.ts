@@ -2,11 +2,22 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { db } from "@/lib/db";
 import { getSession, createSession } from "@/lib/session";
 import { hashPassword, verifyPassword } from "@/lib/auth";
 import { todayStr } from "@/lib/datetime";
+import { rateLimit } from "@/lib/rate-limit";
+import { recomputeBusinessRating } from "@/lib/rating";
+import { getDictionary } from "@/i18n";
 import type { FormState } from "./auth";
+
+async function clientIp(): Promise<string> {
+  const h = await headers();
+  const xff = h.get("x-forwarded-for");
+  if (xff) return xff.split(",")[0].trim();
+  return h.get("x-real-ip") ?? "unknown";
+}
 
 export async function toggleFavoriteAction(businessId: string, slug: string) {
   const session = await getSession();
@@ -92,21 +103,66 @@ export async function createReviewAction(
     },
   });
 
-  const agg = await db.review.aggregate({
-    where: { businessId: appt.businessId },
-    _avg: { rating: true },
-    _count: true,
-  });
-  await db.business.update({
-    where: { id: appt.businessId },
-    data: {
-      ratingAvg: Math.round((agg._avg.rating ?? 0) * 10) / 10,
-      ratingCount: agg._count,
-    },
-  });
+  await recomputeBusinessRating(appt.businessId);
 
   revalidatePath("/hesap");
   revalidatePath(`/salon/${appt.business.slug}`);
+  return { ok: true };
+}
+
+/**
+ * Herkese açık yorum (Google tarzı — giriş gerektirmez). Girişliyse adı/hesabı
+ * kullanılır; değilse verilen ad ile anonim kaydedilir. Spam'i sınırlamak için
+ * IP başına saatte 3 yorum. (Sahte yorum riskine karşı admin yorumları silebilir.)
+ */
+export async function addPublicReviewAction(
+  _prev: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const slug = String(formData.get("slug") ?? "");
+  const rating = Number(formData.get("rating"));
+  const comment = String(formData.get("comment") ?? "").trim();
+  const nameInput = String(formData.get("name") ?? "").trim();
+
+  if (!Number.isInteger(rating) || rating < 1) {
+    const dict = await getDictionary();
+    return { error: dict.salon.selectRatingFirst };
+  }
+  if (rating > 5)
+    return { error: "Lütfen 1-5 arası bir puan seç." };
+  if (comment.length < 5)
+    return { error: "Lütfen deneyimini birkaç kelimeyle anlat." };
+
+  const business = await db.business.findUnique({ where: { slug }, select: { id: true } });
+  if (!business) return { error: "İşletme bulunamadı." };
+
+  const session = await getSession();
+  if (!session && nameInput.length < 2) return { error: "Lütfen adını gir." };
+
+  const ip = await clientIp();
+  if (!rateLimit(`review:${ip}`, 3, 60 * 60 * 1000).ok)
+    return { error: "Çok fazla yorum gönderdin. Lütfen biraz sonra tekrar dene." };
+
+  try {
+    await db.review.create({
+      data: {
+        businessId: business.id,
+        customerId: session?.userId ?? null,
+        authorName: session ? null : nameInput.slice(0, 60),
+        rating,
+        comment: comment.slice(0, 1000),
+      },
+    });
+
+    await recomputeBusinessRating(business.id);
+  } catch (e) {
+    console.error("addPublicReviewAction:", e);
+    return { error: "Yorum kaydedilemedi, lütfen tekrar dene." };
+  }
+
+  // Not: revalidatePath'i burada KULLANMIYORUZ — ağır salon sayfasını eşzamanlı
+  // yeniden render etmek "Gönderiliyor..."u uzatıyordu. Yeni yorum, modal
+  // kapanınca client tarafında router.refresh() ile anında görünür.
   return { ok: true };
 }
 

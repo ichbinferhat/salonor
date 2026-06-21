@@ -13,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { LocationList } from "./location-list";
+import { useDict } from "@/i18n/provider";
 
 export type SearchCategory = { slug: string; name: string; emoji: string };
 
@@ -33,6 +34,7 @@ export function SearchBar({
   className = "",
 }: Props) {
   const router = useRouter();
+  const dict = useDict();
 
   const [q, setQ] = useState(defaults.q ?? "");
   const [kategori, setKategori] = useState(defaults.kategori ?? "");
@@ -94,10 +96,11 @@ export function SearchBar({
   }, [picker]);
 
   const catName = kategori
-    ? categories.find((c) => c.slug === kategori)?.name ?? "Tüm hizmetler"
-    : "Tüm hizmetler";
+    ? categories.find((c) => c.slug === kategori)?.name ?? dict.search.allServices
+    : dict.search.allServices;
 
-  const locLabel = ilce && sehir ? `${ilce}, ${sehir}` : sehir || "Şehir & ilçe";
+  const locLabel =
+    ilce && sehir ? `${ilce}, ${sehir}` : sehir || dict.search.locationPlaceholder;
 
   function submit() {
     const params = new URLSearchParams();
@@ -127,13 +130,13 @@ export function SearchBar({
     <div className={`w-full ${className}`}>
       {/* ───────── Masaüstü: segmentli pill ───────── */}
       <div className="mx-auto hidden w-full max-w-3xl lg:block">
-        <div className="flex items-center rounded-full border border-line bg-surface p-2 shadow-pop">
+        <div className="flex items-center rounded-full border border-line bg-surface/90 p-2 shadow-pop ring-1 ring-inset ring-white/40 backdrop-blur-sm transition-shadow hover:shadow-card">
           <Segment
             buttonRef={typeBtnRef}
             active={panel === "type"}
             onClick={() => setPanel(panel === "type" ? null : "type")}
             icon={<Scissors className="size-5" />}
-            label="Tür"
+            label={dict.search.typeLabel}
             value={catName}
             chevron
             className="min-w-[152px]"
@@ -141,20 +144,20 @@ export function SearchBar({
 
           <Divider />
 
-          <label className="flex min-w-0 flex-1 cursor-text items-center gap-3 rounded-full px-4 py-2 transition-colors hover:bg-cream">
+          <label className="flex min-w-0 flex-1 cursor-text items-center gap-3 rounded-full px-4 py-2 transition-colors hover:bg-cream focus-within:bg-cream">
             <Search className="size-5 shrink-0 text-ink-soft" />
-            <span className="min-w-0 flex-1">
-              <span className="block text-[11px] font-bold uppercase tracking-wide text-ink-mute">
-                Salon adı
+            <span className="min-w-0 flex-1 text-left">
+              <span className="block text-left text-[11px] font-bold uppercase tracking-wide text-ink-mute">
+                {dict.search.salonNameLabel}
               </span>
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 onFocus={() => setPanel(null)}
                 onKeyDown={(e) => e.key === "Enter" && submit()}
-                placeholder="Salon, hizmet ara…"
-                className="w-full truncate bg-transparent text-[15px] font-semibold text-ink placeholder:font-medium placeholder:text-ink-mute focus:outline-none"
-                aria-label="Salon veya hizmet"
+                placeholder={dict.search.salonNamePlaceholder}
+                className="w-full truncate bg-transparent text-left text-[15px] font-semibold text-ink placeholder:font-medium placeholder:text-ink-mute focus:outline-none focus-visible:outline-none"
+                aria-label={dict.search.salonNameAria}
               />
             </span>
           </label>
@@ -166,7 +169,7 @@ export function SearchBar({
             active={panel === "loc"}
             onClick={() => setPanel(panel === "loc" ? null : "loc")}
             icon={<MapPin className="size-5" />}
-            label="Konum"
+            label={dict.search.locationLabel}
             value={locLabel}
             chevron
             className="min-w-[164px]"
@@ -175,10 +178,10 @@ export function SearchBar({
           <button
             type="button"
             onClick={submit}
-            className="ml-1.5 flex h-[52px] shrink-0 items-center gap-2 rounded-full bg-accent px-7 font-semibold text-white shadow-card transition-all hover:bg-accent-deep active:scale-[0.98]"
+            className="ml-1.5 flex h-[52px] shrink-0 items-center gap-2 rounded-full bg-gradient-to-r from-accent via-[#8b5cf6] to-[#ff5fa2] px-7 font-semibold text-white shadow-pop ring-1 ring-inset ring-white/20 transition-all hover:-translate-y-0.5 hover:shadow-pop active:translate-y-0 active:scale-[0.98]"
           >
             <Search className="size-5" />
-            Ara
+            {dict.search.searchButton}
           </button>
         </div>
       </div>
@@ -190,9 +193,9 @@ export function SearchBar({
           <div className="fixed inset-0 z-[70] hidden lg:block">
             <button
               type="button"
-              aria-label="Kapat"
+              aria-label={dict.search.close}
               onClick={() => setPanel(null)}
-              className="absolute inset-0 cursor-default bg-ink/20 backdrop-blur-[2px]"
+              className="absolute inset-0 cursor-default"
             />
             {anchor && (
               <div
@@ -233,7 +236,7 @@ export function SearchBar({
           <Scissors className="size-5 shrink-0 text-ink-soft" />
           <span className="min-w-0 flex-1">
             <span className="block text-[11px] font-bold uppercase tracking-wide text-ink-mute">
-              Tür
+              {dict.search.typeLabel}
             </span>
             <span className="block truncate text-[15px] font-semibold text-ink">
               {catName}
@@ -246,15 +249,15 @@ export function SearchBar({
           <Search className="size-5 shrink-0 text-ink-soft" />
           <span className="min-w-0 flex-1">
             <span className="block text-[11px] font-bold uppercase tracking-wide text-ink-mute">
-              Salon adı
+              {dict.search.salonNameLabel}
             </span>
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && submit()}
-              placeholder="Salon, hizmet ara…"
+              placeholder={dict.search.salonNamePlaceholder}
               className="w-full bg-transparent text-[15px] font-semibold text-ink placeholder:font-medium placeholder:text-ink-mute focus:outline-none"
-              aria-label="Salon veya hizmet"
+              aria-label={dict.search.salonNameAria}
             />
           </span>
         </label>
@@ -267,7 +270,7 @@ export function SearchBar({
           <MapPin className="size-5 shrink-0 text-ink-soft" />
           <span className="min-w-0 flex-1">
             <span className="block text-[11px] font-bold uppercase tracking-wide text-ink-mute">
-              Konum
+              {dict.search.locationLabel}
             </span>
             <span className="block truncate text-[15px] font-semibold text-ink">
               {locLabel}
@@ -283,7 +286,7 @@ export function SearchBar({
             className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-accent font-semibold text-white transition-all hover:bg-accent-deep active:scale-[0.99]"
           >
             <Search className="size-5" />
-            Ara
+            {dict.search.searchButton}
           </button>
         </div>
       </div>
@@ -300,13 +303,15 @@ export function SearchBar({
                 className="flex items-center gap-1.5 font-display text-lg font-bold text-ink"
               >
                 <ChevronLeft className="size-5" />
-                {picker === "type" ? "Hizmet türü" : "Konum"}
+                {picker === "type"
+                  ? dict.search.serviceTypeTitle
+                  : dict.search.locationLabel}
               </button>
               <button
                 type="button"
                 onClick={() => setPicker(null)}
                 className="flex size-10 items-center justify-center rounded-full text-ink transition-colors hover:bg-cream"
-                aria-label="Kapat"
+                aria-label={dict.search.close}
               >
                 <X className="size-5" />
               </button>
@@ -391,6 +396,7 @@ function CategoryList({
   value: string;
   onSelect: (slug: string) => void;
 }) {
+  const dict = useDict();
   return (
     <ul className="no-scrollbar overflow-y-auto px-1.5 pb-1.5 pt-1.5">
       <li>
@@ -402,7 +408,9 @@ function CategoryList({
           <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent-soft text-base">
             ✨
           </span>
-          <span className="flex-1 font-semibold text-ink">Tüm hizmetler</span>
+          <span className="flex-1 font-semibold text-ink">
+            {dict.search.allServices}
+          </span>
           {!value && <Check className="size-4 text-accent-deep" />}
         </button>
       </li>

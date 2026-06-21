@@ -50,14 +50,20 @@ model Business {
   name        String
   description String
   phone       String
+  whatsappPhone String? // İsteğe bağlı WhatsApp hattı; boşsa salon sayfasında `phone` kullanılır
   address     String
   district    String
   city        String
   lat         Float
   lng         Float
+  googlePlaceId String? // Google "yorum yaz" derin bağlantısı için (writereview?placeid=)
+  promoText   String?  // salon sayfasında öne çıkan kampanya/duyuru (ör. "Bu hafta saç boyamada %20 indirim")
+  promoUntil  String?  // YYYY-MM-DD; bu tarihe kadar gösterilir (boş = süresiz)
   coverImage  String
   featured    Boolean  @default(false)
   active      Boolean  @default(true)
+  plan        String   @default("baslangic") // baslangic | profesyonel | kurumsal
+  smsCredits  Int      @default(0)
   ratingAvg   Float    @default(0)
   ratingCount Int      @default(0)
   createdAt   DateTime @default(now())
@@ -75,6 +81,16 @@ model Business {
   appointments      Appointment[]
   reviews           Review[]
   favorites         Favorite[]
+  expenses          Expense[]
+  packages          Package[]
+  campaigns         Campaign[]
+  products          Product[]
+  sales             Sale[]
+  giftCards         GiftCard[]
+  loyaltyAccounts   LoyaltyAccount[]
+  debts             Debt[]
+  smsLogs           SmsLog[]
+  todos             TodoTask[]
 
   @@index([city])
   @@index([categoryId])
@@ -125,15 +141,16 @@ model Service {
 }
 
 model Staff {
-  id           String         @id @default(cuid())
-  businessId   String
-  business     Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  name         String
-  title        String
-  image        String
-  active       Boolean        @default(true)
-  services     StaffService[]
-  appointments Appointment[]
+  id            String         @id @default(cuid())
+  businessId    String
+  business      Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name          String
+  title         String
+  image         String
+  active        Boolean        @default(true)
+  commissionPct Int            @default(0)
+  services      StaffService[]
+  appointments  Appointment[]
 }
 
 model StaffService {
@@ -162,6 +179,8 @@ model Appointment {
   status       AppointmentStatus @default(CONFIRMED)
   totalTl      Int
   note         String?
+  reminderSentAt DateTime?       // hatırlatma gönderildiyse işaretlenir (çift gönderimi önler)
+  seenAt       DateTime?         // işletme sahibi yeni randevuyu gördü/onayladıysa işaretlenir (bildirim sayacı)
   createdAt    DateTime          @default(now())
   items        AppointmentItem[]
   review       Review?
@@ -169,6 +188,13 @@ model Appointment {
   @@index([businessId, date])
   @@index([staffId, date])
   @@index([customerId])
+  // ÇİFT REZERVASYON KORUMASI: aşağıdaki kısmi (partial) unique index DB seviyesinde
+  // canlıdır ve aynı personele aynı tarih+saatte ikinci aktif randevu yazılmasını engeller.
+  // Prisma şeması "partial unique index" ifade edemediği için raw SQL ile kurulur:
+  //   CREATE UNIQUE INDEX appt_no_double_book ON "Appointment" ("staffId", date, "startMin")
+  //     WHERE status IN ('CONFIRMED','COMPLETED');
+  // Yeniden kurmak için: `npx tsx prisma/ensure-indexes.ts`. `prisma db push` sonrası
+  // bu indeks düşerse mutlaka tekrar çalıştır — booking.ts atomik kontrolünün DB güvencesidir.
 }
 
 model AppointmentItem {
@@ -186,13 +212,16 @@ model Review {
   id            String       @id @default(cuid())
   businessId    String
   business      Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  customerId    String
-  customer      User         @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId    String?
+  customer      User?        @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  authorName    String?      // girişsiz (anonim) yorumlarda görünen ad
   appointmentId String?      @unique
   appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
   rating        Int
   comment       String
   reply         String?
+  hidden        Boolean      @default(false) // admin gizledi → vitrinde görünmez + puana sayılmaz
+  reported      Boolean      @default(false) // işletme sahibi şikayet etti → admin incelesin
   createdAt     DateTime     @default(now())
 
   @@index([businessId, createdAt])
@@ -206,4 +235,201 @@ model Favorite {
   createdAt  DateTime @default(now())
 
   @@id([userId, businessId])
+}
+
+model Expense {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  title      String
+  category   String   @default("Diğer")
+  amountTl   Int
+  date       String // YYYY-MM-DD (Europe/Istanbul)
+  note       String?
+  createdAt  DateTime @default(now())
+
+  @@index([businessId, date])
+}
+
+model Package {
+  id           String   @id @default(cuid())
+  businessId   String
+  business     Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name         String
+  description  String?
+  priceTl      Int
+  sessions     Int      @default(1)
+  validityDays Int      @default(30)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  @@index([businessId])
+}
+
+model Campaign {
+  id          String   @id @default(cuid())
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  code        String
+  description String?
+  discountPct Int
+  active      Boolean  @default(true)
+  expiresAt   String? // YYYY-MM-DD
+  usedCount   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([businessId])
+}
+
+model Product {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name       String
+  priceTl    Int
+  stock      Int      @default(0)
+  lowStockAt Int      @default(5)
+  createdAt  DateTime @default(now())
+
+  @@index([businessId])
+}
+
+model Sale {
+  id            String     @id @default(cuid())
+  businessId    String
+  business      Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customerName  String?
+  totalTl       Int
+  paymentMethod String     @default("Nakit")
+  date          String // YYYY-MM-DD (Europe/Istanbul)
+  createdAt     DateTime   @default(now())
+  items         SaleItem[]
+
+  @@index([businessId, date])
+}
+
+model SaleItem {
+  id      String @id @default(cuid())
+  saleId  String
+  sale    Sale   @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  name    String
+  kind    String @default("product") // service | product | other
+  qty     Int    @default(1)
+  priceTl Int
+}
+
+// Hediye Çeki Sistemi
+model GiftCard {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  code       String   @unique
+  amountTl   Int // başlangıç tutarı
+  balanceTl  Int // kalan bakiye
+  buyerName  String?
+  recipient  String? // alıcı / not
+  active     Boolean  @default(true)
+  expiresAt  String? // YYYY-MM-DD
+  createdAt  DateTime @default(now())
+
+  @@index([businessId])
+}
+
+// Para Puan (Sadakat) Sistemi — müşteri telefonuna göre
+model LoyaltyAccount {
+  id           String       @id @default(cuid())
+  businessId   String
+  business     Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customerName String
+  phone        String
+  points       Int          @default(0)
+  createdAt    DateTime     @default(now())
+  txns         LoyaltyTxn[]
+
+  @@unique([businessId, phone])
+  @@index([businessId])
+}
+
+model LoyaltyTxn {
+  id        String         @id @default(cuid())
+  accountId String
+  account   LoyaltyAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  delta     Int // + kazanım / - harcama
+  reason    String
+  createdAt DateTime       @default(now())
+
+  @@index([accountId])
+}
+
+// Borç / Taksitli Satış Takibi
+model Debt {
+  id           String        @id @default(cuid())
+  businessId   String
+  business     Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customerName String
+  phone        String?
+  totalTl      Int
+  paidTl       Int           @default(0)
+  installments Int           @default(1)
+  note         String?
+  date         String // YYYY-MM-DD
+  createdAt    DateTime      @default(now())
+  payments     DebtPayment[]
+
+  @@index([businessId])
+}
+
+model DebtPayment {
+  id        String   @id @default(cuid())
+  debtId    String
+  debt      Debt     @relation(fields: [debtId], references: [id], onDelete: Cascade)
+  amountTl  Int
+  method    String   @default("Nakit")
+  date      String // YYYY-MM-DD
+  createdAt DateTime @default(now())
+
+  @@index([debtId])
+}
+
+// İşletme iş birliği talepleri (/iletisim formundan gelir, admin panelinde görünür)
+model ContactRequest {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  message   String?
+  handled   Boolean  @default(false) // admin işledi/iletişime geçti mi
+  createdAt DateTime @default(now())
+
+  @@index([handled, createdAt])
+}
+
+// Yapılacaklar Listesi — işletmeye özel görev/hatırlatma takibi
+model TodoTask {
+  id          String    @id @default(cuid())
+  businessId  String
+  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  title       String
+  done        Boolean   @default(false)
+  priority    String    @default("normal") // dusuk | normal | yuksek
+  dueDate     String? // YYYY-MM-DD (Europe/Istanbul)
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([businessId, done])
+}
+
+// SMS gönderim kayıtları (kontör düşümü + geçmiş)
+model SmsLog {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  toPhone    String
+  body       String
+  kind       String   @default("manual") // manual | confirm | reminder | bulk
+  status     String   @default("queued") // queued | sent | failed | mock
+  credits    Int      @default(1)
+  createdAt  DateTime @default(now())
+
+  @@index([businessId, createdAt])
 }

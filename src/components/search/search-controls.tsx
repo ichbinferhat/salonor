@@ -1,19 +1,21 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
+import { useDict } from "@/i18n/provider";
 
 type Category = { slug: string; name: string; emoji: string };
-
-const SORTS: [string, string][] = [
-  ["", "Önerilen"],
-  ["puan", "En yüksek puan"],
-  ["yorum", "En çok yorum"],
-];
 
 /** /arama ikincil filtreler: kategori çipleri + sıralama (pill'ler). */
 export function SearchControls({ categories }: { categories: Category[] }) {
   const router = useRouter();
   const params = useSearchParams();
+  const dict = useDict();
+
+  const SORTS: [string, string][] = [
+    ["", dict.search.sortRecommended],
+    ["puan", dict.search.sortRating],
+    ["yorum", dict.search.sortReviews],
+  ];
 
   const kategori = params.get("kategori") ?? "";
   const sirala = params.get("sirala") ?? "";
@@ -28,15 +30,15 @@ export function SearchControls({ categories }: { categories: Category[] }) {
   const chip = (active: boolean) =>
     `flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition-all ${
       active
-        ? "border-ink bg-ink text-white"
-        : "border-line-strong bg-surface text-ink hover:border-ink/40"
+        ? "border-ink bg-ink text-white shadow-card"
+        : "border-line-strong bg-surface text-ink hover:-translate-y-0.5 hover:border-ink/40 hover:shadow-card"
     }`;
 
   return (
     <div className="space-y-3">
       <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
         <button className={chip(!kategori)} onClick={() => update("kategori", "")}>
-          Tümü
+          {dict.search.filterAll}
         </button>
         {categories.map((c) => (
           <button
@@ -50,7 +52,9 @@ export function SearchControls({ categories }: { categories: Category[] }) {
       </div>
 
       <div className="no-scrollbar -mx-4 flex items-center gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-        <span className="shrink-0 text-sm font-semibold text-ink-mute">Sırala:</span>
+        <span className="shrink-0 text-sm font-semibold text-ink-mute">
+          {dict.search.sortLabel}
+        </span>
         {SORTS.map(([val, label]) => {
           const active = sirala === val;
           return (

@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import { db } from "@/lib/db";
+import { getDictionary } from "@/i18n";
 import { getOwnerBusiness } from "@/lib/owner";
 import { ServicesManager } from "@/components/panel/services-manager";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDictionary();
+  return { title: dict.panelCatalog.services.title };
+}
 
 export default async function ServicesPage() {
   const business = (await getOwnerBusiness())!;

@@ -2,9 +2,13 @@
 
 import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
+import { useDict } from "@/i18n/provider";
+import { interpolate } from "@/i18n/interpolate";
 
 export function MiniMap({ lat, lng, name }: { lat: number; lng: number; name: string }) {
+  const dict = useDict();
   const ref = useRef<HTMLDivElement>(null);
+  const label = interpolate(dict.salon.mapAriaLabel, { name });
 
   useEffect(() => {
     if (!ref.current) return;
@@ -40,5 +44,13 @@ export function MiniMap({ lat, lng, name }: { lat: number; lng: number; name: st
     return () => map.remove();
   }, [lat, lng, name]);
 
-  return <div ref={ref} className="h-64 w-full overflow-hidden rounded-2xl border border-line" />;
+  return (
+    <div
+      ref={ref}
+      role="img"
+      aria-label={label}
+      title={label}
+      className="h-64 w-full overflow-hidden rounded-2xl border border-line"
+    />
+  );
 }

@@ -10,28 +10,31 @@ import {
 } from "@/server/actions/auth";
 import { Input, Label, FormError } from "@/components/ui/form";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { useDict } from "@/i18n/provider";
 
 export function LoginForm({ next }: { next?: string }) {
   const [state, action] = useActionState<FormState, FormData>(loginAction, undefined);
+  const dict = useDict();
+  const t = dict.auth;
   return (
     <form action={action} className="space-y-4">
       {next && <input type="hidden" name="next" value={next} />}
       <div>
-        <Label htmlFor="email">E-posta</Label>
-        <Input id="email" name="email" type="email" placeholder="ornek@eposta.com" required autoComplete="email" />
+        <Label htmlFor="email">{t.fields.email}</Label>
+        <Input id="email" name="email" type="email" placeholder={t.placeholders.email} required autoComplete="email" />
       </div>
       <div>
-        <Label htmlFor="password">Şifre</Label>
-        <Input id="password" name="password" type="password" placeholder="••••••••" required autoComplete="current-password" />
+        <Label htmlFor="password">{t.fields.password}</Label>
+        <Input id="password" name="password" type="password" placeholder={t.placeholders.password} required autoComplete="current-password" />
       </div>
       <FormError message={state?.error} />
-      <SubmitButton size="lg" className="w-full" pendingText="Giriş yapılıyor...">
-        Giriş yap
+      <SubmitButton size="lg" className="w-full" pendingText={t.loginForm.submitPending}>
+        {t.loginForm.submit}
       </SubmitButton>
       <p className="text-center text-sm text-ink-soft">
-        Hesabın yok mu?{" "}
+        {t.loginForm.noAccount}{" "}
         <Link href="/kayit" className="font-semibold text-accent-deep hover:underline">
-          Kayıt ol
+          {t.registerForm.submit}
         </Link>
       </p>
     </form>
@@ -40,33 +43,35 @@ export function LoginForm({ next }: { next?: string }) {
 
 export function RegisterForm({ next }: { next?: string }) {
   const [state, action] = useActionState<FormState, FormData>(registerAction, undefined);
+  const dict = useDict();
+  const t = dict.auth;
   return (
     <form action={action} className="space-y-4">
       {next && <input type="hidden" name="next" value={next} />}
       <div>
-        <Label htmlFor="name">Ad Soyad</Label>
-        <Input id="name" name="name" placeholder="Adınız Soyadınız" required autoComplete="name" />
+        <Label htmlFor="name">{t.fields.name}</Label>
+        <Input id="name" name="name" placeholder={t.placeholders.name} required autoComplete="name" />
       </div>
       <div>
-        <Label htmlFor="email">E-posta</Label>
-        <Input id="email" name="email" type="email" placeholder="ornek@eposta.com" required autoComplete="email" />
+        <Label htmlFor="email">{t.fields.email}</Label>
+        <Input id="email" name="email" type="email" placeholder={t.placeholders.email} required autoComplete="email" />
       </div>
       <div>
-        <Label htmlFor="phone">Telefon (isteğe bağlı)</Label>
-        <Input id="phone" name="phone" type="tel" placeholder="05xx xxx xx xx" autoComplete="tel" />
+        <Label htmlFor="phone">{t.fields.phoneOptional}</Label>
+        <Input id="phone" name="phone" type="tel" placeholder={t.placeholders.phone} autoComplete="tel" />
       </div>
       <div>
-        <Label htmlFor="password">Şifre</Label>
-        <Input id="password" name="password" type="password" placeholder="En az 6 karakter" required autoComplete="new-password" minLength={6} />
+        <Label htmlFor="password">{t.fields.password}</Label>
+        <Input id="password" name="password" type="password" placeholder={t.placeholders.passwordMin} required autoComplete="new-password" minLength={6} />
       </div>
       <FormError message={state?.error} />
-      <SubmitButton size="lg" className="w-full" pendingText="Hesap oluşturuluyor...">
-        Hesap oluştur
+      <SubmitButton size="lg" className="w-full" pendingText={t.registerForm.submitPending}>
+        {t.registerForm.submit}
       </SubmitButton>
       <p className="text-center text-sm text-ink-soft">
-        Zaten hesabın var mı?{" "}
+        {t.registerForm.haveAccount}{" "}
         <Link href="/giris" className="font-semibold text-accent-deep hover:underline">
-          Giriş yap
+          {t.registerForm.signIn}
         </Link>
       </p>
     </form>
@@ -78,26 +83,28 @@ export function BusinessRegisterForm() {
     registerBusinessAction,
     undefined
   );
+  const dict = useDict();
+  const t = dict.auth;
   return (
     <form action={action} className="space-y-4">
       <div>
-        <Label htmlFor="name">Ad Soyad</Label>
-        <Input id="name" name="name" placeholder="Adınız Soyadınız" required autoComplete="name" />
+        <Label htmlFor="name">{t.fields.name}</Label>
+        <Input id="name" name="name" placeholder={t.placeholders.name} required autoComplete="name" />
       </div>
       <div>
-        <Label htmlFor="email">İş e-postanız</Label>
-        <Input id="email" name="email" type="email" placeholder="salon@eposta.com" required autoComplete="email" />
+        <Label htmlFor="email">{t.fields.businessEmail}</Label>
+        <Input id="email" name="email" type="email" placeholder={t.placeholders.businessEmail} required autoComplete="email" />
       </div>
       <div>
-        <Label htmlFor="password">Şifre</Label>
-        <Input id="password" name="password" type="password" placeholder="En az 6 karakter" required autoComplete="new-password" minLength={6} />
+        <Label htmlFor="password">{t.fields.password}</Label>
+        <Input id="password" name="password" type="password" placeholder={t.placeholders.passwordMin} required autoComplete="new-password" minLength={6} />
       </div>
       <FormError message={state?.error} />
-      <SubmitButton variant="accent" size="lg" className="w-full" pendingText="Hesap oluşturuluyor...">
-        Devam et — işletmeni kur
+      <SubmitButton variant="accent" size="lg" className="w-full" pendingText={t.businessForm.submitPending}>
+        {t.businessForm.submit}
       </SubmitButton>
       <p className="text-center text-xs text-ink-mute">
-        Devam ederek Kullanım Şartları'nı kabul etmiş olursunuz.
+        {t.businessForm.termsNotice}
       </p>
     </form>
   );

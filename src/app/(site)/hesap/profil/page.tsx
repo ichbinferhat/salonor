@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/session";
+import { getDictionary } from "@/i18n";
 import { ProfileForm } from "@/components/account/profile-form";
 
-export const metadata: Metadata = { title: "Profilim" };
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDictionary();
+  return { title: dict.account.meta.profile };
+}
 
 export default async function ProfilePage() {
   const session = (await getSession())!;

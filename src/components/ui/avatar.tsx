@@ -34,7 +34,7 @@ export function Avatar({
   }
   return (
     <span
-      className={`${SIZES[size]} inline-flex shrink-0 items-center justify-center rounded-full bg-accent-soft font-bold text-accent-deep ${className}`}
+      className={`${SIZES[size]} inline-flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent-soft to-accent-faint font-bold text-accent-deep ring-1 ring-inset ring-accent/10 ${className}`}
       aria-hidden
     >
       {initials(name)}

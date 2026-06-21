@@ -1,26 +1,35 @@
 import type { Metadata } from "next";
 import { Mail, Headphones, Building2 } from "lucide-react";
 import { InfoPage, Section } from "@/components/legal/info-page";
+import { ContactForm } from "@/components/contact/contact-form";
+import { getDictionary } from "@/i18n";
 
-export const metadata: Metadata = { title: "İletişim" };
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDictionary();
+  return { title: dict.legal.contact.metaTitle };
+}
 
-export default function Page() {
+export default async function Page() {
+  const dict = await getDictionary();
+  const t = dict.legal.contact;
   return (
-    <InfoPage
-      title="İletişim"
-      intro="Bir sorun mu var, bir önerin mi? Sana yardımcı olmaktan memnuniyet duyarız."
-    >
+    <InfoPage title={t.title} intro={t.intro}>
+      <Section title={t.addBusinessTitle}>
+        <p className="mb-5">{t.addBusinessBody}</p>
+        <ContactForm />
+      </Section>
+
       <div className="grid gap-4 sm:grid-cols-3">
         {[
-          { icon: Headphones, title: "Müşteri desteği", value: "destek@salonor.com" },
-          { icon: Building2, title: "İşletme iş birliği", value: "isletme@salonor.com" },
-          { icon: Mail, title: "Basın & diğer", value: "merhaba@salonor.com" },
+          { icon: Headphones, title: t.cardSupportTitle, value: "destek@salonor.com" },
+          { icon: Building2, title: t.cardPartnerTitle, value: "isletme@salonor.com" },
+          { icon: Mail, title: t.cardPressTitle, value: "merhaba@salonor.com" },
         ].map((c) => (
           <div
             key={c.title}
-            className="rounded-2xl border border-line bg-surface p-5 shadow-card"
+            className="group rounded-2xl border border-line bg-surface p-5 shadow-card transition-all hover:-translate-y-0.5 hover:border-accent/30 hover:shadow-pop"
           >
-            <span className="inline-flex size-10 items-center justify-center rounded-xl bg-accent-soft text-accent-deep">
+            <span className="inline-flex size-10 items-center justify-center rounded-xl bg-accent-soft text-accent-deep transition-transform group-hover:scale-105">
               <c.icon className="size-5" />
             </span>
             <p className="mt-3 font-bold text-ink">{c.title}</p>
@@ -28,17 +37,14 @@ export default function Page() {
           </div>
         ))}
       </div>
-      <Section title="Çalışma saatleri">
-        <p>
-          Destek ekibimiz hafta içi 09:00–18:00 arası yazılı taleplere yanıt
-          verir. Genellikle aynı gün içinde dönüş yaparız.
-        </p>
+      <Section title={t.hoursTitle}>
+        <p>{t.hoursBody}</p>
       </Section>
-      <Section title="İşletme misin?">
+      <Section title={t.businessTitle}>
         <p>
-          Salonor Business ile tanışmak ve işletmeni eklemek için{" "}
-          <span className="font-semibold text-accent-deep">isletme@salonor.com</span>{" "}
-          adresine yazabilir veya kayıt sayfasından hemen başlayabilirsin.
+          {t.businessBodyBefore}
+          <span className="font-semibold text-accent-deep">isletme@salonor.com</span>
+          {t.businessBodyAfter}
         </p>
       </Section>
     </InfoPage>

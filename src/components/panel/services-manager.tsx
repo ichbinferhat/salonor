@@ -10,6 +10,8 @@ import {
   type ActionState,
 } from "@/server/actions/business";
 import { formatTl, formatDuration } from "@/lib/format";
+import { useDict } from "@/i18n/provider";
+import { interpolate } from "@/i18n/interpolate";
 import { PanelPageHeader } from "@/components/panel/page-header";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
@@ -26,6 +28,7 @@ type Svc = {
 type Cat = { id: string; name: string; services: Svc[] };
 
 export function ServicesManager({ categories }: { categories: Cat[] }) {
+  const t = useDict().panelCatalog.services;
   const [editing, setEditing] = useState<{ categoryId: string; service: Svc | null } | null>(null);
   const [addingCat, setAddingCat] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -35,19 +38,19 @@ export function ServicesManager({ categories }: { categories: Cat[] }) {
   return (
     <div>
       <PanelPageHeader
-        title="Hizmetler"
-        subtitle={`${total} hizmet · ${categories.length} bölüm`}
+        title={t.title}
+        subtitle={interpolate(t.subtitle, { count: total, sections: categories.length })}
         action={
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setAddingCat(true)}>
-              <Plus className="size-4" /> Bölüm
+              <Plus className="size-4" /> {t.addSection}
             </Button>
             {categories.length > 0 && (
               <Button
                 variant="accent"
                 onClick={() => setEditing({ categoryId: categories[0].id, service: null })}
               >
-                <Plus className="size-4" /> Hizmet ekle
+                <Plus className="size-4" /> {t.addService}
               </Button>
             )}
           </div>
@@ -59,12 +62,10 @@ export function ServicesManager({ categories }: { categories: Cat[] }) {
           <span className="flex size-14 items-center justify-center rounded-full bg-cream">
             <Scissors className="size-7 text-ink-mute" />
           </span>
-          <h2 className="mt-4 font-display text-xl font-bold text-ink">Henüz bölüm yok</h2>
-          <p className="mt-2 max-w-sm text-ink-soft">
-            Hizmetlerini gruplamak için önce bir bölüm oluştur (örn. "Kesim", "Renk").
-          </p>
+          <h2 className="mt-4 font-display text-xl font-bold text-ink">{t.emptyTitle}</h2>
+          <p className="mt-2 max-w-sm text-ink-soft">{t.emptyDesc}</p>
           <Button variant="accent" className="mt-5" onClick={() => setAddingCat(true)}>
-            <Plus className="size-4" /> İlk bölümü ekle
+            <Plus className="size-4" /> {t.addFirstSection}
           </Button>
         </div>
       ) : (
@@ -78,16 +79,17 @@ export function ServicesManager({ categories }: { categories: Cat[] }) {
                     onClick={() => setEditing({ categoryId: cat.id, service: null })}
                     className="flex items-center gap-1 text-sm font-semibold text-accent-deep hover:underline"
                   >
-                    <Plus className="size-3.5" /> Hizmet
+                    <Plus className="size-3.5" /> {t.addServiceShort}
                   </button>
                   {cat.services.length === 0 && (
                     <button
-                      onClick={() =>
-                        startTransition(() => deleteServiceCategoryAction(cat.id))
-                      }
+                      onClick={() => {
+                        if (confirm(interpolate(t.confirmDeleteSection, { name: cat.name })))
+                          startTransition(() => deleteServiceCategoryAction(cat.id));
+                      }}
                       disabled={isPending}
                       className="text-ink-mute transition-colors hover:text-rose"
-                      aria-label="Bölümü sil"
+                      aria-label={t.deleteSectionAria}
                     >
                       <Trash2 className="size-4" />
                     </button>
@@ -96,7 +98,7 @@ export function ServicesManager({ categories }: { categories: Cat[] }) {
               </div>
               {cat.services.length === 0 ? (
                 <p className="rounded-xl border border-dashed border-line bg-surface px-4 py-6 text-center text-sm text-ink-soft">
-                  Bu bölümde henüz hizmet yok.
+                  {t.emptySection}
                 </p>
               ) : (
                 <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface shadow-card">
@@ -105,7 +107,7 @@ export function ServicesManager({ categories }: { categories: Cat[] }) {
                       <div className="min-w-0">
                         <p className="font-semibold text-ink">{s.name}</p>
                         {s.description && (
-                          <p className="mt-0.5 truncate text-sm text-ink-soft">{s.description}</p>
+                          <p className="mt-0.5 line-clamp-2 text-sm text-ink-soft">{s.description}</p>
                         )}
                         <p className="mt-1 flex items-center gap-1 text-sm text-ink-mute">
                           <Clock className="size-3.5" /> {formatDuration(s.durationMin)}
@@ -116,15 +118,18 @@ export function ServicesManager({ categories }: { categories: Cat[] }) {
                         <button
                           onClick={() => setEditing({ categoryId: cat.id, service: s })}
                           className="rounded-lg p-2 text-ink-soft transition-colors hover:bg-cream hover:text-ink"
-                          aria-label="Düzenle"
+                          aria-label={t.editAria}
                         >
                           <Pencil className="size-4" />
                         </button>
                         <button
-                          onClick={() => startTransition(() => deleteServiceAction(s.id))}
+                          onClick={() => {
+                            if (confirm(interpolate(t.confirmDeleteService, { name: s.name })))
+                              startTransition(() => deleteServiceAction(s.id));
+                          }}
                           disabled={isPending}
                           className="rounded-lg p-2 text-ink-soft transition-colors hover:bg-rose-soft hover:text-rose"
-                          aria-label="Sil"
+                          aria-label={t.deleteAria}
                         >
                           <Trash2 className="size-4" />
                         </button>
@@ -162,17 +167,18 @@ function ServiceModal({
   service: Svc | null;
   onClose: () => void;
 }) {
+  const t = useDict().panelCatalog.services;
   const [state, action] = useActionState<ActionState, FormData>(saveServiceAction, undefined);
   useEffect(() => {
     if (state?.ok) onClose();
   }, [state, onClose]);
 
   return (
-    <Modal open onClose={onClose} title={service ? "Hizmeti düzenle" : "Yeni hizmet"}>
+    <Modal open onClose={onClose} title={service ? t.modalEditTitle : t.modalNewTitle}>
       <form action={action} className="space-y-4">
         {service && <input type="hidden" name="id" value={service.id} />}
         <div>
-          <Label htmlFor="sv-cat">Bölüm</Label>
+          <Label htmlFor="sv-cat">{t.sectionLabel}</Label>
           <select
             id="sv-cat"
             name="categoryId"
@@ -185,30 +191,37 @@ function ServiceModal({
           </select>
         </div>
         <div>
-          <Label htmlFor="sv-name">Hizmet adı</Label>
-          <Input id="sv-name" name="name" defaultValue={service?.name} required placeholder="Örn. Kadın Saç Kesimi" />
+          <Label htmlFor="sv-name">{t.nameLabel}</Label>
+          <Input id="sv-name" name="name" defaultValue={service?.name} required placeholder={t.namePlaceholder} />
         </div>
         <div>
-          <Label htmlFor="sv-desc">Açıklama (isteğe bağlı)</Label>
-          <Input id="sv-desc" name="description" defaultValue={service?.description ?? ""} placeholder="Kısa açıklama" />
+          <Label htmlFor="sv-desc">{t.descLabel}</Label>
+          <Textarea
+            id="sv-desc"
+            name="description"
+            rows={3}
+            maxLength={500}
+            defaultValue={service?.description ?? ""}
+            placeholder={t.descPlaceholder}
+          />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label htmlFor="sv-dur">Süre (dk)</Label>
+            <Label htmlFor="sv-dur">{t.durationLabel}</Label>
             <Input id="sv-dur" name="durationMin" type="number" min={5} step={5} defaultValue={service?.durationMin ?? 30} required />
           </div>
           <div>
-            <Label htmlFor="sv-price">Fiyat (₺)</Label>
+            <Label htmlFor="sv-price">{t.priceLabel}</Label>
             <Input id="sv-price" name="priceTl" type="number" min={0} step={10} defaultValue={service?.priceTl ?? 0} required />
           </div>
         </div>
         <FormError message={state?.error} />
         <div className="flex gap-2">
           <Button variant="outline" className="flex-1" type="button" onClick={onClose}>
-            Vazgeç
+            {t.cancel}
           </Button>
           <SubmitButton variant="accent" className="flex-1">
-            {service ? "Kaydet" : "Ekle"}
+            {service ? t.save : t.add}
           </SubmitButton>
         </div>
       </form>
@@ -217,24 +230,25 @@ function ServiceModal({
 }
 
 function CategoryModal({ onClose }: { onClose: () => void }) {
+  const t = useDict().panelCatalog.services;
   const [state, action] = useActionState<ActionState, FormData>(addServiceCategoryAction, undefined);
   useEffect(() => {
     if (state?.ok) onClose();
   }, [state, onClose]);
 
   return (
-    <Modal open onClose={onClose} title="Yeni bölüm" maxW="max-w-sm">
+    <Modal open onClose={onClose} title={t.categoryModalTitle} maxW="max-w-sm">
       <form action={action} className="space-y-4">
         <div>
-          <Label htmlFor="cat-name">Bölüm adı</Label>
-          <Input id="cat-name" name="name" required placeholder="Örn. Kesim & Şekillendirme" autoFocus />
+          <Label htmlFor="cat-name">{t.categoryNameLabel}</Label>
+          <Input id="cat-name" name="name" required placeholder={t.categoryNamePlaceholder} autoFocus />
         </div>
         <FormError message={state?.error} />
         <div className="flex gap-2">
           <Button variant="outline" className="flex-1" type="button" onClick={onClose}>
-            Vazgeç
+            {t.cancel}
           </Button>
-          <SubmitButton variant="accent" className="flex-1">Ekle</SubmitButton>
+          <SubmitButton variant="accent" className="flex-1">{t.add}</SubmitButton>
         </div>
       </form>
     </Modal>

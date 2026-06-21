@@ -27,7 +27,10 @@ export function Logo({
       aria-label="Salonor ana sayfa"
     >
       salonor
-      <span className="inline-block size-2 rounded-full bg-accent" aria-hidden />
+      <span
+        className="inline-block size-2 rounded-full bg-gradient-to-br from-accent to-[#ff5fa2] shadow-[0_0_10px_-1px_rgb(108_77_246_/_0.7)] ring-1 ring-white/40"
+        aria-hidden
+      />
     </Link>
   );
 }

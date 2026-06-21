@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Check, MapPin, Search } from "lucide-react";
 import { TURKEY_PROVINCES, normalizeTr } from "@/lib/turkey-geo";
+import { useDict } from "@/i18n/provider";
+import { interpolate } from "@/i18n/interpolate";
 
 type Value = { city: string; district: string };
 
@@ -14,6 +16,7 @@ export function LocationList({
   value: Value;
   onSelect: (city: string, district: string) => void;
 }) {
+  const dict = useDict();
   const [province, setProvince] = useState<string | null>(value.city || null);
   const [query, setQuery] = useState("");
 
@@ -41,7 +44,7 @@ export function LocationList({
         <SearchBox
           query={query}
           setQuery={setQuery}
-          placeholder="İl ara… (ör. İstanbul)"
+          placeholder={dict.search.provinceSearchPlaceholder}
         />
         <ul className="px-1.5 pb-1.5">
           <li>
@@ -53,7 +56,9 @@ export function LocationList({
               <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent-deep">
                 <MapPin className="size-4" />
               </span>
-              <span className="flex-1 font-semibold text-ink">Tüm Türkiye</span>
+              <span className="flex-1 font-semibold text-ink">
+                {dict.search.allTurkey}
+              </span>
               {!value.city && <Check className="size-4 text-accent-deep" />}
             </button>
           </li>
@@ -77,7 +82,9 @@ export function LocationList({
                   >
                     {p.name}
                   </span>
-                  <span className="text-xs text-ink-mute">{p.districts.length} ilçe</span>
+                  <span className="text-xs text-ink-mute">
+                    {interpolate(dict.search.districtCount, { n: p.districts.length })}
+                  </span>
                   <ChevronRight className="size-4 shrink-0 text-ink-mute" />
                 </button>
               </li>
@@ -100,7 +107,7 @@ export function LocationList({
             setQuery("");
           }}
           className="flex size-9 items-center justify-center rounded-full text-ink transition-colors hover:bg-cream"
-          aria-label="İllere dön"
+          aria-label={dict.search.backToProvinces}
         >
           <ChevronLeft className="size-5" />
         </button>
@@ -109,7 +116,7 @@ export function LocationList({
       <SearchBox
         query={query}
         setQuery={setQuery}
-        placeholder={`${province} içinde ilçe ara…`}
+        placeholder={interpolate(dict.search.districtSearchPlaceholder, { province })}
       />
       <ul className="px-1.5 pb-1.5">
         <li>
@@ -121,7 +128,9 @@ export function LocationList({
             <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent-deep">
               <MapPin className="size-4" />
             </span>
-            <span className="flex-1 font-semibold text-ink">Tüm {province}</span>
+            <span className="flex-1 font-semibold text-ink">
+              {interpolate(dict.search.allProvince, { province })}
+            </span>
             {value.city === province && !value.district && (
               <Check className="size-4 text-accent-deep" />
             )}
@@ -163,7 +172,7 @@ function SearchBox({
 }) {
   return (
     <div className="sticky top-0 z-10 bg-surface px-3 pb-2 pt-2">
-      <div className="flex items-center gap-2 rounded-full bg-cream px-3.5 py-2.5">
+      <div className="flex items-center gap-2 rounded-full bg-cream px-3.5 py-2.5 ring-1 ring-inset ring-line transition-shadow focus-within:bg-surface focus-within:ring-accent-soft focus-within:shadow-card">
         <Search className="size-4 shrink-0 text-ink-mute" />
         <input
           value={query}
@@ -178,7 +187,10 @@ function SearchBox({
 }
 
 function Empty() {
+  const dict = useDict();
   return (
-    <li className="px-3 py-8 text-center text-sm text-ink-mute">Sonuç bulunamadı</li>
+    <li className="px-3 py-8 text-center text-sm text-ink-mute">
+      {dict.search.noResults}
+    </li>
   );
 }

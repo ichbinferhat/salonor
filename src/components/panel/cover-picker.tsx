@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState, useTransition } from "react";
 import { Check } from "lucide-react";
 import { updateCoverAction } from "@/server/actions/business";
+import { useDict } from "@/i18n/provider";
 
 const PRESETS = [
   "1560066984-138dadb4c035",
@@ -17,6 +18,7 @@ const PRESETS = [
 ].map((id) => `https://images.unsplash.com/photo-${id}?q=80&w=1200&auto=format&fit=crop`);
 
 export function CoverPicker({ current }: { current: string }) {
+  const t = useDict().panelCatalog.cover;
   const [selected, setSelected] = useState(current);
   const [isPending, startTransition] = useTransition();
 
@@ -38,7 +40,7 @@ export function CoverPicker({ current }: { current: string }) {
               active ? "border-accent ring-2 ring-accent/30" : "border-transparent hover:border-ink/30"
             }`}
           >
-            <Image src={url} alt="Kapak seçeneği" fill sizes="200px" className="object-cover" />
+            <Image src={url} alt={t.optionAlt} fill sizes="200px" className="object-cover" />
             {active && (
               <span className="absolute inset-0 flex items-center justify-center bg-ink/30">
                 <span className="flex size-8 items-center justify-center rounded-full bg-accent text-white">

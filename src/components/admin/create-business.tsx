@@ -9,6 +9,8 @@ import {
 } from "@/server/actions/admin";
 import { Input, Label, FormError } from "@/components/ui/form";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { PLAN_LIST, planOptionLabel } from "@/lib/plans";
+import { useDict } from "@/i18n/provider";
 
 function genPassword() {
   return (
@@ -17,6 +19,7 @@ function genPassword() {
 }
 
 export function CreateBusiness() {
+  const dict = useDict();
   const [open, setOpen] = useState(false);
   const [pw, setPw] = useState("");
   const [state, action] = useActionState<CreateBizState, FormData>(
@@ -42,7 +45,7 @@ export function CreateBusiness() {
         onClick={() => setOpen(true)}
         className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-accent-deep active:scale-[0.98]"
       >
-        <Plus className="size-4" /> Yeni işletme oluştur
+        <Plus className="size-4" /> {dict.admin.createButton}
       </button>
 
       {open && (
@@ -50,12 +53,12 @@ export function CreateBusiness() {
           <div className="anim-rise max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-[28px] bg-surface p-6 shadow-pop sm:rounded-[28px]">
             <div className="mb-5 flex items-center justify-between">
               <h2 className="font-display text-xl font-bold text-ink">
-                {done ? "İşletme oluşturuldu" : "Yeni işletme oluştur"}
+                {done ? dict.admin.createdTitle : dict.admin.createTitle}
               </h2>
               <button
                 onClick={close}
                 className="flex size-9 items-center justify-center rounded-full text-ink transition-colors hover:bg-cream"
-                aria-label="Kapat"
+                aria-label={dict.admin.close}
               >
                 <X className="size-5" />
               </button>
@@ -66,13 +69,12 @@ export function CreateBusiness() {
                 <div className="flex items-center gap-2.5 rounded-2xl bg-mint-soft p-4 text-mint">
                   <CheckCircle2 className="size-5 shrink-0" />
                   <span className="text-sm font-semibold">
-                    İşletme vitrinde yayında. Sahibi aşağıdaki bilgilerle girip
-                    özelleştirebilir.
+                    {dict.admin.createdNote}
                   </span>
                 </div>
                 <div className="space-y-2 rounded-2xl border border-line bg-cream p-4 text-sm">
-                  <Row label="Giriş e-postası" value={state.email} />
-                  <Row label="Geçici şifre" value={state.password} />
+                  <Row label={dict.admin.loginEmail} value={state.email} />
+                  <Row label={dict.admin.tempPassword} value={state.password} />
                 </div>
                 <div className="flex gap-2">
                   <Link
@@ -80,32 +82,32 @@ export function CreateBusiness() {
                     target="_blank"
                     className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-line-strong bg-surface py-2.5 text-sm font-semibold text-ink hover:bg-cream"
                   >
-                    <ExternalLink className="size-4" /> Vitrini gör
+                    <ExternalLink className="size-4" /> {dict.admin.viewStorefront}
                   </Link>
                   <button
                     onClick={close}
                     className="flex-1 rounded-full bg-ink py-2.5 text-sm font-bold text-white hover:bg-ink-strong"
                   >
-                    Tamam
+                    {dict.admin.ok}
                   </button>
                 </div>
               </div>
             ) : (
               <form action={action} className="space-y-3.5">
                 <div>
-                  <Label htmlFor="cb-name">İşletme adı</Label>
-                  <Input id="cb-name" name="name" required placeholder="Glow Studio" />
+                  <Label htmlFor="cb-name">{dict.admin.nameLabel}</Label>
+                  <Input id="cb-name" name="name" required placeholder={dict.admin.namePlaceholder} />
                 </div>
                 <div>
-                  <Label htmlFor="cb-owner">Sahip adı (opsiyonel)</Label>
-                  <Input id="cb-owner" name="ownerName" placeholder="Ad Soyad" />
+                  <Label htmlFor="cb-owner">{dict.admin.ownerNameLabel}</Label>
+                  <Input id="cb-owner" name="ownerName" placeholder={dict.admin.ownerNamePlaceholder} />
                 </div>
                 <div>
-                  <Label htmlFor="cb-email">Giriş e-postası</Label>
-                  <Input id="cb-email" name="email" type="email" required placeholder="isletme@ornek.com" />
+                  <Label htmlFor="cb-email">{dict.admin.emailLabel}</Label>
+                  <Input id="cb-email" name="email" type="email" required placeholder={dict.admin.emailPlaceholder} />
                 </div>
                 <div>
-                  <Label htmlFor="cb-pw">Geçici şifre</Label>
+                  <Label htmlFor="cb-pw">{dict.admin.passwordLabel}</Label>
                   <Input
                     id="cb-pw"
                     name="password"
@@ -114,10 +116,25 @@ export function CreateBusiness() {
                     required
                   />
                 </div>
+                <div>
+                  <Label htmlFor="cb-plan">{dict.admin.planLabel}</Label>
+                  <select
+                    id="cb-plan"
+                    name="plan"
+                    defaultValue="baslangic"
+                    className="h-11 w-full rounded-xl border border-line-strong bg-surface px-4 text-sm text-ink focus:border-accent focus:outline-none"
+                  >
+                    {PLAN_LIST.map((p) => (
+                      <option key={p.key} value={p.key}>
+                        {planOptionLabel(p)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <FormError message={state && "error" in state ? state.error : undefined} />
-                <SubmitButton className="w-full">İşletmeyi oluştur</SubmitButton>
+                <SubmitButton className="w-full">{dict.admin.submit}</SubmitButton>
                 <p className="text-center text-xs text-ink-mute">
-                  İşletme, vitrinde (işletmeler) otomatik görünür.
+                  {dict.admin.createHint}
                 </p>
               </form>
             )}

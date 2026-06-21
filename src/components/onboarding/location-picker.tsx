@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import maplibregl, { type Map as MlMap, type Marker } from "maplibre-gl";
+import { useDict } from "@/i18n/provider";
 
 export const CITY_CENTERS: Record<string, [lng: number, lat: number]> = {
   İstanbul: [28.9784, 41.0082],
@@ -18,6 +19,7 @@ export function LocationPicker({
   lng: number;
   onChange: (lat: number, lng: number) => void;
 }) {
+  const t = useDict().onboarding;
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MlMap | null>(null);
   const markerRef = useRef<Marker | null>(null);
@@ -84,7 +86,7 @@ export function LocationPicker({
     <div className="overflow-hidden rounded-2xl border border-line">
       <div ref={containerRef} className="h-64 w-full" />
       <p className="bg-cream px-4 py-2 text-xs text-ink-soft">
-        Haritaya tıklayarak veya işaretçiyi sürükleyerek konumunu ayarla.
+        {t.mapHint}
       </p>
     </div>
   );

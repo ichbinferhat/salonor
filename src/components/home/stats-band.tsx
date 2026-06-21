@@ -1,5 +1,20 @@
+import { getDictionary } from "@/i18n";
+import { interpolate } from "@/i18n/interpolate";
+
+/** Tire öncesi lead cümleyi koyu/yarı-kalın gösterip alt başlığa premium kontrast katar. */
+function emphasizeLead(text: string) {
+  const i = text.indexOf("—");
+  if (i < 0) return text;
+  return (
+    <>
+      <span className="font-semibold text-ink">{text.slice(0, i).trimEnd()}</span>{" "}
+      {text.slice(i + 1).trim()}
+    </>
+  );
+}
+
 /** Büyük gradyan tipografili istatistik bandı (gerçek verilerle). */
-export function StatsBand({
+export async function StatsBand({
   bizCount,
   serviceCount,
   reviewCount,
@@ -8,30 +23,31 @@ export function StatsBand({
   serviceCount: number;
   reviewCount: number;
 }) {
+  const dict = await getDictionary();
+  const s = dict.home.stats;
   const stats: [string, string][] = [
-    [String(bizCount), "seçkin salon"],
-    ["81 il", "Türkiye genelinde"],
-    [`${reviewCount}+`, "doğrulanmış yorum"],
+    [String(bizCount), s.selectSalons],
+    [s.provincesNum, s.provincesLabel],
+    [`${reviewCount}+`, s.verifiedReviews],
   ];
   return (
     <section className="container-x py-20">
       <div className="mx-auto max-w-3xl text-center">
         <h2 className="font-display text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
-          Güzellik ve bakımda doğru adres
+          {s.heading}
         </h2>
-        <p className="mt-4 text-lg text-ink-soft">
-          Tek platform, tek uygulama — 81 ilden seçkin salonların ve uzmanların
-          buluştuğu yer.
+        <p className="mt-4 text-pretty text-lg leading-relaxed text-ink-soft">
+          {emphasizeLead(s.sub)}
         </p>
       </div>
 
       <p className="mt-12 text-center font-display text-[3.25rem] font-extrabold leading-[0.95] tracking-tight sm:text-7xl lg:text-8xl">
         <span className="bg-gradient-to-r from-accent via-[#8b5cf6] to-[#ff5fa2] bg-clip-text text-transparent">
-          Saniyeler içinde
+          {s.bigGradient}
         </span>
       </p>
       <p className="mt-3 text-center text-lg font-medium text-ink-soft">
-        randevu — ücretsiz ve 7/24
+        {s.bigSub}
       </p>
 
       <div className="mx-auto mt-14 grid max-w-4xl gap-10 sm:grid-cols-3">
@@ -46,7 +62,7 @@ export function StatsBand({
       </div>
 
       <p className="mt-12 text-center text-sm text-ink-mute">
-        {serviceCount}+ rezerve edilebilir hizmet · anında onay · güvenli ödeme
+        {interpolate(s.footnote, { n: serviceCount })}
       </p>
     </section>
   );

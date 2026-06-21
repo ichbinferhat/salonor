@@ -35,3 +35,22 @@ export function ratingLabel(avg: number): string {
   if (avg >= 3.5) return "İyi";
   return "Ortalama";
 }
+
+/**
+ * Puan etiketi için sözlük anahtarı bucket'ı (dile-duyarlı kullanım).
+ * Çağıran taraf dict.salon[key] ile yerelleştirilmiş metni alır.
+ */
+export type RatingLabelKey =
+  | "ratingExcellent"
+  | "ratingVeryGood"
+  | "ratingGood"
+  | "ratingAverage"
+  | "ratingPoor";
+
+export function ratingLabelKey(avg: number): RatingLabelKey {
+  if (avg >= 4.8) return "ratingExcellent";
+  if (avg >= 4.5) return "ratingVeryGood";
+  if (avg >= 4.0) return "ratingGood";
+  if (avg >= 3.5) return "ratingAverage";
+  return "ratingPoor";
+}

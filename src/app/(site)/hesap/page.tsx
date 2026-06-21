@@ -4,6 +4,9 @@ import Link from "next/link";
 import { CalendarX2 } from "lucide-react";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/session";
+import { getDictionary } from "@/i18n";
+import { interpolate } from "@/i18n/interpolate";
+import type { Dictionary } from "@/i18n/types";
 import { todayStr, formatDateTr, minToHHMM } from "@/lib/datetime";
 import { formatTl } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
@@ -13,23 +16,37 @@ import {
   ReviewButton,
 } from "@/components/account/appointment-actions";
 
-export const metadata: Metadata = { title: "Randevularım" };
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDictionary();
+  return { title: dict.account.meta.appointments };
+}
 
-const STATUS_BADGE = {
-  CONFIRMED: { tone: "mint", label: "Onaylandı" },
-  COMPLETED: { tone: "sea", label: "Tamamlandı" },
-  CANCELLED: { tone: "rose", label: "İptal edildi" },
-  NO_SHOW: { tone: "honey", label: "Gelinmedi" },
+const STATUS_TONE = {
+  CONFIRMED: "mint",
+  COMPLETED: "sea",
+  CANCELLED: "rose",
+  NO_SHOW: "honey",
 } as const;
+
+function statusLabel(dict: Dictionary, status: keyof typeof STATUS_TONE) {
+  const a = dict.account.appointments;
+  return {
+    CONFIRMED: a.statusConfirmed,
+    COMPLETED: a.statusCompleted,
+    CANCELLED: a.statusCancelled,
+    NO_SHOW: a.statusNoShow,
+  }[status];
+}
 
 export default async function AppointmentsPage() {
   const session = (await getSession())!;
+  const dict = await getDictionary();
   const today = todayStr();
 
   const appointments = await db.appointment.findMany({
     where: { customerId: session.userId },
     include: {
-      business: { select: { name: true, slug: true, coverImage: true, district: true, city: true } },
+      business: { select: { name: true, slug: true, coverImage: true, district: true, city: true, googlePlaceId: true } },
       staff: { select: { name: true } },
       items: { select: { name: true } },
       review: { select: { id: true } },
@@ -44,16 +61,17 @@ export default async function AppointmentsPage() {
 
   if (appointments.length === 0) {
     return (
-      <div className="flex flex-col items-center rounded-[24px] border border-dashed border-line-strong bg-surface px-6 py-20 text-center">
-        <span className="flex size-16 items-center justify-center rounded-full bg-cream">
+      <div className="relative isolate flex flex-col items-center overflow-hidden rounded-[28px] border border-dashed border-line-strong bg-gradient-to-b from-surface to-cream/40 px-6 py-20 text-center shadow-card">
+        <div className="pointer-events-none absolute -top-16 left-1/2 -z-10 size-48 -translate-x-1/2 rounded-full bg-accent-faint blur-3xl" />
+        <span className="flex size-16 items-center justify-center rounded-full bg-cream ring-1 ring-line shadow-card">
           <CalendarX2 className="size-8 text-ink-mute" />
         </span>
-        <h2 className="mt-5 font-display text-xl font-bold text-ink">Henüz randevun yok</h2>
+        <h2 className="mt-5 font-display text-xl font-bold text-balance text-ink">{dict.account.appointments.emptyTitle}</h2>
         <p className="mt-2 max-w-sm text-ink-soft">
-          Çevrendeki en iyi salonları keşfet ve ilk randevunu saniyeler içinde al.
+          {dict.account.appointments.emptyDesc}
         </p>
         <Button href="/arama" variant="accent" className="mt-6">
-          Salon keşfet
+          {dict.account.appointments.discoverSalons}
         </Button>
       </div>
     );
@@ -62,20 +80,21 @@ export default async function AppointmentsPage() {
   return (
     <div className="space-y-10">
       <section>
-        <h2 className="mb-4 font-display text-xl font-bold text-ink">
-          Yaklaşan randevular ({upcoming.length})
+        <h2 className="mb-4 flex items-center gap-2.5 font-display text-xl font-bold text-ink">
+          <span className="h-5 w-1 rounded-full bg-gradient-to-b from-accent to-[#ff5fa2]" />
+          {interpolate(dict.account.appointments.upcomingTitle, { n: upcoming.length })}
         </h2>
         {upcoming.length === 0 ? (
           <p className="rounded-2xl border border-line bg-surface p-5 text-ink-soft">
-            Yaklaşan randevun yok.{" "}
+            {dict.account.appointments.noUpcoming}{" "}
             <Link href="/arama" className="font-semibold text-accent-deep hover:underline">
-              Yeni randevu al →
+              {dict.account.appointments.newAppointment}
             </Link>
           </p>
         ) : (
           <ul className="space-y-4">
             {upcoming.map((a) => (
-              <AppointmentCard key={a.id} appt={a} upcoming />
+              <AppointmentCard key={a.id} appt={a} dict={dict} upcoming />
             ))}
           </ul>
         )}
@@ -83,10 +102,10 @@ export default async function AppointmentsPage() {
 
       {past.length > 0 && (
         <section>
-          <h2 className="mb-4 font-display text-xl font-bold text-ink">Geçmiş</h2>
+          <h2 className="mb-4 font-display text-xl font-bold text-ink">{dict.account.appointments.pastTitle}</h2>
           <ul className="space-y-4">
             {past.map((a) => (
-              <AppointmentCard key={a.id} appt={a} />
+              <AppointmentCard key={a.id} appt={a} dict={dict} />
             ))}
           </ul>
         </section>
@@ -102,7 +121,7 @@ type ApptWithRelations = Awaited<
 function getAppointmentsForType() {
   return db.appointment.findMany({
     include: {
-      business: { select: { name: true, slug: true, coverImage: true, district: true, city: true } },
+      business: { select: { name: true, slug: true, coverImage: true, district: true, city: true, googlePlaceId: true } },
       staff: { select: { name: true } },
       items: { select: { name: true } },
       review: { select: { id: true } },
@@ -112,14 +131,16 @@ function getAppointmentsForType() {
 
 function AppointmentCard({
   appt,
+  dict,
   upcoming = false,
 }: {
   appt: ApptWithRelations;
+  dict: Dictionary;
   upcoming?: boolean;
 }) {
-  const badge = STATUS_BADGE[appt.status];
+  const tone = STATUS_TONE[appt.status];
   return (
-    <li className="flex flex-col gap-4 rounded-[20px] border border-line bg-surface p-4 shadow-card sm:flex-row sm:items-center sm:p-5">
+    <li className="group flex flex-col gap-4 rounded-[20px] border border-line bg-surface p-4 shadow-card ring-1 ring-transparent transition-all hover:-translate-y-0.5 hover:shadow-pop hover:ring-accent-faint sm:flex-row sm:items-center sm:p-5">
       <Link
         href={`/salon/${appt.business.slug}`}
         className="relative h-24 w-full shrink-0 overflow-hidden rounded-2xl sm:size-24"
@@ -129,7 +150,7 @@ function AppointmentCard({
           alt={appt.business.name}
           fill
           sizes="(max-width: 640px) 100vw, 96px"
-          className="object-cover"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
       </Link>
       <div className="min-w-0 flex-1">
@@ -140,26 +161,31 @@ function AppointmentCard({
           >
             {appt.business.name}
           </Link>
-          <Badge tone={badge.tone}>{badge.label}</Badge>
+          <Badge tone={tone}>{statusLabel(dict, appt.status)}</Badge>
         </div>
         <p className="mt-1 text-sm font-semibold text-ink">
           {formatDateTr(appt.date)} · {minToHHMM(appt.startMin)} – {minToHHMM(appt.endMin)}
         </p>
         <p className="mt-0.5 truncate text-sm text-ink-soft">
-          {appt.items.map((i) => i.name).join(" + ")} · {appt.staff.name} ile
+          {appt.items.map((i) => i.name).join(" + ")} · {interpolate(dict.account.appointments.withStaff, { name: appt.staff.name })}
         </p>
         <p className="mt-1 text-xs text-ink-mute">
-          Kod: {appt.code} · {formatTl(appt.totalTl)}
+          {interpolate(dict.account.appointments.codeAndTotal, { code: appt.code, total: formatTl(appt.totalTl) })}
         </p>
       </div>
       <div className="flex shrink-0 flex-wrap items-center gap-2">
         {upcoming && <CancelButton appointmentId={appt.id} />}
-        {appt.status === "COMPLETED" && !appt.review && (
-          <ReviewButton appointmentId={appt.id} businessName={appt.business.name} />
+        {appt.status === "COMPLETED" && (
+          <ReviewButton
+            appointmentId={appt.id}
+            businessName={appt.business.name}
+            googlePlaceId={appt.business.googlePlaceId}
+            alreadyReviewed={!!appt.review}
+          />
         )}
         {!upcoming && (
           <Button href={`/randevu/${appt.business.slug}`} variant="outline" size="sm">
-            Tekrar al
+            {dict.account.appointments.rebook}
           </Button>
         )}
       </div>

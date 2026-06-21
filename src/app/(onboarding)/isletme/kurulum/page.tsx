@@ -2,16 +2,20 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/session";
+import { getDictionary } from "@/i18n";
 import { OnboardingWizard } from "@/components/onboarding/wizard";
 
-export const metadata: Metadata = { title: "İşletme kurulumu" };
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDictionary();
+  return { title: dict.onboarding.metaTitle };
+}
 
 // Sıralı bir kategori listesi
 const ORDER = ["kuafor", "berber", "tirnak", "cilt-bakimi", "spa-masaj", "makyaj", "epilasyon", "kas-kirpik"];
 
 export default async function OnboardingPage() {
   const session = await getSession();
-  if (!session) redirect("/isletme/kayit");
+  if (!session) redirect("/giris");
   if (session.role !== "OWNER") redirect("/");
 
   const existing = await db.business.findUnique({

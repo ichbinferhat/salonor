@@ -8,7 +8,7 @@ const VARIANTS: Record<Variant, string> = {
   primary:
     "bg-ink text-white hover:bg-ink-strong active:scale-[0.98] border border-transparent",
   accent:
-    "bg-accent text-white hover:bg-accent-deep active:scale-[0.98] border border-transparent",
+    "bg-gradient-to-r from-accent via-[#8b5cf6] to-[#ff5fa2] text-white shadow-[0_8px_24px_-10px_rgba(108,77,246,0.7)] hover:shadow-[0_12px_30px_-10px_rgba(255,95,162,0.6)] hover:-translate-y-0.5 active:scale-[0.98] active:translate-y-0 border border-transparent",
   outline:
     "bg-surface text-ink border border-line-strong hover:border-ink/40 hover:bg-cream",
   ghost: "bg-transparent text-ink hover:bg-ink/5 border border-transparent",
@@ -25,7 +25,7 @@ const SIZES: Record<Size, string> = {
 };
 
 const BASE =
-  "inline-flex items-center justify-center rounded-full font-semibold transition-all duration-150 select-none disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap";
+  "inline-flex items-center justify-center rounded-full font-semibold tracking-[-0.01em] transition-all duration-200 ease-out select-none disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap";
 
 type ButtonProps = {
   variant?: Variant;

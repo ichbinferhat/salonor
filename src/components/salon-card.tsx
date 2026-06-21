@@ -1,7 +1,10 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { Star } from "lucide-react";
 import { FavoriteIcon } from "@/components/salon/favorite-icon";
+import { useDict } from "@/i18n/provider";
 
 export type SalonCardData = {
   id: string;
@@ -20,14 +23,17 @@ export function SalonCard({
   salon,
   className = "",
   priority = false,
+  initialFavorite = false,
 }: {
   salon: SalonCardData;
   className?: string;
   priority?: boolean;
+  initialFavorite?: boolean;
 }) {
+  const dict = useDict();
   return (
     <Link href={`/salon/${salon.slug}`} className={`group block ${className}`}>
-      <div className="relative aspect-[5/4] overflow-hidden rounded-[20px] bg-cream">
+      <div className="relative aspect-[5/4] overflow-hidden rounded-[20px] bg-cream shadow-card ring-1 ring-ink/[0.04] transition-all duration-300 group-hover:shadow-pop">
         <Image
           src={salon.coverImage}
           alt={salon.name}
@@ -42,11 +48,11 @@ export function SalonCard({
         />
         {salon.featured && (
           <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-ink shadow-card backdrop-blur-sm">
-            Öne çıkan
+            {dict.salon.featured}
           </span>
         )}
         <span className="absolute right-3 top-3">
-          <FavoriteIcon businessId={salon.id} slug={salon.slug} />
+          <FavoriteIcon businessId={salon.id} slug={salon.slug} initial={initialFavorite} />
         </span>
       </div>
 
@@ -55,7 +61,7 @@ export function SalonCard({
           <h3 className="truncate font-display text-[16px] font-bold text-ink transition-colors group-hover:text-accent-deep">
             {salon.name}
           </h3>
-          <span className="flex shrink-0 items-center gap-1 text-sm font-bold text-ink">
+          <span className="flex shrink-0 items-center gap-1 rounded-full bg-cream px-2 py-0.5 text-sm font-bold text-ink ring-1 ring-inset ring-line">
             <Star className="size-3.5 fill-gold text-gold" />
             {salon.ratingAvg.toFixed(1)}
           </span>
@@ -64,7 +70,7 @@ export function SalonCard({
           {salon.district}, {salon.city}
         </p>
         <p className="mt-0.5 truncate text-[13px] text-ink-mute">
-          {salon.category.name} · {salon.ratingCount} değerlendirme
+          {salon.category.name} · {salon.ratingCount} {dict.salon.reviewWord}
         </p>
       </div>
     </Link>

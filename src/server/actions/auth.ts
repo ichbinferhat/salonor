@@ -1,22 +1,42 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { db } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/auth";
-import { createSession, destroySession } from "@/lib/session";
+import { createSession, destroySession, getSession } from "@/lib/session";
+import { rateLimit } from "@/lib/rate-limit";
+import { getDictionary } from "@/i18n";
 
 export type FormState = { error?: string; ok?: boolean } | undefined;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+async function clientIp(): Promise<string> {
+  const h = await headers();
+  const xff = h.get("x-forwarded-for");
+  if (xff) return xff.split(",")[0].trim();
+  return h.get("x-real-ip") ?? "unknown";
+}
+
 function safeNext(raw: FormDataEntryValue | null, fallback: string) {
   const v = typeof raw === "string" ? raw : "";
-  return v.startsWith("/") && !v.startsWith("//") ? v : fallback;
+  // Must start with "/" and the next char must not be "/" or "\" — browsers
+  // normalize backslashes to "/", so "/\evil.com" would become the
+  // protocol-relative "//evil.com" (open redirect). Reject those.
+  return /^\/(?![/\\])/.test(v) ? v : fallback;
 }
 
 export async function loginAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
+
+  // Kaba kuvvet (brute-force) şifre denemelerini sınırla: IP başına 10 dk'da 10 deneme.
+  const ip = await clientIp();
+  if (!rateLimit(`login:${ip}`, 10, 10 * 60 * 1000).ok) {
+    const dict = await getDictionary();
+    return { error: dict.auth.loginForm.tooManyAttempts };
+  }
 
   if (!EMAIL_RE.test(email) || password.length < 6) {
     return { error: "E-posta veya şifre hatalı." };
@@ -29,11 +49,19 @@ export async function loginAction(_prev: FormState, formData: FormData): Promise
 
   await createSession({ userId: user.id, role: user.role, name: user.name });
 
-  const fallback = user.role === "OWNER" ? "/panel" : "/";
+  const fallback =
+    user.role === "OWNER" ? "/panel" : user.role === "ADMIN" ? "/admin" : "/";
   redirect(safeNext(formData.get("next"), fallback));
 }
 
 export async function registerAction(_prev: FormState, formData: FormData): Promise<FormState> {
+  // Kayıt suistimali koruması: IP başına saatte 8 kayıt (inline kayıtla aynı kova).
+  const ip = await clientIp();
+  if (!rateLimit(`register:${ip}`, 8, 60 * 60 * 1000).ok) {
+    const dict = await getDictionary();
+    return { error: dict.auth.loginForm.tooManyAttempts };
+  }
+
   const name = String(formData.get("name") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
@@ -65,6 +93,13 @@ export async function registerBusinessAction(
   _prev: FormState,
   formData: FormData
 ): Promise<FormState> {
+  // Kayıt suistimali koruması: IP başına saatte 8 kayıt (diğer kayıt yollarıyla aynı kova).
+  const ip = await clientIp();
+  if (!rateLimit(`register:${ip}`, 8, 60 * 60 * 1000).ok) {
+    const dict = await getDictionary();
+    return { error: dict.auth.loginForm.tooManyAttempts };
+  }
+
   const name = String(formData.get("name") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
@@ -85,6 +120,12 @@ export async function registerBusinessAction(
 }
 
 export async function logoutAction() {
+  // İşletme/yönetici çıkışını, DB sorgusu yapmayan hafif /giris sayfasına
+  // yönlendir (ana sayfa 7 DB sorgusu çalıştırdığı için yavaştı). Müşteri
+  // çıkışı ana sayfaya gider.
+  const session = await getSession();
+  const dest =
+    session && (session.role === "OWNER" || session.role === "ADMIN") ? "/giris" : "/";
   await destroySession();
-  redirect("/");
+  redirect(dest);
 }

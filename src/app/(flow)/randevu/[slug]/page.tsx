@@ -2,10 +2,14 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/session";
+import { getDictionary } from "@/i18n";
 import { todayStr, addDaysStr, weekdayOf } from "@/lib/datetime";
 import { BookingWizard } from "@/components/booking/wizard";
 
-export const metadata: Metadata = { title: "Randevu al" };
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDictionary();
+  return { title: dict.booking.metaTitle };
+}
 
 export default async function BookingPage(props: {
   params: Promise<{ slug: string }>;

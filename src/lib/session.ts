@@ -9,7 +9,15 @@ export type SessionRole = "CUSTOMER" | "OWNER" | "ADMIN";
 export type Session = { userId: string; role: SessionRole; name: string };
 
 function secretKey() {
-  return new TextEncoder().encode(process.env.AUTH_SECRET!);
+  const secret = process.env.AUTH_SECRET;
+  // Fail-fast: tanımsızsa sessizce "undefined" string'iyle (zayıf, tahmin edilebilir
+  // anahtar) imzalama/doğrulama yapmak yerine açık hata ver.
+  if (!secret) {
+    throw new Error(
+      "AUTH_SECRET ortam değişkeni tanımlı değil — oturum imzalama/doğrulama yapılamaz."
+    );
+  }
+  return new TextEncoder().encode(secret);
 }
 
 export async function createSession(session: Session) {
@@ -36,7 +44,9 @@ export const getSession = cache(async (): Promise<Session | null> => {
   const token = (await cookies()).get(COOKIE_NAME)?.value;
   if (!token) return null;
   try {
-    const { payload } = await jwtVerify(token, secretKey());
+    // algorithms pin: yalnızca HS256 kabul et (algoritma karışıklığı/"alg" değişim
+    // saldırılarına karşı savunma-derinliği).
+    const { payload } = await jwtVerify(token, secretKey(), { algorithms: ["HS256"] });
     return {
       userId: payload.userId as string,
       role: payload.role as SessionRole,

@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
-/** /panel ve /hesap rotalarını oturum kontrolüyle korur (Next 16 proxy). */
+/** /panel, /hesap ve /admin rotalarını oturum/rol kontrolüyle korur (Next 16 proxy). */
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get("salonor_session")?.value;
@@ -11,7 +11,8 @@ export async function proxy(request: NextRequest) {
     try {
       const { payload } = await jwtVerify(
         token,
-        new TextEncoder().encode(process.env.AUTH_SECRET!)
+        new TextEncoder().encode(process.env.AUTH_SECRET!),
+        { algorithms: ["HS256"] } // yalnızca HS256 — algoritma karışıklığına karşı
       );
       role = (payload.role as string) ?? null;
     } catch {
@@ -29,9 +30,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
+  if (pathname.startsWith("/admin") && role !== "ADMIN") {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/panel/:path*", "/hesap/:path*"],
+  matcher: ["/panel/:path*", "/hesap/:path*", "/admin/:path*"],
 };

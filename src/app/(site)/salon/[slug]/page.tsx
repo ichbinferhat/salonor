@@ -8,11 +8,15 @@ import {
   Clock,
   CalendarCheck2,
   Navigation,
+  MessageCircle,
 } from "lucide-react";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/session";
-import { todayStr, nowMinutes, weekdayOf, minToHHMM, WEEKDAYS_TR } from "@/lib/datetime";
-import { formatTl, formatDuration, timeAgoTr, ratingLabel } from "@/lib/format";
+import { getDictionary, getLocale } from "@/i18n";
+import { interpolate } from "@/i18n/interpolate";
+import { waChatLink } from "@/lib/contact";
+import { todayStr, nowMinutes, weekdayOf, minToHHMM, weekdayName, relativeTime } from "@/lib/datetime";
+import { formatTl, formatDuration, ratingLabelKey } from "@/lib/format";
 import { Gallery } from "@/components/salon/gallery";
 import { FavoriteButton } from "@/components/salon/favorite-button";
 import { MiniMap } from "@/components/salon/mini-map";
@@ -20,24 +24,49 @@ import { RatingStars } from "@/components/ui/rating-stars";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PublicReviewButton } from "@/components/salon/review-form";
+
+const SCHEMA_DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 export async function generateMetadata(props: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await props.params;
-  const business = await db.business.findUnique({
-    where: { slug },
-    select: { name: true, district: true, city: true },
-  });
-  if (!business) return { title: "Salon bulunamadı" };
+  const [business, dict, locale] = await Promise.all([
+    db.business.findUnique({
+      where: { slug },
+      select: { name: true, district: true, city: true, description: true, coverImage: true },
+    }),
+    getDictionary(),
+    getLocale(),
+  ]);
+  if (!business) return { title: dict.salon.notFoundTitle };
+  const title = `${business.name} — ${business.district}, ${business.city}`;
+  const description =
+    business.description?.trim() ||
+    interpolate(dict.salon.metaDescriptionFallback, { name: business.name });
+  const OG_LOCALE: Record<string, string> = {
+    tr: "tr_TR", en: "en_US", ru: "ru_RU", ar: "ar_SA",
+    de: "de_DE", fr: "fr_FR", fa: "fa_IR", es: "es_ES",
+  };
   return {
-    title: `${business.name} — ${business.district}, ${business.city}`,
-    description: `${business.name} için fiyatları görüntüle, yorumları oku ve online randevu al.`,
+    title,
+    description,
+    alternates: { canonical: `/salon/${slug}` },
+    openGraph: {
+      type: "website",
+      locale: OG_LOCALE[locale] ?? "tr_TR",
+      title,
+      description,
+      images: [{ url: business.coverImage, width: 1200, height: 630, alt: business.name }],
+    },
+    twitter: { card: "summary_large_image", title, description, images: [business.coverImage] },
   };
 }
 
 export default async function SalonPage(props: { params: Promise<{ slug: string }> }) {
   const { slug } = await props.params;
+  const [dict, locale] = await Promise.all([getDictionary(), getLocale()]);
 
   const [business, session] = await Promise.all([
     db.business.findUnique({
@@ -52,6 +81,7 @@ export default async function SalonPage(props: { params: Promise<{ slug: string 
         staff: { where: { active: true } },
         hours: { orderBy: { weekday: "asc" } },
         reviews: {
+          where: { hidden: false },
           orderBy: { createdAt: "desc" },
           take: 12,
           include: { customer: { select: { name: true, image: true } } },
@@ -75,27 +105,76 @@ export default async function SalonPage(props: { params: Promise<{ slug: string 
       : Promise.resolve(false),
     db.review.groupBy({
       by: ["rating"],
-      where: { businessId: business.id },
+      where: { businessId: business.id, hidden: false },
       _count: true,
     }),
   ]);
 
   const distMap = new Map(ratingDist.map((d) => [d.rating, d._count]));
-  const totalReviews = business.ratingCount || 1;
+  const totalReviews = ratingDist.reduce((s, d) => s + d._count, 0) || 1;
+  const galleryImages = business.images.length
+    ? business.images.map((i) => i.url)
+    : [business.coverImage];
 
   const today = todayStr();
+  const promoActive =
+    !!business.promoText && (!business.promoUntil || business.promoUntil >= today);
   const todayHours = business.hours.find((h) => h.weekday === weekdayOf(today));
   const now = nowMinutes();
   const isOpen =
     !!todayHours && !todayHours.closed && now >= todayHours.openMin && now < todayHours.closeMin;
 
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${business.lat},${business.lng}`;
+  const waHref = waChatLink(
+    business.whatsappPhone || business.phone,
+    interpolate(dict.salon.whatsappGreeting, { name: business.name })
+  );
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "HealthAndBeautyBusiness",
+    name: business.name,
+    image: business.coverImage,
+    description: business.description,
+    url: `https://salonor.vercel.app/salon/${business.slug}`,
+    telephone: business.phone || undefined,
+    priceRange: "₺₺",
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: business.address || undefined,
+      addressLocality: business.district,
+      addressRegion: business.city,
+      addressCountry: "TR",
+    },
+    geo: { "@type": "GeoCoordinates", latitude: business.lat, longitude: business.lng },
+    ...(business.ratingCount > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: business.ratingAvg.toFixed(1),
+            reviewCount: business.ratingCount,
+          },
+        }
+      : {}),
+    openingHoursSpecification: business.hours
+      .filter((h) => !h.closed)
+      .map((h) => ({
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: SCHEMA_DAYS[h.weekday],
+        opens: minToHHMM(h.openMin),
+        closes: minToHHMM(h.closeMin),
+      })),
+  };
 
   return (
     <div className="container-x py-6 pb-28 lg:pb-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+      />
       {/* Breadcrumb */}
-      <nav className="mb-4 flex items-center gap-1.5 text-sm text-ink-soft" aria-label="Sayfa yolu">
-        <Link href="/" className="hover:text-ink">Ana sayfa</Link>
+      <nav className="mb-4 flex items-center gap-1.5 text-sm text-ink-soft" aria-label={dict.salon.breadcrumbLabel}>
+        <Link href="/" className="hover:text-ink">{dict.salon.home}</Link>
         <ChevronRight className="size-3.5" />
         <Link href={`/arama?kategori=${business.category.slug}`} className="hover:text-ink">
           {business.category.name}
@@ -103,6 +182,14 @@ export default async function SalonPage(props: { params: Promise<{ slug: string 
         <ChevronRight className="size-3.5" />
         <span className="font-semibold text-ink">{business.name}</span>
       </nav>
+
+      {/* Öne çıkan kampanya / duyuru */}
+      {promoActive && (
+        <div className="anim-rise mb-5 flex items-center gap-3 rounded-2xl border border-accent/30 bg-gradient-to-r from-accent-soft to-[#ffe4f3] px-4 py-3 shadow-card sm:px-5">
+          <span className="text-xl" aria-hidden>📣</span>
+          <p className="text-sm font-bold text-accent-deep sm:text-[15px]">{business.promoText}</p>
+        </div>
+      )}
 
       {/* Başlık */}
       <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
@@ -115,7 +202,7 @@ export default async function SalonPage(props: { params: Promise<{ slug: string 
               <strong className="text-base">{business.ratingAvg.toFixed(1)}</strong>
               <RatingStars value={business.ratingAvg} size="sm" />
               <a href="#yorumlar" className="text-ink-soft underline-offset-2 hover:underline">
-                ({business.ratingCount} yorum)
+                {interpolate(dict.salon.reviewsCountInline, { n: business.ratingCount })}
               </a>
             </span>
             <span className="flex items-center gap-1 text-ink-soft">
@@ -123,33 +210,34 @@ export default async function SalonPage(props: { params: Promise<{ slug: string 
               {business.address}, {business.district}, {business.city}
             </span>
             {isOpen ? (
-              <Badge tone="mint">Şu an açık</Badge>
+              <Badge tone="mint">{dict.salon.openNow}</Badge>
             ) : (
-              <Badge tone="rose">Şu an kapalı</Badge>
+              <Badge tone="rose">{dict.salon.closedNow}</Badge>
             )}
           </div>
         </div>
         <FavoriteButton businessId={business.id} slug={business.slug} initial={isFavorite} />
       </div>
 
-      <Gallery images={business.images.map((i) => i.url)} name={business.name} />
+      <Gallery images={galleryImages} name={business.name} />
 
       <div className="mt-10 grid items-start gap-10 lg:grid-cols-[1fr_360px]">
         <div className="min-w-0 space-y-12">
           {/* Hizmetler */}
           <section id="hizmetler">
             <h2 className="mb-5 font-display text-2xl font-bold tracking-tight text-ink">
-              Hizmetler
+              {dict.salon.servicesTitle}
             </h2>
             <div className="space-y-8">
               {business.serviceCategories.map((sc) => (
                 <div key={sc.id}>
-                  <h3 className="mb-3 text-sm font-bold uppercase tracking-widest text-ink-mute">
+                  <h3 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-ink-mute">
+                    <span className="h-px w-5 bg-gradient-to-r from-accent to-transparent" aria-hidden />
                     {sc.name}
                   </h3>
                   <ul className="divide-y divide-line overflow-hidden rounded-[20px] border border-line bg-surface shadow-card">
                     {sc.services.map((s) => (
-                      <li key={s.id} className="flex items-center justify-between gap-4 p-4 sm:p-5">
+                      <li key={s.id} className="flex items-center justify-between gap-4 p-4 transition-colors hover:bg-accent-faint sm:p-5">
                         <div className="min-w-0">
                           <p className="font-semibold text-ink">{s.name}</p>
                           {s.description && (
@@ -166,7 +254,7 @@ export default async function SalonPage(props: { params: Promise<{ slug: string 
                             variant="outline"
                             size="sm"
                           >
-                            Seç
+                            {dict.salon.select}
                           </Button>
                         </div>
                       </li>
@@ -179,12 +267,12 @@ export default async function SalonPage(props: { params: Promise<{ slug: string 
 
           {/* Ekip */}
           <section id="ekip">
-            <h2 className="mb-5 font-display text-2xl font-bold tracking-tight text-ink">Ekip</h2>
+            <h2 className="mb-5 font-display text-2xl font-bold tracking-tight text-ink">{dict.salon.teamTitle}</h2>
             <div className="no-scrollbar -mx-4 flex gap-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
               {business.staff.map((st) => (
                 <div
                   key={st.id}
-                  className="flex w-36 shrink-0 flex-col items-center rounded-[20px] border border-line bg-surface p-5 text-center shadow-card"
+                  className="group flex w-36 shrink-0 flex-col items-center rounded-[20px] border border-line bg-surface p-5 text-center shadow-card transition-all hover:-translate-y-0.5 hover:border-accent/30 hover:shadow-pop"
                 >
                   <Avatar src={st.image} name={st.name} size="xl" />
                   <p className="mt-3 text-sm font-bold text-ink">{st.name}</p>
@@ -196,17 +284,23 @@ export default async function SalonPage(props: { params: Promise<{ slug: string 
 
           {/* Yorumlar */}
           <section id="yorumlar">
-            <h2 className="mb-5 font-display text-2xl font-bold tracking-tight text-ink">
-              Yorumlar
-            </h2>
-            <div className="mb-6 grid gap-6 rounded-[20px] border border-line bg-surface p-6 shadow-card sm:grid-cols-[auto_1fr] sm:gap-10">
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="font-display text-2xl font-bold tracking-tight text-ink">
+                {dict.salon.reviewsTitle}
+              </h2>
+              <PublicReviewButton slug={business.slug} loggedIn={!!session} />
+            </div>
+            <div className="mb-6 grid gap-6 rounded-[20px] border border-line bg-gradient-to-br from-surface to-accent-faint p-6 shadow-card sm:grid-cols-[auto_1fr] sm:gap-10">
               <div className="text-center sm:text-left">
                 <p className="font-display text-5xl font-extrabold text-ink">
                   {business.ratingAvg.toFixed(1)}
                 </p>
                 <RatingStars value={business.ratingAvg} className="mt-2" />
                 <p className="mt-1 text-sm font-semibold text-ink-soft">
-                  {ratingLabel(business.ratingAvg)} · {business.ratingCount} yorum
+                  {interpolate(dict.salon.ratingSummary, {
+                    label: dict.salon[ratingLabelKey(business.ratingAvg)],
+                    n: business.ratingCount,
+                  })}
                 </p>
               </div>
               <div className="space-y-1.5">
@@ -231,12 +325,12 @@ export default async function SalonPage(props: { params: Promise<{ slug: string 
               {business.reviews.map((r) => (
                 <li key={r.id} className="rounded-[20px] border border-line bg-surface p-5 shadow-card">
                   <div className="flex items-center gap-3">
-                    <Avatar src={r.customer.image} name={r.customer.name} size="md" />
+                    <Avatar src={r.customer?.image ?? null} name={r.customer?.name ?? r.authorName ?? dict.salon.guest} size="md" />
                     <div>
-                      <p className="text-sm font-bold text-ink">{r.customer.name}</p>
+                      <p className="text-sm font-bold text-ink">{r.customer?.name ?? r.authorName ?? dict.salon.guest}</p>
                       <div className="flex items-center gap-2">
                         <RatingStars value={r.rating} size="sm" />
-                        <span className="text-xs text-ink-mute">{timeAgoTr(r.createdAt)}</span>
+                        <span className="text-xs text-ink-mute">{relativeTime(locale, r.createdAt)}</span>
                       </div>
                     </div>
                   </div>
@@ -244,7 +338,7 @@ export default async function SalonPage(props: { params: Promise<{ slug: string 
                   {r.reply && (
                     <div className="mt-3 rounded-2xl bg-cream p-4">
                       <p className="text-xs font-bold text-ink-soft">
-                        {business.name} yanıtladı
+                        {interpolate(dict.salon.businessReplied, { name: business.name })}
                       </p>
                       <p className="mt-1 text-sm text-ink-soft">{r.reply}</p>
                     </div>
@@ -257,13 +351,13 @@ export default async function SalonPage(props: { params: Promise<{ slug: string 
           {/* Hakkında */}
           <section id="hakkinda">
             <h2 className="mb-5 font-display text-2xl font-bold tracking-tight text-ink">
-              Hakkında
+              {dict.salon.aboutTitle}
             </h2>
             <p className="max-w-2xl leading-relaxed text-ink-soft">{business.description}</p>
             <div className="mt-6 grid gap-6 md:grid-cols-2">
               <MiniMap lat={business.lat} lng={business.lng} name={business.name} />
               <div className="rounded-2xl border border-line bg-surface p-5 shadow-card">
-                <h3 className="mb-3 font-bold text-ink">Çalışma saatleri</h3>
+                <h3 className="mb-3 font-bold text-ink">{dict.salon.openingHours}</h3>
                 <ul className="space-y-2 text-sm">
                   {[1, 2, 3, 4, 5, 6, 0].map((wd) => {
                     const h = business.hours.find((x) => x.weekday === wd);
@@ -276,11 +370,11 @@ export default async function SalonPage(props: { params: Promise<{ slug: string 
                         }`}
                       >
                         <span>
-                          {WEEKDAYS_TR[wd]} {isToday && "· Bugün"}
+                          {weekdayName(locale, wd)} {isToday && dict.salon.today}
                         </span>
                         <span>
                           {!h || h.closed
-                            ? "Kapalı"
+                            ? dict.salon.closed
                             : `${minToHHMM(h.openMin)} – ${minToHHMM(h.closeMin)}`}
                         </span>
                       </li>
@@ -293,8 +387,9 @@ export default async function SalonPage(props: { params: Promise<{ slug: string 
         </div>
 
         {/* Yapışkan randevu kartı */}
-        <aside className="sticky top-24 hidden rounded-[24px] border border-line bg-surface p-6 shadow-pop lg:block">
-          <div className="flex items-center justify-between">
+        <aside className="sticky top-24 isolate hidden overflow-hidden rounded-[28px] border border-line bg-surface p-6 shadow-pop ring-1 ring-accent/5 lg:block">
+          <div className="pointer-events-none absolute -right-16 -top-20 -z-10 size-44 rounded-full bg-accent/10 blur-3xl" aria-hidden />
+          <div className="relative flex items-center justify-between">
             <div>
               <p className="font-display text-2xl font-extrabold text-ink">
                 {business.ratingAvg.toFixed(1)}
@@ -302,7 +397,7 @@ export default async function SalonPage(props: { params: Promise<{ slug: string 
               <RatingStars value={business.ratingAvg} size="sm" />
             </div>
             <Badge tone={isOpen ? "mint" : "rose"}>
-              {isOpen ? "Şu an açık" : "Şu an kapalı"}
+              {isOpen ? dict.salon.openNow : dict.salon.closedNow}
             </Badge>
           </div>
           <Button
@@ -311,10 +406,10 @@ export default async function SalonPage(props: { params: Promise<{ slug: string 
             size="xl"
             className="mt-5 w-full"
           >
-            <CalendarCheck2 className="size-5" /> Randevu al
+            <CalendarCheck2 className="size-5" /> {dict.salon.book}
           </Button>
           <p className="mt-2 text-center text-xs text-ink-mute">
-            Anında onay · Ücretsiz iptal
+            {dict.salon.bookNote}
           </p>
           <div className="mt-5 space-y-3 border-t border-line pt-5 text-sm">
             <p className="flex items-start gap-2.5 text-ink-soft">
@@ -327,10 +422,23 @@ export default async function SalonPage(props: { params: Promise<{ slug: string 
                 {business.phone}
               </a>
             </p>
+            {waHref && (
+              <a
+                href={waHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2.5 font-semibold text-[#1da851] hover:underline"
+              >
+                <MessageCircle className="size-4 shrink-0" /> {dict.salon.whatsappChat}
+              </a>
+            )}
             {todayHours && !todayHours.closed && (
               <p className="flex items-center gap-2.5 text-ink-soft">
                 <Clock className="size-4 shrink-0" />
-                Bugün: {minToHHMM(todayHours.openMin)} – {minToHHMM(todayHours.closeMin)}
+                {interpolate(dict.salon.todayHours, {
+                  open: minToHHMM(todayHours.openMin),
+                  close: minToHHMM(todayHours.closeMin),
+                })}
               </p>
             )}
             <a
@@ -339,7 +447,7 @@ export default async function SalonPage(props: { params: Promise<{ slug: string 
               rel="noopener noreferrer"
               className="flex items-center gap-2.5 font-semibold text-accent-deep hover:underline"
             >
-              <Navigation className="size-4 shrink-0" /> Yol tarifi al
+              <Navigation className="size-4 shrink-0" /> {dict.salon.getDirections}
             </a>
           </div>
         </aside>
@@ -354,13 +462,24 @@ export default async function SalonPage(props: { params: Promise<{ slug: string 
               ★ {business.ratingAvg.toFixed(1)} ({business.ratingCount})
             </p>
           </div>
+          {waHref && (
+            <a
+              href={waHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={dict.salon.whatsappChat}
+              className="ml-auto inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white shadow-card"
+            >
+              <MessageCircle className="size-5" />
+            </a>
+          )}
           <Button
             href={`/randevu/${business.slug}`}
             variant="accent"
             size="lg"
-            className="ml-auto shrink-0"
+            className={`${waHref ? "" : "ml-auto "}shrink-0`}
           >
-            Randevu al
+            {dict.salon.book}
           </Button>
         </div>
       </div>

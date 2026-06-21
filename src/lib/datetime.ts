@@ -61,3 +61,28 @@ export function formatDateTr(
 export function formatDateShortTr(dateStr: string): string {
   return formatDateTr(dateStr, { day: "numeric", month: "short" });
 }
+
+/**
+ * Aktif dile göre haftanın günü adı. weekday: 0 = Pazar ... 6 = Cumartesi.
+ * (1970-01-04 bir Pazar günüdür; ona gün ekleyerek istenen güne ulaşırız.)
+ */
+export function weekdayName(
+  locale: string,
+  weekday: number,
+  opts: Intl.DateTimeFormatOptions = { weekday: "long" }
+): string {
+  const ref = new Date(Date.UTC(1970, 0, 4 + ((weekday % 7) + 7) % 7, 12));
+  return new Intl.DateTimeFormat(locale, { ...opts, timeZone: "UTC" }).format(ref);
+}
+
+/** Aktif dile göre göreli zaman ("3 gün önce" vb.) — Intl.RelativeTimeFormat. */
+export function relativeTime(locale: string, date: Date): string {
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+  const diffMs = Date.now() - date.getTime();
+  const days = Math.floor(diffMs / 86_400_000);
+  if (days < 1) return rtf.format(0, "day");
+  if (days < 7) return rtf.format(-days, "day");
+  if (days < 31) return rtf.format(-Math.floor(days / 7), "week");
+  if (days < 365) return rtf.format(-Math.floor(days / 30), "month");
+  return rtf.format(-Math.floor(days / 365), "year");
+}

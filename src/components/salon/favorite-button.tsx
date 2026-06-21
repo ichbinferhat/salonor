@@ -3,6 +3,7 @@
 import { useOptimistic, useTransition } from "react";
 import { Heart } from "lucide-react";
 import { toggleFavoriteAction } from "@/server/actions/account";
+import { useDict } from "@/i18n/provider";
 
 export function FavoriteButton({
   businessId,
@@ -13,6 +14,7 @@ export function FavoriteButton({
   slug: string;
   initial: boolean;
 }) {
+  const dict = useDict();
   const [isPending, startTransition] = useTransition();
   const [fav, setFav] = useOptimistic(initial);
 
@@ -35,7 +37,7 @@ export function FavoriteButton({
       aria-pressed={fav}
     >
       <Heart className={`size-4 ${fav ? "fill-rose" : ""}`} />
-      {fav ? "Favorilerde" : "Favorilere ekle"}
+      {fav ? dict.salon.inFavorites : dict.salon.addToFavorites}
     </button>
   );
 }

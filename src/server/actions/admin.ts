@@ -5,10 +5,51 @@ import { db } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import { hashPassword } from "@/lib/auth";
 import { slugify } from "@/lib/slug";
+import { recomputeBusinessRating } from "@/lib/rating";
+import { PLANS, isPlanKey, type PlanKey } from "@/lib/plans";
 
 async function isAdmin() {
   const session = await getSession();
   return session?.role === "ADMIN";
+}
+
+/**
+ * İşletmenin paketini değiştirir (yalnızca ADMIN).
+ * Kontör (smsCredits) KORUNUR — paket değişimi mevcut kontörü ezmez/sıfırlamaz.
+ * Hediye kontörü ayrı `addSmsCreditsAction` ile yüklenir.
+ */
+export async function setBusinessPlanAction(businessId: string, plan: string) {
+  if (!(await isAdmin())) return { ok: false };
+  if (!isPlanKey(plan)) return { ok: false };
+  await db.business.update({
+    where: { id: businessId },
+    data: { plan },
+  });
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
+/** İşletmeye SMS kontörü ekler/manuel yükler (yalnızca ADMIN). */
+export async function addSmsCreditsAction(businessId: string, amount: number) {
+  if (!(await isAdmin())) return { ok: false };
+  const inc = Math.round(amount);
+  if (!Number.isFinite(inc) || inc === 0) return { ok: false };
+  // Kontör 0'ın altına inemez: eksiltme (negatif inc) mevcut bakiyeden büyükse
+  // sonucu 0'a sabitle. Aksi halde DB'ye negatif kontör yazılır ve istemcinin
+  // Math.max(0, ...) ile kırptığı sayıyla kalıcı olarak ters düşer.
+  await db.$transaction(async (tx) => {
+    const biz = await tx.business.findUnique({
+      where: { id: businessId },
+      select: { smsCredits: true },
+    });
+    if (!biz) return;
+    await tx.business.update({
+      where: { id: businessId },
+      data: { smsCredits: Math.max(0, biz.smsCredits + inc) },
+    });
+  });
+  revalidatePath("/admin");
+  return { ok: true };
 }
 
 /** İşletmeyi öne çıkan yap/kaldır (yalnızca ADMIN). */
@@ -26,6 +67,65 @@ export async function setBusinessActiveAction(businessId: string, active: boolea
   await db.business.update({ where: { id: businessId }, data: { active } });
   revalidatePath("/admin");
   revalidatePath("/");
+  return { ok: true };
+}
+
+/**
+ * İşletmeyi kalıcı olarak siler (yalnızca ADMIN). İlişkili tüm kayıtlar
+ * (randevular, yorumlar, satışlar, saatler, personel vb.) DB onDelete: Cascade
+ * ile silinir; ardından bu işletmeye bağlı sahip hesabı da ayrıca temizlenir.
+ * Geri alınamaz — istemci tarafında onay (confirm) istenir.
+ */
+export async function deleteBusinessByAdminAction(businessId: string) {
+  if (!(await isAdmin())) return { ok: false };
+  const biz = await db.business.findUnique({
+    where: { id: businessId },
+    select: { id: true, slug: true, ownerId: true },
+  });
+  if (!biz) return { ok: false };
+  // İşletmeyi sil — ilişkili kayıtlar onDelete: Cascade ile temizlenir.
+  await db.business.delete({ where: { id: businessId } });
+  // Yetim kalmaması için sahip hesabını da temizle (sahip yalnızca bu işletmeye bağlı).
+  await db.user.delete({ where: { id: biz.ownerId } }).catch(() => {});
+  revalidatePath("/admin");
+  revalidatePath("/");
+  revalidatePath(`/salon/${biz.slug}`);
+  return { ok: true };
+}
+
+/**
+ * Yorumu gizler/gösterir (yalnızca ADMIN). Gizli yorum vitrinde görünmez ve
+ * puana sayılmaz; gizleyince şikayet işareti de düşer. Puan yeniden hesaplanır.
+ */
+export async function setReviewHiddenAction(reviewId: string, hidden: boolean) {
+  if (!(await isAdmin())) return { ok: false };
+  const review = await db.review.findUnique({
+    where: { id: reviewId },
+    select: { businessId: true, business: { select: { slug: true } } },
+  });
+  if (!review) return { ok: false };
+  await db.review.update({
+    where: { id: reviewId },
+    data: { hidden, reported: hidden ? false : undefined },
+  });
+  await recomputeBusinessRating(review.businessId);
+  revalidatePath("/admin");
+  revalidatePath(`/salon/${review.business.slug}`);
+  return { ok: true };
+}
+
+/** Yorumu kalıcı siler (yalnızca ADMIN — açık spam/saldırı için). Puan yeniden hesaplanır. */
+export async function deleteReviewByAdminAction(reviewId: string) {
+  if (!(await isAdmin())) return { ok: false };
+  const review = await db.review.findUnique({
+    where: { id: reviewId },
+    select: { businessId: true, business: { select: { slug: true } } },
+  });
+  if (!review) return { ok: false };
+  await db.review.delete({ where: { id: reviewId } });
+  await recomputeBusinessRating(review.businessId);
+  revalidatePath("/admin");
+  revalidatePath(`/salon/${review.business.slug}`);
   return { ok: true };
 }
 
@@ -49,6 +149,8 @@ export async function createBusinessByAdminAction(
   const ownerName = String(formData.get("ownerName") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "").trim();
+  const planRaw = String(formData.get("plan") ?? "baslangic");
+  const plan: PlanKey = isPlanKey(planRaw) ? planRaw : "baslangic";
 
   if (name.length < 2) return { error: "İşletme adı gerekli." };
   if (!EMAIL_RE.test(email)) return { error: "Geçerli bir e-posta gir." };
@@ -61,7 +163,11 @@ export async function createBusinessByAdminAction(
   const category = await db.category.findFirst();
   if (!category) return { error: "Önce kategori tanımlanmalı." };
 
-  const slug = `${slugify(name) || "salon"}-${Math.random().toString(36).slice(2, 6)}`;
+  // Benzersiz slug
+  const base = slugify(name) || "salon";
+  let slug = base;
+  let n = 1;
+  while (await db.business.findUnique({ where: { slug } })) slug = `${base}-${++n}`;
 
   const owner = await db.user.create({
     data: {
@@ -79,24 +185,37 @@ export async function createBusinessByAdminAction(
     return { weekday, openMin: 540, closeMin: 1140, closed: false };
   });
 
-  await db.business.create({
-    data: {
-      slug,
-      name,
-      description: "",
-      phone: "",
-      address: "",
-      district: "",
-      city: "İstanbul",
-      lat: 41.0082,
-      lng: 28.9784,
-      coverImage: DEFAULT_COVER,
-      active: true,
-      ownerId: owner.id,
-      categoryId: category.id,
-      hours: { create: hours },
-    },
-  });
+  try {
+    await db.business.create({
+      data: {
+        slug,
+        name,
+        description: "",
+        phone: "",
+        address: "",
+        district: "",
+        city: "İstanbul",
+        lat: 41.0082,
+        lng: 28.9784,
+        coverImage: DEFAULT_COVER,
+        // Taslak olarak başla: konum (şehir/koordinat) henüz girilmediğinden işletme
+        // yanlış sabit İstanbul/Sultanahmet konumuyla vitrinde + şehir filtresinde +
+        // haritada görünmesin. Sahip ayarlardan gerçek konumu girdikten sonra admin
+        // panelindeki anahtar (setBusinessActiveAction) ile aktifleştirilir.
+        active: false,
+        plan,
+        smsCredits: PLANS[plan].smsBonus,
+        ownerId: owner.id,
+        categoryId: category.id,
+        hours: { create: hours },
+      },
+    });
+  } catch (e) {
+    console.error("createBusinessByAdminAction error:", e);
+    // İşletme açılamazsa yetim sahip hesabını temizle
+    await db.user.delete({ where: { id: owner.id } }).catch(() => {});
+    return { error: "İşletme oluşturulamadı. Lütfen tekrar dene." };
+  }
 
   revalidatePath("/admin");
   revalidatePath("/");

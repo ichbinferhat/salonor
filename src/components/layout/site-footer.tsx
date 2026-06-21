@@ -1,45 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
-
-const COLUMNS: { title: string; links: [label: string, href: string][] }[] = [
-  {
-    title: "Keşfet",
-    links: [
-      ["Kuaförler", "/arama?kategori=kuafor"],
-      ["Berberler", "/arama?kategori=berber"],
-      ["Spa & Masaj", "/arama?kategori=spa-masaj"],
-      ["Tırnak stüdyoları", "/arama?kategori=tirnak"],
-      ["Cilt bakımı", "/arama?kategori=cilt-bakimi"],
-    ],
-  },
-  {
-    title: "Şehirler",
-    links: [
-      ["İstanbul", "/arama?sehir=İstanbul"],
-      ["Ankara", "/arama?sehir=Ankara"],
-      ["İzmir", "/arama?sehir=İzmir"],
-    ],
-  },
-  {
-    title: "İşletmeler için",
-    links: [
-      ["Salonor Business", "/isletme"],
-      ["Fiyatlandırma", "/fiyatlandirma"],
-      ["İşletmenizi ekleyin", "/isletme/kayit"],
-      ["İşletme girişi", "/giris"],
-    ],
-  },
-  {
-    title: "Salonor",
-    links: [
-      ["Hakkımızda", "/hakkimizda"],
-      ["Yardım & SSS", "/sss"],
-      ["Gizlilik & KVKK", "/kvkk"],
-      ["Kullanım şartları", "/kullanim-sartlari"],
-      ["İletişim", "/iletisim"],
-    ],
-  },
-];
+import { getDictionary } from "@/i18n";
 
 const SOCIALS: { label: string; href: string; path: string }[] = [
   {
@@ -71,18 +32,57 @@ const SOCIAL_TINT: Record<string, string> = {
   YouTube: "text-[#FF0000] hover:bg-[#FF0000] hover:text-white",
 };
 
-export function SiteFooter() {
+export async function SiteFooter() {
+  const dict = await getDictionary();
+
+  const COLUMNS: { title: string; links: [label: string, href: string][] }[] = [
+    {
+      title: dict.footer.exploreTitle,
+      links: [
+        [dict.footer.hairdressers, "/arama?kategori=kuafor"],
+        [dict.footer.barbers, "/arama?kategori=berber"],
+        [dict.footer.spaMassage, "/arama?kategori=spa-masaj"],
+        [dict.footer.nailStudios, "/arama?kategori=tirnak"],
+        [dict.footer.skincare, "/arama?kategori=cilt-bakimi"],
+      ],
+    },
+    {
+      title: dict.footer.forBusinessesTitle,
+      links: [
+        [dict.footer.salonorBusiness, "/isletme"],
+        [dict.footer.pricing, "/fiyatlandirma"],
+        [dict.footer.addBusiness, "/isletme"],
+        [dict.footer.businessLogin, "/giris"],
+      ],
+    },
+    {
+      title: dict.footer.companyTitle,
+      links: [
+        [dict.footer.about, "/hakkimizda"],
+        [dict.footer.helpFaq, "/sss"],
+        [dict.footer.privacy, "/kvkk"],
+        [dict.footer.terms, "/kullanim-sartlari"],
+        [dict.footer.contact, "/iletisim"],
+      ],
+    },
+  ];
+
   return (
-    <footer className="mt-auto bg-ink-strong text-white">
-      <div className="container-x grid gap-10 py-14 md:grid-cols-[1.4fr_repeat(4,1fr)]">
+    <footer className="relative isolate mt-auto overflow-hidden bg-ink-strong text-white">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-32 left-1/2 -z-10 h-64 w-[42rem] -translate-x-1/2 rounded-full bg-accent/20 blur-3xl"
+      />
+      <div className="relative container-x grid gap-10 py-14 md:grid-cols-[1.6fr_repeat(3,1fr)]">
         <div>
           <Logo tone="white" />
-          <p className="mt-4 max-w-56 text-sm leading-relaxed text-white/55">
-            Güzellik ve bakım randevunu saniyeler içinde ayırt. Ücretsiz, hızlı,
-            7/24.
+          <p className="mt-4 max-w-56 text-pretty text-sm leading-relaxed text-white/55">
+            {dict.footer.tagline}
           </p>
           <div className="mt-5 flex gap-2">
-            {SOCIALS.map((s) => (
+            {/* Yalnızca gerçek (geçerli) hesap bağlantısı olan sosyal ikonları
+                göster — "#" yer tutucular ölü link olmasın diye gizlenir. */}
+            {SOCIALS.filter((s) => s.href && s.href !== "#").map((s) => (
               <a
                 key={s.label}
                 href={s.href}
@@ -91,9 +91,26 @@ export function SiteFooter() {
                   SOCIAL_TINT[s.label] ?? "text-white"
                 }`}
               >
-                <svg viewBox="0 0 24 24" fill="currentColor" className="size-[18px]" aria-hidden>
-                  <path d={s.path} />
-                </svg>
+                {s.label === "Instagram" ? (
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="size-[18px]"
+                    aria-hidden
+                  >
+                    <rect x="2.5" y="2.5" width="19" height="19" rx="5.2" />
+                    <circle cx="12" cy="12" r="4.1" />
+                    <circle cx="17.4" cy="6.6" r="1.15" fill="currentColor" stroke="none" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="size-[18px]" aria-hidden>
+                    <path d={s.path} />
+                  </svg>
+                )}
               </a>
             ))}
           </div>
@@ -101,7 +118,8 @@ export function SiteFooter() {
 
         {COLUMNS.map((col) => (
           <nav key={col.title} aria-label={col.title}>
-            <h3 className="mb-4 text-sm font-bold tracking-wide text-white/90">
+            <h3 className="mb-4 flex items-center gap-2 text-sm font-bold tracking-wide text-white/90">
+              <span aria-hidden className="h-3.5 w-0.5 rounded-full bg-gradient-to-b from-accent to-[#ff5fa2]" />
               {col.title}
             </h3>
             <ul className="space-y-2.5">
@@ -121,8 +139,8 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-white/10">
         <div className="container-x flex flex-col items-center justify-between gap-3 py-6 text-xs text-white/45 sm:flex-row">
-          <span>© 2026 Salonor Teknoloji A.Ş. Tüm hakları saklıdır.</span>
-          <span>Türkiye&apos;de 🇹🇷 tasarlandı</span>
+          <span>{dict.footer.rights}</span>
+          <span>{dict.footer.designedIn}</span>
         </div>
       </div>
     </footer>

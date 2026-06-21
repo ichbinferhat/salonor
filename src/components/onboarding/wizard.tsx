@@ -20,16 +20,19 @@ import { WEEKDAYS_TR } from "@/lib/datetime";
 import { Logo } from "@/components/logo";
 import { Input, Label, Textarea } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
+import { useDict } from "@/i18n/provider";
+import { interpolate } from "@/i18n/interpolate";
 
 type Category = { slug: string; name: string; emoji: string };
 type DraftService = { name: string; durationMin: number; priceTl: number };
 
-const STEPS = [
-  { icon: Store, label: "İşletme" },
-  { icon: Tag, label: "Kategori" },
-  { icon: MapPin, label: "Konum" },
-  { icon: Clock, label: "Saatler" },
-  { icon: Scissors, label: "Hizmetler" },
+type StepKey = "business" | "category" | "location" | "hours" | "services";
+const STEPS: { icon: typeof Store; key: StepKey }[] = [
+  { icon: Store, key: "business" },
+  { icon: Tag, key: "category" },
+  { icon: MapPin, key: "location" },
+  { icon: Clock, key: "hours" },
+  { icon: Scissors, key: "services" },
 ];
 
 const TIME_OPTIONS: number[] = [];
@@ -67,6 +70,7 @@ export function OnboardingWizard({
   ownerName: string;
 }) {
   const router = useRouter();
+  const t = useDict().onboarding;
   const [step, setStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -155,11 +159,15 @@ export function OnboardingWizard({
   }
 
   return (
-    <div className="min-h-dvh bg-cream">
+    <div className="relative min-h-dvh overflow-hidden bg-cream">
+      <div aria-hidden className="pointer-events-none absolute -left-32 -top-40 -z-10 size-[34rem] rounded-full bg-accent-soft/60 blur-3xl" />
+      <div aria-hidden className="pointer-events-none absolute -right-40 top-1/3 -z-10 size-[30rem] rounded-full bg-[#ff5fa2]/10 blur-3xl" />
       <header className="border-b border-line bg-surface/80 backdrop-blur">
         <div className="container-x flex h-16 items-center justify-between">
           <Logo />
-          <span className="text-sm text-ink-soft">Merhaba, {ownerName.split(" ")[0]} 👋</span>
+          <span className="text-sm text-ink-soft">
+            {interpolate(t.greeting, { name: ownerName.split(" ")[0] })}
+          </span>
         </div>
       </header>
 
@@ -170,7 +178,7 @@ export function OnboardingWizard({
             const done = i < step;
             const active = i === step;
             return (
-              <li key={s.label} className="flex flex-1 flex-col items-center gap-2">
+              <li key={s.key} className="flex flex-1 flex-col items-center gap-2">
                 <div className="flex w-full items-center">
                   <span className={`h-0.5 flex-1 ${i === 0 ? "opacity-0" : done || active ? "bg-accent" : "bg-line-strong"}`} />
                   <span
@@ -187,34 +195,35 @@ export function OnboardingWizard({
                   <span className={`h-0.5 flex-1 ${i === STEPS.length - 1 ? "opacity-0" : done ? "bg-accent" : "bg-line-strong"}`} />
                 </div>
                 <span className={`text-xs font-semibold ${active ? "text-ink" : "text-ink-mute"}`}>
-                  {s.label}
+                  {t.steps[s.key]}
                 </span>
               </li>
             );
           })}
         </ol>
 
-        <div className="rounded-[24px] border border-line bg-surface p-6 shadow-card sm:p-8">
+        <div className="rounded-[28px] border border-line bg-surface/95 p-6 shadow-pop ring-1 ring-line/60 backdrop-blur-sm sm:p-8">
           {/* Adım 1: İşletme */}
           {step === 0 && (
             <div className="anim-rise space-y-5">
               <div>
-                <h1 className="font-display text-2xl font-extrabold tracking-tight text-ink">
-                  İşletmeni tanıtalım
+                <span className="mb-3 inline-flex h-1.5 w-12 rounded-full bg-gradient-to-r from-accent via-[#8b5cf6] to-[#ff5fa2]" />
+                <h1 className="font-display text-2xl font-extrabold tracking-tight text-balance text-ink">
+                  {t.step1.title}
                 </h1>
-                <p className="mt-1 text-ink-soft">Müşterilerin seni nasıl görecek?</p>
+                <p className="mt-1 text-pretty text-ink-soft">{t.step1.subtitle}</p>
               </div>
               <div>
-                <Label htmlFor="ob-name">İşletme adı</Label>
-                <Input id="ob-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Örn. Nova Saç Atölyesi" autoFocus />
+                <Label htmlFor="ob-name">{t.step1.nameLabel}</Label>
+                <Input id="ob-name" value={name} onChange={(e) => setName(e.target.value)} placeholder={t.step1.namePlaceholder} autoFocus />
               </div>
               <div>
-                <Label htmlFor="ob-phone">Telefon</Label>
-                <Input id="ob-phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="0212 000 00 00" />
+                <Label htmlFor="ob-phone">{t.step1.phoneLabel}</Label>
+                <Input id="ob-phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t.step1.phonePlaceholder} />
               </div>
               <div>
-                <Label htmlFor="ob-desc">Kısa açıklama (isteğe bağlı)</Label>
-                <Textarea id="ob-desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Salonunu birkaç cümleyle anlat..." />
+                <Label htmlFor="ob-desc">{t.step1.descLabel}</Label>
+                <Textarea id="ob-desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t.step1.descPlaceholder} />
               </div>
             </div>
           )}
@@ -224,20 +233,20 @@ export function OnboardingWizard({
             <div className="anim-rise space-y-5">
               <div>
                 <h1 className="font-display text-2xl font-extrabold tracking-tight text-ink">
-                  Hangi alandasın?
+                  {t.step2.title}
                 </h1>
-                <p className="mt-1 text-ink-soft">İşletmene en uygun kategoriyi seç.</p>
+                <p className="mt-1 text-ink-soft">{t.step2.subtitle}</p>
               </div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {categories.map((c) => (
                   <button
                     key={c.slug}
                     onClick={() => chooseCategory(c.slug)}
-                    className={`flex flex-col items-center gap-2 rounded-2xl border-2 p-4 transition-all ${
-                      categorySlug === c.slug ? "border-accent bg-accent-soft" : "border-line hover:border-ink/30"
+                    className={`group flex flex-col items-center gap-2 rounded-2xl border-2 p-4 transition-all hover:-translate-y-0.5 hover:shadow-card ${
+                      categorySlug === c.slug ? "border-accent bg-accent-soft shadow-card" : "border-line hover:border-accent/40"
                     }`}
                   >
-                    <span className="text-3xl">{c.emoji}</span>
+                    <span className="text-3xl transition-transform group-hover:scale-110">{c.emoji}</span>
                     <span className="text-center text-sm font-semibold text-ink">{c.name}</span>
                   </button>
                 ))}
@@ -250,13 +259,13 @@ export function OnboardingWizard({
             <div className="anim-rise space-y-5">
               <div>
                 <h1 className="font-display text-2xl font-extrabold tracking-tight text-ink">
-                  Neredesin?
+                  {t.step3.title}
                 </h1>
-                <p className="mt-1 text-ink-soft">Müşterilerin seni haritada bulabilsin.</p>
+                <p className="mt-1 text-ink-soft">{t.step3.subtitle}</p>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <Label htmlFor="ob-city">Şehir</Label>
+                  <Label htmlFor="ob-city">{t.step3.cityLabel}</Label>
                   <select
                     id="ob-city"
                     value={city}
@@ -269,13 +278,13 @@ export function OnboardingWizard({
                   </select>
                 </div>
                 <div>
-                  <Label htmlFor="ob-district">İlçe</Label>
-                  <Input id="ob-district" value={district} onChange={(e) => setDistrict(e.target.value)} placeholder="Örn. Kadıköy" />
+                  <Label htmlFor="ob-district">{t.step3.districtLabel}</Label>
+                  <Input id="ob-district" value={district} onChange={(e) => setDistrict(e.target.value)} placeholder={t.step3.districtPlaceholder} />
                 </div>
               </div>
               <div>
-                <Label htmlFor="ob-address">Açık adres</Label>
-                <Input id="ob-address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Mahalle, cadde, no" />
+                <Label htmlFor="ob-address">{t.step3.addressLabel}</Label>
+                <Input id="ob-address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder={t.step3.addressPlaceholder} />
               </div>
               <LocationPicker
                 lat={coords.lat}
@@ -290,13 +299,13 @@ export function OnboardingWizard({
             <div className="anim-rise space-y-5">
               <div>
                 <h1 className="font-display text-2xl font-extrabold tracking-tight text-ink">
-                  Çalışma saatlerin
+                  {t.step4.title}
                 </h1>
-                <p className="mt-1 text-ink-soft">Açık olduğun saatleri ve günleri belirle.</p>
+                <p className="mt-1 text-ink-soft">{t.step4.subtitle}</p>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <Label htmlFor="ob-open">Açılış</Label>
+                  <Label htmlFor="ob-open">{t.step4.openLabel}</Label>
                   <select
                     id="ob-open"
                     value={openMin}
@@ -309,7 +318,7 @@ export function OnboardingWizard({
                   </select>
                 </div>
                 <div>
-                  <Label htmlFor="ob-close">Kapanış</Label>
+                  <Label htmlFor="ob-close">{t.step4.closeLabel}</Label>
                   <select
                     id="ob-close"
                     value={closeMin}
@@ -323,7 +332,7 @@ export function OnboardingWizard({
                 </div>
               </div>
               <div>
-                <Label>Kapalı günler</Label>
+                <Label>{t.step4.closedDaysLabel}</Label>
                 <div className="flex flex-wrap gap-2">
                   {ORDER.map((wd) => {
                     const closed = closedDays.includes(wd);
@@ -331,10 +340,10 @@ export function OnboardingWizard({
                       <button
                         key={wd}
                         onClick={() => toggleClosed(wd)}
-                        className={`rounded-full border-2 px-4 py-2 text-sm font-semibold transition-colors ${
+                        className={`rounded-full border-2 px-4 py-2 text-sm font-semibold transition-all hover:-translate-y-0.5 ${
                           closed
                             ? "border-rose/40 bg-rose-soft text-rose"
-                            : "border-line bg-surface text-ink hover:border-ink/30"
+                            : "border-line bg-surface text-ink hover:border-accent/40 hover:shadow-card"
                         }`}
                       >
                         {WEEKDAYS_TR[wd]}
@@ -343,7 +352,7 @@ export function OnboardingWizard({
                   })}
                 </div>
                 <p className="mt-2 text-xs text-ink-mute">
-                  Kapalı işaretlenmeyen günlerde {fmt(openMin)}–{fmt(closeMin)} arası açıksın.
+                  {interpolate(t.step4.hoursHint, { open: fmt(openMin), close: fmt(closeMin) })}
                 </p>
               </div>
             </div>
@@ -354,10 +363,10 @@ export function OnboardingWizard({
             <div className="anim-rise space-y-5">
               <div>
                 <h1 className="font-display text-2xl font-extrabold tracking-tight text-ink">
-                  İlk hizmetlerin
+                  {t.step5.title}
                 </h1>
                 <p className="mt-1 text-ink-soft">
-                  Birkaç hizmet ekle — sonra panelden istediğin kadar değiştirebilirsin.
+                  {t.step5.subtitle}
                 </p>
               </div>
               <div className="space-y-2.5">
@@ -366,7 +375,7 @@ export function OnboardingWizard({
                     <input
                       value={s.name}
                       onChange={(e) => updateService(i, { name: e.target.value })}
-                      placeholder="Hizmet adı"
+                      placeholder={t.step5.servicePlaceholder}
                       className="h-10 min-w-0 flex-1 rounded-lg border border-line-strong bg-surface px-3 text-sm focus:border-accent focus:outline-none"
                     />
                     <div className="flex items-center gap-1">
@@ -378,7 +387,7 @@ export function OnboardingWizard({
                         min={5}
                         step={5}
                       />
-                      <span className="text-xs text-ink-mute">dk</span>
+                      <span className="text-xs text-ink-mute">{t.step5.minUnit}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <input
@@ -389,12 +398,12 @@ export function OnboardingWizard({
                         min={0}
                         step={10}
                       />
-                      <span className="text-xs text-ink-mute">₺</span>
+                      <span className="text-xs text-ink-mute">{t.step5.priceUnit}</span>
                     </div>
                     <button
                       onClick={() => removeService(i)}
                       className="rounded-lg p-2 text-ink-mute transition-colors hover:bg-rose-soft hover:text-rose"
-                      aria-label="Kaldır"
+                      aria-label={t.step5.removeService}
                     >
                       <Trash2 className="size-4" />
                     </button>
@@ -405,7 +414,7 @@ export function OnboardingWizard({
                 onClick={addService}
                 className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-line-strong py-3 text-sm font-semibold text-ink-soft transition-colors hover:border-accent hover:text-accent-deep"
               >
-                <Plus className="size-4" /> Hizmet ekle
+                <Plus className="size-4" /> {t.step5.addService}
               </button>
             </div>
           )}
@@ -420,20 +429,20 @@ export function OnboardingWizard({
           <div className="mt-7 flex items-center justify-between gap-3">
             {step > 0 ? (
               <Button variant="ghost" onClick={() => setStep(step - 1)} disabled={isPending}>
-                <ChevronLeft className="size-4" /> Geri
+                <ChevronLeft className="size-4" /> {t.back}
               </Button>
             ) : (
               <span />
             )}
             <Button variant="accent" size="lg" onClick={next} disabled={!canProceed || isPending}>
               {isPending ? (
-                "Oluşturuluyor..."
+                t.creating
               ) : step === STEPS.length - 1 ? (
                 <>
-                  <PartyPopper className="size-4" /> İşletmemi yayınla
+                  <PartyPopper className="size-4" /> {t.publish}
                 </>
               ) : (
-                "Devam et"
+                t.continue
               )}
             </Button>
           </div>

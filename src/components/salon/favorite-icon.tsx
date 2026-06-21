@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Heart } from "lucide-react";
 import { toggleFavoriteAction } from "@/server/actions/account";
+import { useDict } from "@/i18n/provider";
 
 /** Kart üzerindeki küçük dairesel favori (kalp) düğmesi. */
 export function FavoriteIcon({
@@ -14,6 +15,7 @@ export function FavoriteIcon({
   slug: string;
   initial?: boolean;
 }) {
+  const dict = useDict();
   const [fav, setFav] = useState(initial);
   const [isPending, startTransition] = useTransition();
 
@@ -32,7 +34,7 @@ export function FavoriteIcon({
       onClick={toggle}
       disabled={isPending}
       aria-pressed={fav}
-      aria-label={fav ? "Favorilerden çıkar" : "Favorilere ekle"}
+      aria-label={fav ? dict.salon.removeFromFavorites : dict.salon.addToFavorites}
       className="flex size-9 items-center justify-center rounded-full bg-white/85 shadow-card backdrop-blur-sm transition-all hover:scale-110 hover:bg-white active:scale-95"
     >
       <Heart
