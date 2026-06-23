@@ -1,8 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { headers } from "next/headers";
 import { db } from "@/lib/db";
+import { notifyUser } from "@/lib/push";
 import { getSession, createSession } from "@/lib/session";
 import { hashPassword, verifyPassword } from "@/lib/auth";
 import { getAvailableSlots, generateCode, type Slot } from "@/lib/slots";
@@ -15,9 +17,14 @@ import { smsConfigured } from "@/lib/sms";
 /** İstek sahibinin IP'si (hız sınırı anahtarı için). */
 async function clientIp(): Promise<string> {
   const h = await headers();
-  const xff = h.get("x-forwarded-for");
-  if (xff) return xff.split(",")[0].trim();
-  return h.get("x-real-ip") ?? "unknown";
+  // Vercel'in güvenilir gerçek-istemci IP başlığını önce kullan (spoof'a kapalı);
+  // ham x-forwarded-for son çaredir (istemci tarafından sahtelenebilir).
+  return (
+    h.get("x-real-ip") ??
+    h.get("x-vercel-forwarded-for")?.split(",")[0].trim() ??
+    h.get("x-forwarded-for")?.split(",")[0].trim() ??
+    "unknown"
+  );
 }
 
 export async function fetchSlotsAction(opts: {
@@ -243,6 +250,36 @@ export async function createAppointmentAction(opts: {
         console.error("randevu teyit SMS hatası:", e);
       }
     }
+
+    // Push bildirimleri (mobil uygulama) — yanıt gönderildikten SONRA, randevuyu
+    // bloklamadan gönderilir; herhangi bir hata randevuyu etkilemez.
+    after(async () => {
+      try {
+        const biz = await db.business.findUnique({
+          where: { id: opts.businessId },
+          select: { name: true, ownerId: true },
+        });
+        if (!biz) return;
+        const dateLabel = formatDateTr(opts.date, { day: "numeric", month: "long" });
+        const timeLabel = minToHHMM(opts.startMin);
+        // İşletme sahibine anlık "yeni randevu" bildirimi.
+        await notifyUser(biz.ownerId, {
+          title: "Yeni randevu 🎉",
+          body: `${custName || "Misafir"} • ${dateLabel} ${timeLabel}`,
+          url: "/panel/bildirimler",
+        });
+        // Girişli müşteriye randevu onay bildirimi.
+        if (session?.userId) {
+          await notifyUser(session.userId, {
+            title: "Randevun alındı ✓",
+            body: `${biz.name} • ${dateLabel} ${timeLabel} · Kod: ${code}`,
+            url: "/hesap",
+          });
+        }
+      } catch (e) {
+        console.error("randevu push hatası:", e);
+      }
+    });
 
     revalidatePath("/hesap");
     revalidatePath("/panel");

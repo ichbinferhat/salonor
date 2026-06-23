@@ -8,15 +8,20 @@ import { createSession, destroySession, getSession } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
 import { getDictionary } from "@/i18n";
 
-export type FormState = { error?: string; ok?: boolean } | undefined;
+export type FormState = { error?: string; ok?: boolean; notice?: string } | undefined;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 async function clientIp(): Promise<string> {
   const h = await headers();
-  const xff = h.get("x-forwarded-for");
-  if (xff) return xff.split(",")[0].trim();
-  return h.get("x-real-ip") ?? "unknown";
+  // Vercel'in güvenilir gerçek-istemci IP başlığını önce kullan (spoof'a kapalı);
+  // ham x-forwarded-for son çaredir (istemci tarafından sahtelenebilir).
+  return (
+    h.get("x-real-ip") ??
+    h.get("x-vercel-forwarded-for")?.split(",")[0].trim() ??
+    h.get("x-forwarded-for")?.split(",")[0].trim() ??
+    "unknown"
+  );
 }
 
 function safeNext(raw: FormDataEntryValue | null, fallback: string) {

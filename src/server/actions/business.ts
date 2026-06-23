@@ -1,13 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/session";
+import { notifyUser } from "@/lib/push";
 import { getOwnerBusiness, requireOwnerBusinessId } from "@/lib/owner";
 import { slugify } from "@/lib/slug";
 import { generateCode } from "@/lib/slots";
-import { todayStr } from "@/lib/datetime";
+import { todayStr, formatDateTr, minToHHMM } from "@/lib/datetime";
 import { recomputeBusinessRating } from "@/lib/rating";
 import { normalizePhone, isValidTrMobile } from "@/lib/phone";
 import { PLANS, isPlanKey } from "@/lib/plans";
@@ -480,15 +482,53 @@ export async function markAppointmentsSeenAction(
 export async function setAppointmentStatusAction(
   appointmentId: string,
   status: "COMPLETED" | "CANCELLED" | "NO_SHOW" | "CONFIRMED"
-) {
+): Promise<{ ok: boolean; error?: string }> {
   const businessId = await requireOwnerBusinessId();
-  if (!businessId) return;
+  if (!businessId) return { ok: false, error: "Yetkisiz işlem." };
   const appt = await db.appointment.findFirst({ where: { id: appointmentId, businessId } });
-  if (!appt) return;
-  if (appt.status === status) return; // zaten bu durumda — gereksiz yazma/revalidate yok
-  await db.appointment.update({ where: { id: appointmentId }, data: { status } });
+  if (!appt) return { ok: false, error: "Randevu bulunamadı." };
+  if (appt.status === status) return { ok: true }; // zaten bu durumda — gereksiz yazma yok
+
+  try {
+    // CONFIRMED'a (yeniden) geçişte slot çakışmasını YENİDEN doğrula: iptal/gelinmedi
+    // edilmiş bir randevu, o slota başka randevu alındıktan SONRA tekrar onaylanırsa
+    // overbooking olur. Aynı (staffId,date,startMin) ise DB kısmi unique index P2002,
+    // örtüşen farklı-başlangıçlı yarış ise Serializable SSI (P2034) yakalar.
+    if (status === "CONFIRMED") {
+      const done = await db.$transaction(
+        async (tx) => {
+          const conflicts = await tx.appointment.count({
+            where: {
+              staffId: appt.staffId,
+              date: appt.date,
+              status: { in: ["CONFIRMED", "COMPLETED"] },
+              startMin: { lt: appt.endMin },
+              endMin: { gt: appt.startMin },
+              id: { not: appt.id },
+            },
+          });
+          if (conflicts > 0) return false;
+          await tx.appointment.update({ where: { id: appointmentId }, data: { status } });
+          return true;
+        },
+        { isolationLevel: "Serializable" }
+      );
+      if (!done) return { ok: false, error: "Bu saat dolu — randevu yeniden onaylanamadı." };
+    } else {
+      await db.appointment.update({ where: { id: appointmentId }, data: { status } });
+    }
+  } catch (e) {
+    const errCode = (e as { code?: string })?.code;
+    if (errCode === "P2002" || errCode === "P2034") {
+      return { ok: false, error: "Bu saat dolu — randevu yeniden onaylanamadı." };
+    }
+    console.error("setAppointmentStatusAction error:", e);
+    return { ok: false, error: "İşlem yapılamadı, lütfen tekrar dene." };
+  }
+
   revalidatePath("/panel/takvim");
   revalidatePath("/panel");
+  return { ok: true };
 }
 
 /** Randevuyu "hatırlatıldı" olarak işaretler / işareti kaldırır (çift gönderimi önlemek için). */
@@ -504,6 +544,29 @@ export async function markReminderSentAction(
     where: { id: appointmentId },
     data: { reminderSentAt: sent ? new Date() : null },
   });
+
+  // "Hatırlat" işaretlendiğinde, uygulaması olan müşteriye (customerId varsa) anlık
+  // push hatırlatma gönder — yanıttan sonra, bloklamadan. SMS/WhatsApp'a ek bir kanal.
+  if (sent && appt.customerId) {
+    const customerId = appt.customerId;
+    after(async () => {
+      try {
+        const biz = await db.business.findUnique({
+          where: { id: businessId },
+          select: { name: true },
+        });
+        const dateLabel = formatDateTr(appt.date, { day: "numeric", month: "long" });
+        await notifyUser(customerId, {
+          title: "Randevu hatırlatması ⏰",
+          body: `${biz?.name ?? "Salonor"} • ${dateLabel} ${minToHHMM(appt.startMin)}`,
+          url: "/hesap",
+        });
+      } catch (e) {
+        console.error("hatırlatma push hatası:", e);
+      }
+    });
+  }
+
   revalidatePath("/panel/bildirimler");
   return { ok: true };
 }

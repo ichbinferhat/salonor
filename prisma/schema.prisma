@@ -33,6 +33,21 @@ model User {
   appointments Appointment[]
   reviews      Review[]
   favorites    Favorite[]
+  devices      DeviceToken[]
+}
+
+// Mobil uygulama (Expo) push bildirimi cihaz jetonları. Bir kullanıcının birden çok
+// cihazı olabilir; jeton benzersizdir (aynı cihaz tekrar kaydolursa upsert ile güncellenir).
+model DeviceToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique // Expo push token: "ExponentPushToken[...]"
+  platform  String   @default("unknown") // "ios" | "android"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model Category {
@@ -63,6 +78,8 @@ model Business {
   featured    Boolean  @default(false)
   active      Boolean  @default(true)
   plan        String   @default("baslangic") // baslangic | profesyonel | kurumsal
+  planStartedAt DateTime? // abonelik/paket başlangıcı (elden tahsilatta admin ayarlar)
+  planExpiresAt DateTime? // abonelik bitiş tarihi; geçince panelde uyarı gösterilir (otomatik tahsilat YOK — Ferhat elden alıyor)
   smsCredits  Int      @default(0)
   ratingAvg   Float    @default(0)
   ratingCount Int      @default(0)
@@ -220,7 +237,8 @@ model Review {
   rating        Int
   comment       String
   reply         String?
-  hidden        Boolean      @default(false) // admin gizledi → vitrinde görünmez + puana sayılmaz
+  verified      Boolean      @default(false) // tamamlanmış randevusu olan girişli müşteriden → "Doğrulanmış randevu" rozeti + anında yayında
+  hidden        Boolean      @default(false) // admin gizledi VEYA doğrulanmamış yorum onay bekliyor → vitrinde görünmez + puana sayılmaz
   reported      Boolean      @default(false) // işletme sahibi şikayet etti → admin incelesin
   createdAt     DateTime     @default(now())
 

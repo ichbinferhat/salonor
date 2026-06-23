@@ -66,7 +66,12 @@ export const tr = {
     privacy: "Gizlilik & KVKK",
     terms: "Kullanım şartları",
     contact: "İletişim",
-    rights: "© 2026 Salonor Teknoloji A.Ş. Tüm hakları saklıdır.",
+    legalTitle: "Yasal",
+    distanceSales: "Mesafeli satış sözleşmesi",
+    preInfo: "Ön bilgilendirme formu",
+    withdrawal: "Cayma ve iade",
+    cookiePolicy: "Çerez politikası",
+    rights: "© 2026 Salonor. Tüm hakları saklıdır.",
     designedIn: "Türkiye’de 🇹🇷 tasarlandı",
   },
 

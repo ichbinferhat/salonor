@@ -8,10 +8,10 @@ export const pricing = {
   subtitlePrefix: "Her paket bir öncekinin ",
   subtitleEmphasis: "tüm sistemlerini kapsar",
   subtitleSuffix:
-    ", üstüne işini büyütecek yeni araçlar ekler. Kurulum ücretsiz, sözleşme yok.",
+    ", üstüne işini büyütecek yeni araçlar ekler. Kurulum ücretsiz, uzun dönem taahhüt yok.",
 
   trust: {
-    noContract: "Sözleşme yok, taahhüt yok",
+    noContract: "Uzun dönem taahhüt yok, istediğin zaman iptal",
     freeSetup: "Kurulum ücretsiz — ekibimiz hazırlar",
     liveSupport: "WhatsApp'tan canlı destek",
   },

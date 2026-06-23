@@ -10,9 +10,14 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 async function clientIp(): Promise<string> {
   const h = await headers();
-  const xff = h.get("x-forwarded-for");
-  if (xff) return xff.split(",")[0].trim();
-  return h.get("x-real-ip") ?? "unknown";
+  // Vercel'in güvenilir gerçek-istemci IP başlığını önce kullan (spoof'a kapalı);
+  // ham x-forwarded-for son çaredir (istemci tarafından sahtelenebilir).
+  return (
+    h.get("x-real-ip") ??
+    h.get("x-vercel-forwarded-for")?.split(",")[0].trim() ??
+    h.get("x-forwarded-for")?.split(",")[0].trim() ??
+    "unknown"
+  );
 }
 
 export type ContactState = { ok: true } | { error: string } | undefined;

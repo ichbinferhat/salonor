@@ -2,8 +2,10 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter } from "next/font/google";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./globals.css";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { Analytics } from "@vercel/analytics/next";
+import { getSession } from "@/lib/session";
+import { AppBridge } from "@/components/app-bridge";
 import { ServiceWorkerRegistrar } from "@/components/pwa/service-worker-registrar";
 import { CookieConsent } from "@/components/legal/cookie-consent";
 import { getDictionary, getLocale } from "@/i18n";
@@ -82,6 +84,9 @@ export async function generateMetadata(): Promise<Metadata> {
 export const viewport: Viewport = {
   themeColor: "#131b2e",
   colorScheme: "light",
+  // Mobil uygulama (WebView) içinde çentik/ana-çubuk alanları için env(safe-area-inset-*)
+  // değerlerinin gerçek değer döndürmesini sağlar.
+  viewportFit: "cover",
 };
 
 export default async function RootLayout({
@@ -95,6 +100,13 @@ export default async function RootLayout({
   const analyticsConsent =
     (await cookies()).get("salonor_cookie_consent")?.value === "accepted";
 
+  // Mobil uygulama tespiti: WebView özel User-Agent'ına "SalonorApp" ekler. İçindeyken
+  // web başlık/altbilgisini gizleyip native çubuklara yer açıyoruz (globals.css `.in-app`).
+  const ua = (await headers()).get("user-agent") ?? "";
+  const inApp = ua.includes("SalonorApp");
+  // Köprü için oturum bilgisini yalnızca uygulama içindeyken çek (aksi halde gereksiz).
+  const appSession = inApp ? await getSession() : null;
+
   return (
     <html
       lang={locale}
@@ -102,11 +114,24 @@ export default async function RootLayout({
       className={`${fraunces.variable} ${inter.variable} h-full antialiased`}
       data-scroll-behavior="smooth"
     >
-      <body className="flex min-h-full flex-col">
+      <body className={`flex min-h-full flex-col${inApp ? " in-app" : ""}`}>
         <I18nProvider dict={dict} locale={locale}>
           {children}
           <CookieConsent />
         </I18nProvider>
+        {inApp && (
+          <AppBridge
+            session={
+              appSession
+                ? {
+                    userId: appSession.userId,
+                    role: appSession.role,
+                    name: appSession.name,
+                  }
+                : null
+            }
+          />
+        )}
         <ServiceWorkerRegistrar />
         {analyticsConsent && <Analytics />}
       </body>

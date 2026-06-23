@@ -14,7 +14,19 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error(error);
+    // Yapılandırılmış logger ile raporla (logger içinde SENTRY_DSN varsa Sentry'ye gider).
+    void import("@/lib/logger")
+      .then(({ logger }) =>
+        logger.error("Kök layout hata sınırı (global-error) yakaladı", {
+          error,
+          digest: error.digest,
+        }),
+      )
+      .catch(() => console.error(error));
+
+    // Tarayıcıya enjekte edilmiş Sentry global'i varsa onu da bilgilendir (guard'lı).
+    const w = window as unknown as { Sentry?: { captureException?: (e: unknown) => void } };
+    w.Sentry?.captureException?.(error);
   }, [error]);
 
   return (

@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
+import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { submitContactRequestAction, type ContactState } from "@/server/actions/contact";
 import { Input, Label, Textarea, FormError } from "@/components/ui/form";
@@ -9,6 +10,8 @@ import { useDict } from "@/i18n/provider";
 
 export function ContactForm() {
   const t = useDict().legal.contactForm;
+  const [consent, setConsent] = useState(false);
+  const [consentError, setConsentError] = useState(false);
   const [state, action] = useActionState<ContactState, FormData>(
     submitContactRequestAction,
     undefined
@@ -26,8 +29,19 @@ export function ContactForm() {
     );
   }
 
+  // Onay kutusu işaretlenmeden gönderimi engelle (istemci kontrolü). İşaretliyse
+  // sunucu aksiyonuna devam et; değilse hata göster ve aksiyonu hiç çağırma.
+  function guardedAction(formData: FormData) {
+    if (!consent) {
+      setConsentError(true);
+      return;
+    }
+    setConsentError(false);
+    return action(formData);
+  }
+
   return (
-    <form action={action} className="space-y-4 rounded-2xl border border-line bg-surface p-6 shadow-card ring-1 ring-accent/5">
+    <form action={guardedAction} className="space-y-4 rounded-2xl border border-line bg-surface p-6 shadow-card ring-1 ring-accent/5">
       <div>
         <Label htmlFor="cf-name">{t.nameLabel}</Label>
         <Input id="cf-name" name="name" placeholder={t.namePlaceholder} required autoComplete="name" />
@@ -58,6 +72,26 @@ export function ContactForm() {
           className="min-h-24"
         />
       </div>
+      <label className="flex cursor-pointer items-start gap-2.5 text-sm text-ink-soft">
+        <input
+          type="checkbox"
+          name="consent"
+          checked={consent}
+          onChange={(e) => {
+            setConsent(e.target.checked);
+            if (e.target.checked) setConsentError(false);
+          }}
+          className="mt-0.5 size-4 shrink-0 rounded border-line-strong accent-accent"
+        />
+        <span>
+          {t.consentBefore}
+          <Link href="/kvkk" className="font-semibold text-accent-deep hover:underline">
+            {t.consentLink}
+          </Link>
+          {t.consentAfter}
+        </span>
+      </label>
+      {consentError && <p className="text-sm font-medium text-rose">{t.consentRequired}</p>}
       <FormError message={state && "error" in state ? state.error : undefined} />
       <SubmitButton variant="accent" size="lg" className="w-full" pendingText={t.pendingText}>
         {t.submit}

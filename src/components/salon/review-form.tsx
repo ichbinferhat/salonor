@@ -55,7 +55,7 @@ function ReviewModal({
             <CheckCircle2 className="size-8 text-mint" />
           </span>
           <p className="mt-4 text-ink-soft">
-            {dict.salon.reviewPublished}
+            {state.notice ?? dict.salon.reviewPublished}
           </p>
           <Button variant="accent" className="mt-5 w-full" onClick={done}>
             {dict.salon.close}

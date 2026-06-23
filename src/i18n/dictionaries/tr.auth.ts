@@ -39,6 +39,10 @@ export const auth = {
     submitPending: "Hesap oluşturuluyor...",
     haveAccount: "Zaten hesabın var mı?",
     signIn: "Giriş yap",
+    consentBefore: "Kişisel verilerimin ",
+    consentLink: "KVKK Aydınlatma Metni",
+    consentAfter: " kapsamında işlenmesini kabul ediyorum.",
+    consentRequired: "Hesap oluşturmak için aydınlatma onayını işaretlemen gerekir.",
   },
 
   businessForm: {

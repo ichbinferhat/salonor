@@ -11,9 +11,14 @@ import { todayStr, addDaysStr, WEEKDAYS_TR, minToHHMM } from "@/lib/datetime";
 /** İstek sahibinin IP'sini başlıklardan çıkarır (rate limit anahtarı için). */
 async function clientIp(): Promise<string> {
   const h = await headers();
-  const xff = h.get("x-forwarded-for");
-  if (xff) return xff.split(",")[0].trim();
-  return h.get("x-real-ip") ?? "unknown";
+  // Vercel'in güvenilir gerçek-istemci IP başlığını önce kullan (spoof'a kapalı);
+  // ham x-forwarded-for son çaredir (istemci tarafından sahtelenebilir).
+  return (
+    h.get("x-real-ip") ??
+    h.get("x-vercel-forwarded-for")?.split(",")[0].trim() ??
+    h.get("x-forwarded-for")?.split(",")[0].trim() ??
+    "unknown"
+  );
 }
 
 export type StyleRecommendation = {
@@ -47,9 +52,16 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
 export async function suggestStyleAction(
   businessId: string,
   imageDataUrl: string,
-  prefs?: string
+  prefs?: string,
+  consent?: boolean
 ): Promise<StyleAdvice> {
   if (!businessId || !imageDataUrl) return { ok: false, error: "Eksik bilgi." };
+
+  // KVKK: Yüz fotoğrafı yurt dışındaki Gemini'ye (Google) aktarıldığından açık rıza
+  // ZORUNLUDUR. İstemci onay kutusu atlanabileceği için (doğrudan action çağrısı)
+  // rızayı SUNUCUDA da doğrula.
+  if (!consent)
+    return { ok: false, error: "Devam etmek için veri işleme ve yurt dışı aktarım onayı gerekli." };
 
   const match = /^data:(image\/[a-zA-Z+]+);base64,(.+)$/.exec(imageDataUrl);
   if (!match) return { ok: false, error: "Geçersiz görsel biçimi." };

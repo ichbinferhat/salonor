@@ -43,3 +43,6 @@ next-env.d.ts
 /src/generated/prisma
 
 .vercel
+
+# CI workflow: gh token'da workflow scope yok; GitHub web UI'dan eklenebilir
+.github/workflows/

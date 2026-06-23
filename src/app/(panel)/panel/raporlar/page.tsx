@@ -33,11 +33,17 @@ export default async function ReportsPage() {
   ]);
 
   const realized = appts.filter((a) => a.status === "CONFIRMED" || a.status === "COMPLETED");
-  const apptRevenue = realized.reduce((s, a) => s + a.totalTl, 0);
+  // CİRO yalnızca GERÇEKLEŞEN işten sayılır: tamamlanmış + günü geçmiş onaylı randevular.
+  // Bugünün henüz yaşanmamış CONFIRMED randevuları "kazanılmış" sayılmaz (gün geçince
+  // veya COMPLETED işaretlenince ciroya girer) — böylece gelecek randevu ciroyu şişirmez.
+  const earned = appts.filter(
+    (a) => a.status === "COMPLETED" || (a.status === "CONFIRMED" && a.date < today)
+  );
+  const apptRevenue = earned.reduce((s, a) => s + a.totalTl, 0);
   const saleRevenue = sales.reduce((s, sl) => s + sl.totalTl, 0);
   const revenue = apptRevenue + saleRevenue;
   const count = realized.length;
-  const avgTicket = count ? Math.round(apptRevenue / count) : 0;
+  const avgTicket = earned.length ? Math.round(apptRevenue / earned.length) : 0;
 
   const completed = appts.filter((a) => a.status === "COMPLETED").length;
   const cancelled = appts.filter((a) => a.status === "CANCELLED").length;
@@ -46,7 +52,7 @@ export default async function ReportsPage() {
   // Günlük ciro (son 14 gün) — randevu + kasa satışları
   const daily = Array.from({ length: 14 }, (_, i) => {
     const date = addDaysStr(today, -13 + i);
-    const apptTotal = realized.filter((a) => a.date === date).reduce((s, a) => s + a.totalTl, 0);
+    const apptTotal = earned.filter((a) => a.date === date).reduce((s, a) => s + a.totalTl, 0);
     const saleTotal = sales.filter((sl) => sl.date === date).reduce((s, sl) => s + sl.totalTl, 0);
     return { date, total: apptTotal + saleTotal };
   });
@@ -54,7 +60,7 @@ export default async function ReportsPage() {
 
   // Hizmet bazında gelir
   const svcMap = new Map<string, { count: number; revenue: number }>();
-  for (const a of realized)
+  for (const a of earned)
     for (const it of a.items) {
       const cur = svcMap.get(it.name) ?? { count: 0, revenue: 0 };
       cur.count += 1;
@@ -69,7 +75,7 @@ export default async function ReportsPage() {
 
   // Personel bazında gelir
   const staffMap = new Map<string, { name: string; image: string; count: number; revenue: number }>();
-  for (const a of realized) {
+  for (const a of earned) {
     const cur =
       staffMap.get(a.staff.id) ?? { name: a.staff.name, image: a.staff.image, count: 0, revenue: 0 };
     cur.count += 1;

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { db } from "@/lib/db";
-import { getSession, createSession } from "@/lib/session";
+import { getSession, createSession, destroySession } from "@/lib/session";
 import { hashPassword, verifyPassword } from "@/lib/auth";
 import { todayStr } from "@/lib/datetime";
 import { rateLimit } from "@/lib/rate-limit";
@@ -14,9 +14,14 @@ import type { FormState } from "./auth";
 
 async function clientIp(): Promise<string> {
   const h = await headers();
-  const xff = h.get("x-forwarded-for");
-  if (xff) return xff.split(",")[0].trim();
-  return h.get("x-real-ip") ?? "unknown";
+  // Vercel'in güvenilir gerçek-istemci IP başlığını önce kullan (spoof'a kapalı);
+  // ham x-forwarded-for son çaredir (istemci tarafından sahtelenebilir).
+  return (
+    h.get("x-real-ip") ??
+    h.get("x-vercel-forwarded-for")?.split(",")[0].trim() ??
+    h.get("x-forwarded-for")?.split(",")[0].trim() ??
+    "unknown"
+  );
 }
 
 export async function toggleFavoriteAction(businessId: string, slug: string) {
@@ -143,6 +148,20 @@ export async function addPublicReviewAction(
   if (!rateLimit(`review:${ip}`, 3, 60 * 60 * 1000).ok)
     return { error: "Çok fazla yorum gönderdin. Lütfen biraz sonra tekrar dene." };
 
+  // SAHTE YORUM / PUAN MANİPÜLASYONU KORUMASI:
+  // - Anonim (girişsiz) yorumlar ONAY BEKLER (hidden=true): vitrinde görünmez,
+  //   puana sayılmaz; admin onaylayınca (göster) yayınlanır.
+  // - Girişli kullanıcı yorumları anında yayında ve puana sayılır (hesap + rate-limit
+  //   bariyeri spam'i sınırlar). Bu işletmede TAMAMLANMIŞ randevusu varsa "doğrulanmış".
+  const pending = !session;
+  let verified = false;
+  if (session) {
+    const completed = await db.appointment.count({
+      where: { businessId: business.id, customerId: session.userId, status: "COMPLETED" },
+    });
+    verified = completed > 0;
+  }
+
   try {
     await db.review.create({
       data: {
@@ -151,10 +170,12 @@ export async function addPublicReviewAction(
         authorName: session ? null : nameInput.slice(0, 60),
         rating,
         comment: comment.slice(0, 1000),
+        verified,
+        hidden: pending,
       },
     });
 
-    await recomputeBusinessRating(business.id);
+    if (!pending) await recomputeBusinessRating(business.id);
   } catch (e) {
     console.error("addPublicReviewAction:", e);
     return { error: "Yorum kaydedilemedi, lütfen tekrar dene." };
@@ -163,6 +184,12 @@ export async function addPublicReviewAction(
   // Not: revalidatePath'i burada KULLANMIYORUZ — ağır salon sayfasını eşzamanlı
   // yeniden render etmek "Gönderiliyor..."u uzatıyordu. Yeni yorum, modal
   // kapanınca client tarafında router.refresh() ile anında görünür.
+  if (pending) {
+    return {
+      ok: true,
+      notice: "Yorumun alındı, teşekkürler! İşletme/yönetim onayından sonra yayınlanacak.",
+    };
+  }
   return { ok: true };
 }
 
@@ -199,4 +226,42 @@ export async function updateProfileAction(
 
   revalidatePath("/hesap/profil");
   return { ok: true };
+}
+
+/**
+ * Hesabı kalıcı olarak siler (App Store 5.1.1(v) + Google Play hesap-silme politikası
+ * gereği zorunlu). Şifre doğrulaması ister.
+ *
+ * Pratikte bu akış yalnızca MÜŞTERİ (CUSTOMER) için erişilebilir — `/hesap/*` layout'u
+ * OWNER/ADMIN'i panele yönlendirdiğinden işletme sahibi bu formu göremez. Müşteri için:
+ *  - favorites ve devices → onDelete: Cascade ile silinir
+ *  - appointments.customer, reviews.customer → onDelete: SetNull ile anonimleştirilir
+ *    (geçmiş randevular işletme tarafında kaybolmaz, yalnızca kişisel bağ koparılır).
+ *
+ * NOT: Eğer bir OWNER bu aksiyonu çağırırsa User→Business (onDelete: Cascade) tetiklenir
+ * ve işletme + tüm randevu/personel/hizmet kayıtları SİLİNİR. İşletme silme için panel
+ * üzerinden ayrı/onaylı bir akış planlanmalıdır.
+ */
+export async function deleteAccountAction(
+  _prev: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const session = await getSession();
+  if (!session) redirect("/giris");
+
+  const password = String(formData.get("password") ?? "");
+
+  const user = await db.user.findUnique({ where: { id: session.userId } });
+  if (!user) {
+    await destroySession();
+    redirect("/");
+  }
+
+  if (!(await verifyPassword(password, user.passwordHash))) {
+    return { error: "Şifre hatalı. Hesabınız silinmedi." };
+  }
+
+  await db.user.delete({ where: { id: session.userId } });
+  await destroySession();
+  redirect("/?hesap-silindi=1");
 }

@@ -166,3 +166,27 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* ───────────────────────── Mobil uygulama (WebView) ─────────────────────────
+   Native kabuk (salonor-expo) kendi üst başlığını ve alt sekme çubuğunu sağlar.
+   WebView, User-Agent'a "SalonorApp" ekler → root layout `<body>`'ye `in-app`
+   sınıfını koyar. Burada web başlık/altbilgisini gizleyip native çubuklara yer
+   açıyoruz, çentik/ana-çubuk güvenli alanlarına saygı duyuyoruz. */
+body.in-app > header,                 /* (site) üst başlık + (admin)/(flow) inline başlıklar */
+body.in-app footer,                   /* (site) altbilgi */
+body.in-app header.lg\:hidden {       /* (panel) mobil üst çubuk */
+  display: none !important;
+}
+
+/* İçeriği native üst çubuk + çentik altından başlat. */
+body.in-app main {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Web'in kendi sabit alt aksiyon çubukları (randevu sihirbazı / salon "randevu al" /
+   harita balonu) cihaz ana-çubuğunun (home indicator) üstünde kalsın. Native sekme
+   çubuğu gösterildiğinde WebView zaten onun ÜSTÜNDE konumlandığı için üst üste binmez;
+   tam-ekran rotalarda (sekme gizliyken) env(safe-area-inset-bottom) gerçek değer döndürür. */
+body.in-app .fixed.inset-x-0.bottom-0 {
+  bottom: env(safe-area-inset-bottom, 0px);
+}

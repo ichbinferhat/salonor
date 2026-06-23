@@ -68,7 +68,12 @@ export const en: Dictionary = {
     privacy: "Privacy & GDPR",
     terms: "Terms of use",
     contact: "Contact",
-    rights: "© 2026 Salonor Teknoloji A.Ş. All rights reserved.",
+    legalTitle: "Legal",
+    distanceSales: "Distance sales agreement",
+    preInfo: "Pre-information form",
+    withdrawal: "Withdrawal & refund",
+    cookiePolicy: "Cookie policy",
+    rights: "© 2026 Salonor. All rights reserved.",
     designedIn: "Designed in Türkiye 🇹🇷",
   },
 
@@ -360,12 +365,16 @@ export const en: Dictionary = {
       submitBooking: "Confirm appointment — {total}",
       submitting: "Confirming...",
       paymentNote: "Payment is made at the salon. You can cancel for free.",
+      consentBefore: "I agree that the personal data I provide to make this appointment is processed under the ",
+      consentLink: "KVKK Privacy Notice",
+      consentAfter: " and shared with the relevant salon for the appointment.",
     },
 
     errors: {
       nameRequired: "Please enter your first and last name.",
       phoneRequired: "Enter a valid mobile number so we can send your confirmation by SMS (05XX XXX XX XX).",
       connection: "A connection error occurred. Please try again.",
+      consentRequired: "You must accept the privacy notice to continue.",
     },
 
     summary: {
@@ -417,10 +426,10 @@ export const en: Dictionary = {
     subtitlePrefix: "Each plan includes ",
     subtitleEmphasis: "everything in the one below",
     subtitleSuffix:
-      ", plus new tools to grow your business. Free setup, no contract.",
+      ", plus new tools to grow your business. Free setup, no long-term commitment.",
 
     trust: {
-      noContract: "No contract, no commitment",
+      noContract: "No long-term commitment, cancel anytime",
       freeSetup: "Free setup — our team handles it",
       liveSupport: "Live support on WhatsApp",
     },
@@ -693,6 +702,10 @@ export const en: Dictionary = {
       submitPending: "Creating account...",
       haveAccount: "Already have an account?",
       signIn: "Sign in",
+      consentBefore: "I agree to the processing of my personal data under the ",
+      consentLink: "KVKK Privacy Notice",
+      consentAfter: ".",
+      consentRequired: "You must accept the privacy notice to create an account.",
     },
 
     businessForm: {
@@ -811,7 +824,7 @@ export const en: Dictionary = {
         "The security of your personal data matters to us. This notice summarizes how your data is processed when you use Salonor.",
       controllerTitle: "Data controller",
       controllerBody:
-        "Under Türkiye's Personal Data Protection Law No. 6698 (KVKK), the data controller is Salonor Teknoloji A.Ş. You can send your questions to destek@salonor.com.",
+        "Under Türkiye's Personal Data Protection Law No. 6698 (KVKK), the data controller is Ferhat Gökel, who operates the Salonor platform as an individual / sole proprietorship. Salonor is not currently a joint-stock company. You can send your questions and KVKK requests to destek@salonor.com.",
       dataTitle: "Data we process",
       dataBody:
         "Your account details (name, email, phone), booking history, favorite salons and the reviews you write; plus basic usage data to maintain service quality.",
@@ -903,6 +916,111 @@ export const en: Dictionary = {
       pendingText: "Submitting...",
       submit: "Send request",
       disclaimer: "Your details are used only to get in touch with you.",
+      consentBefore: "I agree to the processing of my personal data under the ",
+      consentLink: "KVKK Privacy Notice",
+      consentAfter: " and to being contacted.",
+      consentRequired: "You must accept the privacy notice to continue.",
+    },
+
+    distanceSales: {
+      metaTitle: "Distance Sales Agreement",
+      title: "Distance Sales Agreement",
+      updated: "June 23, 2026",
+      intro:
+        "This agreement governs the rights and obligations of the parties regarding the online sale of Salonor Business paid packages, in accordance with Türkiye's Consumer Protection Law No. 6502 and the Regulation on Distance Contracts.",
+      partiesTitle: "1. Parties",
+      partiesBody:
+        "SELLER: Ferhat Gökel, who operates the Salonor platform as an individual / sole proprietorship. See the Pre-Information Form and Contact page for contact and address details. BUYER: the business/user purchasing a Salonor Business package.",
+      subjectTitle: "2. Subject of the agreement",
+      subjectBody:
+        "The subject of the agreement is the sale and delivery of the Salonor Business software subscription (Starter, Professional or Enterprise package) ordered electronically by the Buyer, whose features and sale price are stated on the Pricing page.",
+      productTitle: "3. Service and price",
+      productBody:
+        "The service is a subscription software covering appointments, calendar, point of sale, SMS, reporting and other panel features depending on the selected package. Package prices, the billing period (monthly/annual) and any taxes are shown up to date on the Pricing page. Prices are exclusive of VAT.",
+      paymentTitle: "4. Payment",
+      paymentBody:
+        "Payment is collected according to the selected package and billing period. Payment is required for the subscription to start; your account is set up by our team and your login details are sent to you.",
+      deliveryTitle: "5. Delivery / performance",
+      deliveryBody:
+        "The service is digital; once payment is approved your account is set up and panel access is enabled. Exceptions to the right of withdrawal for digital services performed immediately are explained in the Right of Withdrawal and Refund Policy.",
+      withdrawalTitle: "6. Right of withdrawal",
+      withdrawalBody:
+        "The Buyer has the 14-day right of withdrawal provided by law. See the Right of Withdrawal and Refund Policy page for the exercise, exceptions and refund process.",
+      disputeTitle: "7. Dispute resolution",
+      disputeBody:
+        "For disputes arising from this agreement, Consumer Arbitration Committees and Consumer Courts have jurisdiction within the relevant monetary limits. For complaints and requests, contact destek@salonor.com.",
+    },
+
+    preInfo: {
+      metaTitle: "Pre-Information Form",
+      title: "Pre-Information Form",
+      updated: "June 23, 2026",
+      intro:
+        "This form contains the matters you must be informed about before purchasing Salonor Business paid packages, in accordance with Law No. 6502 and the Regulation on Distance Contracts.",
+      sellerTitle: "Seller information",
+      sellerBody:
+        "The seller is Ferhat Gökel, who operates the Salonor platform as an individual / sole proprietorship (not a joint-stock company). The current values in the company-info record apply for the full address and tax/contact details; for questions, contact destek@salonor.com and isletme@salonor.com.",
+      productTitle: "Essential characteristics of the service",
+      productBody:
+        "The service is the Salonor Business subscription software for appointment and business management. The features included in the packages (Starter, Professional, Enterprise) are listed in detail on the Pricing page.",
+      priceTitle: "Price and payment",
+      priceBody:
+        "The total price (taxes included/excluded), the billing period and the payment method are shown on the order screen and the Pricing page. Prices are exclusive of VAT. The subscription renews according to the selected period.",
+      deliveryTitle: "Performance and term",
+      deliveryBody:
+        "The service is digital and access is enabled after payment confirmation by setting up your account. The subscription term is determined by the monthly or annual period you choose.",
+      withdrawalTitle: "Right of withdrawal",
+      withdrawalBody:
+        "Your 14-day right of withdrawal and its exceptions for digital services are explained on the Right of Withdrawal and Refund Policy page. You can send your withdrawal notice to destek@salonor.com.",
+      complaintTitle: "Complaints and applications",
+      complaintBody:
+        "You can send your requests and complaints to destek@salonor.com; for unresolved disputes you may apply to the Consumer Arbitration Committee or Consumer Court according to the legal monetary limits.",
+    },
+
+    withdrawal: {
+      metaTitle: "Right of Withdrawal and Refund Policy",
+      title: "Right of Withdrawal and Refund Policy",
+      updated: "June 23, 2026",
+      intro:
+        "Your right of withdrawal and the refund conditions for Salonor Business paid packages are explained below.",
+      rightTitle: "Withdrawal period",
+      rightBody:
+        "In distance contracts, you have the right to withdraw from the contract within 14 days from the purchase date without giving any reason and without paying a penalty.",
+      howTitle: "Exercising the right of withdrawal",
+      howBody:
+        "To exercise your right of withdrawal, it is sufficient to send a clear notice to destek@salonor.com within 14 days. State your account/business details and your withdrawal request in your notice.",
+      exceptionTitle: "Exception to the right of withdrawal (digital service)",
+      exceptionBody:
+        "Under the legislation, the right of withdrawal may not be exercised for digital content/services whose performance has begun with the consumer's consent before the withdrawal period expires and that are performed immediately. Therefore, where your account has been set up and panel access enabled (performance has begun), the right of withdrawal may be limited; this is presented for your separate approval during purchase.",
+      refundTitle: "Refund process",
+      refundBody:
+        "For a valid withdrawal request, the amount you paid is refunded within 14 days from the date your withdrawal notice reaches us, using the payment method you used and without any additional charge.",
+      contactTitle: "Contact",
+      contactBody:
+        "You can write to destek@salonor.com for your withdrawal and refund requests.",
+    },
+
+    cookies: {
+      metaTitle: "Cookie Policy",
+      title: "Cookie Policy",
+      updated: "June 23, 2026",
+      intro:
+        "This policy explains which cookies and similar technologies we use when you use Salonor and how you can manage your preferences.",
+      whatTitle: "What is a cookie?",
+      whatBody:
+        "Cookies are small text files stored on your device by the sites you visit. They are used to remember your preferences and improve the site.",
+      typesTitle: "Cookies we use",
+      typesBody:
+        "Essential cookies: required for core functions such as session and language preference (e.g. the salonor_locale cookie storing your language preference and the salonor_cookie_consent cookie storing your cookie consent). These cookies are always active. Analytics cookies: Vercel Analytics is used to measure traffic and improve the experience, and these load only if you accept cookie consent.",
+      analyticsTitle: "Analytics and third parties",
+      analyticsBody:
+        "We use the Vercel Analytics service to understand site traffic. Analytics cookies do not run unless you click 'Accept' on the cookie banner at the bottom of the site; you can decline with the 'Essential only' option.",
+      manageTitle: "Managing your preferences",
+      manageBody:
+        "You can set your cookie preference from the cookie banner at the bottom of the site; you can also delete or block cookies from your browser settings. Blocking essential cookies may affect some functions of the site.",
+      contactTitle: "Contact",
+      contactBody:
+        "You can send your questions about cookies to destek@salonor.com.",
     },
   },
 

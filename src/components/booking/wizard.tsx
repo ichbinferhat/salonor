@@ -117,6 +117,8 @@ export function BookingWizard({
   const [note, setNote] = useState("");
   const [custName, setCustName] = useState(initialUserName ?? "");
   const [custPhone, setCustPhone] = useState("");
+  // KVKK aydınlatma onayı — yalnızca misafir (girişsiz) rezervasyonda zorunlu.
+  const [consent, setConsent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<{ code: string; couponDropped?: boolean } | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -208,6 +210,12 @@ export function BookingWizard({
     }
     if (custPhone.trim() && !isValidTrMobile(custPhone)) {
       setError(b.errors.phoneRequired);
+      return;
+    }
+    // Misafir rezervasyonda KVKK aydınlatma onayı zorunlu (girişli kullanıcı
+    // kayıt sırasında zaten onay vermiştir; server action'a dokunulmaz).
+    if (!isAuthed && !consent) {
+      setError(b.errors.consentRequired);
       return;
     }
     setError(null);
@@ -625,6 +633,27 @@ export function BookingWizard({
                     />
                   </div>
                 </div>
+
+                {!isAuthed && (
+                  <label className="flex cursor-pointer items-start gap-2.5 text-sm text-ink-soft">
+                    <input
+                      type="checkbox"
+                      checked={consent}
+                      onChange={(e) => {
+                        setConsent(e.target.checked);
+                        if (e.target.checked) setError(null);
+                      }}
+                      className="mt-0.5 size-4 shrink-0 rounded border-line-strong accent-accent"
+                    />
+                    <span>
+                      {b.confirm.consentBefore}
+                      <Link href="/kvkk" className="font-semibold text-accent-deep hover:underline">
+                        {b.confirm.consentLink}
+                      </Link>
+                      {b.confirm.consentAfter}
+                    </span>
+                  </label>
+                )}
 
                 <FormError message={error} />
 

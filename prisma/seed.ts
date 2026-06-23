@@ -481,6 +481,19 @@ function code(): string {
 }
 
 async function main() {
+  // GÜVENLİK: seed.ts TÜM tabloları siler. Yanlışlıkla canlı/uzak veritabanına
+  // çalıştırılmasını önle — host uzaksa ALLOW_PROD_SEED=1 olmadan çalışma.
+  const dbUrl = process.env.DATABASE_URL ?? "";
+  const isLocal = /@(localhost|127\.0\.0\.1)[:/]/.test(dbUrl);
+  if (!isLocal && process.env.ALLOW_PROD_SEED !== "1") {
+    console.error(
+      "\n⛔ seed.ts UZAK/ÜRETİM veritabanına bağlı ve TÜM verileri siler.\n" +
+        "   Kaza önleme için iptal edildi. Gerçekten sıfırdan tohumlamak istiyorsan:\n" +
+        "   ALLOW_PROD_SEED=1 npm run db:seed\n"
+    );
+    process.exit(1);
+  }
+
   console.log("Mevcut veriler temizleniyor...");
   await db.appointmentItem.deleteMany();
   await db.review.deleteMany();

@@ -643,7 +643,11 @@ function AppointmentDetailModal({
 
   function setStatus(status: "COMPLETED" | "NO_SHOW" | "CANCELLED") {
     startTransition(async () => {
-      await setAppointmentStatusAction(appt.id, status);
+      const r = await setAppointmentStatusAction(appt.id, status);
+      if (r && !r.ok) {
+        alert(r.error ?? "İşlem yapılamadı, lütfen tekrar dene.");
+        return;
+      }
       onChanged();
     });
   }

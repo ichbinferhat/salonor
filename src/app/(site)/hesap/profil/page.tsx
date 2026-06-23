@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import { getDictionary } from "@/i18n";
 import { ProfileForm } from "@/components/account/profile-form";
+import { DeleteAccountSection } from "@/components/account/delete-account";
 
 export async function generateMetadata(): Promise<Metadata> {
   const dict = await getDictionary();
@@ -17,12 +18,15 @@ export default async function ProfilePage() {
   });
 
   return (
-    <ProfileForm
-      defaults={{
-        name: user?.name ?? "",
-        email: user?.email ?? "",
-        phone: user?.phone ?? "",
-      }}
-    />
+    <>
+      <ProfileForm
+        defaults={{
+          name: user?.name ?? "",
+          email: user?.email ?? "",
+          phone: user?.phone ?? "",
+        }}
+      />
+      <DeleteAccountSection />
+    </>
   );
 }

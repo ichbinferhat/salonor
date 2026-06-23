@@ -74,7 +74,12 @@ export const de: Dictionary = {
     privacy: "Datenschutz & DSGVO",
     terms: "Nutzungsbedingungen",
     contact: "Kontakt",
-    rights: "© 2026 Salonor Teknoloji A.Ş. Alle Rechte vorbehalten.",
+    legalTitle: "Rechtliches",
+    distanceSales: "Fernabsatzvertrag",
+    preInfo: "Vorinformationsformular",
+    withdrawal: "Widerruf & Rückerstattung",
+    cookiePolicy: "Cookie-Richtlinie",
+    rights: "© 2026 Salonor. Alle Rechte vorbehalten.",
     designedIn: "Gestaltet in der Türkei 🇹🇷",
   },
 
@@ -391,6 +396,9 @@ export const de: Dictionary = {
       submitBooking: "Termin bestätigen — {total}",
       submitting: "Wird bestätigt...",
       paymentNote: "Die Zahlung erfolgt im Salon. Du kannst kostenlos stornieren.",
+      consentBefore: "Ich stimme zu, dass die für diesen Termin angegebenen personenbezogenen Daten gemäß der ",
+      consentLink: "KVKK-Datenschutzerklärung",
+      consentAfter: " verarbeitet und für den Termin an den betreffenden Salon weitergegeben werden.",
     },
 
     // Fehlermeldungen
@@ -398,6 +406,7 @@ export const de: Dictionary = {
       nameRequired: "Bitte gib deinen Vor- und Nachnamen ein.",
       phoneRequired: "Gib eine gültige Handynummer ein, damit wir die Bestätigung per SMS senden können (05XX XXX XX XX).",
       connection: "Es ist ein Verbindungsfehler aufgetreten. Bitte versuche es erneut.",
+      consentRequired: "Um fortzufahren, musst du die Datenschutzerklärung akzeptieren.",
     },
 
     // Zusammenfassungskarte (Sidebar) und mobile Leiste
@@ -453,10 +462,10 @@ export const de: Dictionary = {
     subtitlePrefix: "Jedes Paket umfasst ",
     subtitleEmphasis: "alle Systeme des kleineren Pakets",
     subtitleSuffix:
-      " und ergänzt sie um neue Werkzeuge für dein Wachstum. Einrichtung kostenlos, kein Vertrag.",
+      " und ergänzt sie um neue Werkzeuge für dein Wachstum. Einrichtung kostenlos, keine langfristige Bindung.",
 
     trust: {
-      noContract: "Kein Vertrag, keine Bindung",
+      noContract: "Keine langfristige Bindung, jederzeit kündbar",
       freeSetup: "Einrichtung kostenlos — unser Team übernimmt das",
       liveSupport: "Live-Support über WhatsApp",
     },
@@ -729,6 +738,10 @@ export const de: Dictionary = {
       submitPending: "Konto wird erstellt...",
       haveAccount: "Hast du bereits ein Konto?",
       signIn: "Anmelden",
+      consentBefore: "Ich stimme der Verarbeitung meiner personenbezogenen Daten gemäß der ",
+      consentLink: "KVKK-Datenschutzerklärung",
+      consentAfter: " zu.",
+      consentRequired: "Um ein Konto zu erstellen, musst du die Datenschutzerklärung akzeptieren.",
     },
 
     businessForm: {
@@ -858,7 +871,7 @@ export const de: Dictionary = {
         "Die Sicherheit deiner personenbezogenen Daten ist uns wichtig. Dieser Text fasst zusammen, wie deine Daten bei der Nutzung von Salonor verarbeitet werden.",
       controllerTitle: "Verantwortlicher",
       controllerBody:
-        "Im Sinne des türkischen Datenschutzgesetzes Nr. 6698 (KVKK) ist die Salonor Teknoloji A.Ş. der Verantwortliche. Deine Fragen kannst du an destek@salonor.com richten.",
+        "Im Sinne des türkischen Datenschutzgesetzes Nr. 6698 (KVKK) ist der Verantwortliche Ferhat Gökel, der die Salonor-Plattform als natürliche Person / Einzelunternehmen betreibt. Salonor ist derzeit keine Aktiengesellschaft. Deine Fragen und KVKK-Anfragen kannst du an destek@salonor.com richten.",
       dataTitle: "Verarbeitete Daten",
       dataBody:
         "Deine Kontodaten (Name, E-Mail, Telefon), dein Terminverlauf, deine Lieblingssalons und deine geschriebenen Bewertungen; außerdem werden zur Sicherung der Servicequalität grundlegende Nutzungsdaten verarbeitet.",
@@ -954,6 +967,111 @@ export const de: Dictionary = {
       pendingText: "Wird gesendet...",
       submit: "Anfrage senden",
       disclaimer: "Deine Angaben werden nur verwendet, um mit dir Kontakt aufzunehmen.",
+      consentBefore: "Ich stimme der Verarbeitung meiner personenbezogenen Daten gemäß der ",
+      consentLink: "KVKK-Datenschutzerklärung",
+      consentAfter: " sowie der Kontaktaufnahme zu.",
+      consentRequired: "Um fortzufahren, musst du die Datenschutzerklärung akzeptieren.",
+    },
+
+    distanceSales: {
+      metaTitle: "Fernabsatzvertrag",
+      title: "Fernabsatzvertrag",
+      updated: "23. Juni 2026",
+      intro:
+        "Dieser Vertrag regelt die Rechte und Pflichten der Parteien beim Online-Verkauf der kostenpflichtigen Salonor-Business-Pakete gemäß dem türkischen Verbraucherschutzgesetz Nr. 6502 und der Verordnung über Fernabsatzverträge.",
+      partiesTitle: "1. Parteien",
+      partiesBody:
+        "VERKÄUFER: Ferhat Gökel, der die Salonor-Plattform als natürliche Person / Einzelunternehmen betreibt. Kontakt- und Adressdaten findest du im Vorinformationsformular und auf der Kontaktseite. KÄUFER: das Unternehmen / der Nutzer, das/der ein Salonor-Business-Paket erwirbt.",
+      subjectTitle: "2. Vertragsgegenstand",
+      subjectBody:
+        "Gegenstand des Vertrags ist der Verkauf und die Bereitstellung des vom Käufer elektronisch bestellten Salonor-Business-Software-Abonnements (Paket Starter, Professional oder Enterprise), dessen Eigenschaften und Verkaufspreis auf der Preisseite angegeben sind.",
+      productTitle: "3. Leistung und Preis",
+      productBody:
+        "Die Leistung ist eine Abonnement-Software, die je nach gewähltem Paket Termine, Kalender, Kassensystem, SMS, Berichte und weitere Panel-Funktionen umfasst. Paketpreise, Abrechnungszeitraum (monatlich/jährlich) und etwaige Steuern werden aktuell auf der Preisseite angezeigt. Preise verstehen sich ohne MwSt.",
+      paymentTitle: "4. Zahlung",
+      paymentBody:
+        "Die Zahlung wird gemäß dem gewählten Paket und Abrechnungszeitraum eingezogen. Für den Beginn des Abonnements ist die Zahlung erforderlich; dein Konto wird von unserem Team eingerichtet und deine Zugangsdaten werden dir zugesandt.",
+      deliveryTitle: "5. Lieferung / Erfüllung",
+      deliveryBody:
+        "Die Leistung ist digital; nach Zahlungsfreigabe wird dein Konto eingerichtet und der Panel-Zugang aktiviert. Ausnahmen vom Widerrufsrecht bei sofort erbrachten digitalen Diensten sind in der Widerrufs- und Rückerstattungsrichtlinie erläutert.",
+      withdrawalTitle: "6. Widerrufsrecht",
+      withdrawalBody:
+        "Der Käufer hat das gesetzlich vorgesehene 14-tägige Widerrufsrecht. Ausübung, Ausnahmen und Rückerstattungsprozess findest du auf der Seite Widerrufs- und Rückerstattungsrichtlinie.",
+      disputeTitle: "7. Streitbeilegung",
+      disputeBody:
+        "Für Streitigkeiten aus diesem Vertrag sind die Verbraucherschlichtungsstellen und Verbrauchergerichte innerhalb der jeweiligen Wertgrenzen zuständig. Für Beschwerden und Anliegen: destek@salonor.com.",
+    },
+
+    preInfo: {
+      metaTitle: "Vorinformationsformular",
+      title: "Vorinformationsformular",
+      updated: "23. Juni 2026",
+      intro:
+        "Dieses Formular enthält die Punkte, über die du vor dem Kauf der kostenpflichtigen Salonor-Business-Pakete gemäß dem Gesetz Nr. 6502 und der Verordnung über Fernabsatzverträge informiert werden musst.",
+      sellerTitle: "Verkäuferinformationen",
+      sellerBody:
+        "Verkäufer ist Ferhat Gökel, der die Salonor-Plattform als natürliche Person / Einzelunternehmen betreibt (keine Aktiengesellschaft). Für vollständige Adresse sowie Steuer-/Kontaktdaten gelten die aktuellen Werte im company-info-Eintrag; bei Fragen: destek@salonor.com und isletme@salonor.com.",
+      productTitle: "Wesentliche Eigenschaften der Leistung",
+      productBody:
+        "Die Leistung ist die Salonor-Business-Abonnement-Software für Termin- und Geschäftsverwaltung. Die in den Paketen (Starter, Professional, Enterprise) enthaltenen Funktionen sind auf der Preisseite ausführlich aufgeführt.",
+      priceTitle: "Preis und Zahlung",
+      priceBody:
+        "Der Gesamtpreis (inkl./exkl. Steuern), der Abrechnungszeitraum und die Zahlungsweise werden im Bestellbildschirm und auf der Preisseite angezeigt. Preise verstehen sich ohne MwSt. Das Abonnement verlängert sich gemäß dem gewählten Zeitraum.",
+      deliveryTitle: "Erfüllung und Laufzeit",
+      deliveryBody:
+        "Die Leistung ist digital und der Zugang wird nach Zahlungsbestätigung durch Einrichtung deines Kontos aktiviert. Die Laufzeit des Abonnements richtet sich nach dem von dir gewählten monatlichen oder jährlichen Zeitraum.",
+      withdrawalTitle: "Widerrufsrecht",
+      withdrawalBody:
+        "Dein 14-tägiges Widerrufsrecht und dessen Ausnahmen für digitale Dienste sind auf der Seite Widerrufs- und Rückerstattungsrichtlinie erläutert. Deine Widerrufserklärung kannst du an destek@salonor.com senden.",
+      complaintTitle: "Beschwerden und Anträge",
+      complaintBody:
+        "Anliegen und Beschwerden kannst du an destek@salonor.com richten; bei ungelösten Streitigkeiten kannst du dich je nach gesetzlichen Wertgrenzen an die Verbraucherschlichtungsstelle oder das Verbrauchergericht wenden.",
+    },
+
+    withdrawal: {
+      metaTitle: "Widerrufs- und Rückerstattungsrichtlinie",
+      title: "Widerrufs- und Rückerstattungsrichtlinie",
+      updated: "23. Juni 2026",
+      intro:
+        "Dein Widerrufsrecht und die Rückerstattungsbedingungen für die kostenpflichtigen Salonor-Business-Pakete sind nachstehend erläutert.",
+      rightTitle: "Widerrufsfrist",
+      rightBody:
+        "Bei Fernabsatzverträgen hast du das Recht, innerhalb von 14 Tagen ab Kaufdatum ohne Angabe von Gründen und ohne Vertragsstrafe vom Vertrag zurückzutreten.",
+      howTitle: "Ausübung des Widerrufsrechts",
+      howBody:
+        "Um dein Widerrufsrecht auszuüben, genügt es, innerhalb von 14 Tagen eine eindeutige Erklärung an destek@salonor.com zu senden. Gib in deiner Erklärung deine Konto-/Geschäftsdaten und deinen Widerrufswunsch an.",
+      exceptionTitle: "Ausnahme vom Widerrufsrecht (digitaler Dienst)",
+      exceptionBody:
+        "Nach der Gesetzgebung kann das Widerrufsrecht bei digitalen Inhalten/Diensten, mit deren Ausführung mit Zustimmung des Verbrauchers vor Ablauf der Widerrufsfrist begonnen wurde und die sofort erbracht werden, nicht ausgeübt werden. Daher kann das Widerrufsrecht eingeschränkt sein, sobald dein Konto eingerichtet und der Panel-Zugang aktiviert wurde (Ausführung begonnen); dies wird beim Kauf gesondert zu deiner Zustimmung vorgelegt.",
+      refundTitle: "Rückerstattungsprozess",
+      refundBody:
+        "Bei einem gültigen Widerruf wird der von dir gezahlte Betrag innerhalb von 14 Tagen ab Eingang deiner Widerrufserklärung über die von dir verwendete Zahlungsmethode und ohne Zusatzkosten erstattet.",
+      contactTitle: "Kontakt",
+      contactBody:
+        "Für Widerrufs- und Rückerstattungsanliegen kannst du an destek@salonor.com schreiben.",
+    },
+
+    cookies: {
+      metaTitle: "Cookie-Richtlinie",
+      title: "Cookie-Richtlinie",
+      updated: "23. Juni 2026",
+      intro:
+        "Diese Richtlinie erläutert, welche Cookies und ähnlichen Technologien wir bei der Nutzung von Salonor verwenden und wie du deine Einstellungen verwalten kannst.",
+      whatTitle: "Was ist ein Cookie?",
+      whatBody:
+        "Cookies sind kleine Textdateien, die von den von dir besuchten Websites auf deinem Gerät gespeichert werden. Sie dienen dazu, deine Einstellungen zu merken und die Website zu verbessern.",
+      typesTitle: "Von uns verwendete Cookies",
+      typesBody:
+        "Notwendige Cookies: erforderlich für Grundfunktionen wie Sitzung und Sprachpräferenz (z. B. das Cookie salonor_locale für deine Sprachpräferenz und das Cookie salonor_cookie_consent für deine Cookie-Einwilligung). Diese Cookies sind immer aktiv. Analyse-Cookies: Vercel Analytics wird zur Messung des Traffics und zur Verbesserung des Erlebnisses verwendet und wird nur geladen, wenn du der Cookie-Einwilligung zustimmst.",
+      analyticsTitle: "Analyse und Dritte",
+      analyticsBody:
+        "Wir nutzen den Dienst Vercel Analytics, um den Website-Traffic zu verstehen. Analyse-Cookies werden nicht ausgeführt, sofern du im Cookie-Banner am Seitenende nicht auf 'Akzeptieren' klickst; mit der Option 'Nur notwendige' kannst du ablehnen.",
+      manageTitle: "Einstellungen verwalten",
+      manageBody:
+        "Du kannst deine Cookie-Einstellung im Cookie-Banner am Seitenende festlegen; außerdem kannst du Cookies in den Browsereinstellungen löschen oder blockieren. Das Blockieren notwendiger Cookies kann einige Funktionen der Website beeinträchtigen.",
+      contactTitle: "Kontakt",
+      contactBody:
+        "Fragen zu Cookies kannst du an destek@salonor.com richten.",
     },
   },
 

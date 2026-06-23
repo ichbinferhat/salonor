@@ -74,7 +74,12 @@ export const es: Dictionary = {
     privacy: "Privacidad y RGPD",
     terms: "Términos de uso",
     contact: "Contacto",
-    rights: "© 2026 Salonor Teknoloji A.Ş. Todos los derechos reservados.",
+    legalTitle: "Legal",
+    distanceSales: "Contrato de venta a distancia",
+    preInfo: "Formulario de información previa",
+    withdrawal: "Desistimiento y reembolso",
+    cookiePolicy: "Política de cookies",
+    rights: "© 2026 Salonor. Todos los derechos reservados.",
     designedIn: "Diseñado en Türkiye 🇹🇷",
   },
 
@@ -391,6 +396,9 @@ export const es: Dictionary = {
       submitBooking: "Confirmar cita — {total}",
       submitting: "Confirmando...",
       paymentNote: "El pago se realiza en el salón. Tienes derecho a cancelación gratuita.",
+      consentBefore: "Acepto que los datos personales que proporciono para esta cita se traten conforme al ",
+      consentLink: "Aviso de Privacidad (KVKK)",
+      consentAfter: " y se compartan con el salón correspondiente para la cita.",
     },
 
     // Mensajes de error
@@ -398,6 +406,7 @@ export const es: Dictionary = {
       nameRequired: "Introduce tu nombre y apellidos.",
       phoneRequired: "Introduce un número de móvil válido para poder enviarte la confirmación por SMS (05XX XXX XX XX).",
       connection: "Se ha producido un error de conexión. Inténtalo de nuevo.",
+      consentRequired: "Debes aceptar el aviso de privacidad para continuar.",
     },
 
     // Tarjeta de resumen (sidebar) y barra móvil
@@ -453,10 +462,10 @@ export const es: Dictionary = {
     subtitlePrefix: "Cada plan incluye ",
     subtitleEmphasis: "todos los sistemas del anterior",
     subtitleSuffix:
-      " y añade nuevas herramientas para hacer crecer tu negocio. Instalación gratuita, sin contrato.",
+      " y añade nuevas herramientas para hacer crecer tu negocio. Instalación gratuita, sin compromiso de larga duración.",
 
     trust: {
-      noContract: "Sin contrato, sin compromiso",
+      noContract: "Sin compromiso de larga duración, cancela cuando quieras",
       freeSetup: "Instalación gratuita — la prepara nuestro equipo",
       liveSupport: "Soporte en vivo por WhatsApp",
     },
@@ -729,6 +738,10 @@ export const es: Dictionary = {
       submitPending: "Creando cuenta...",
       haveAccount: "¿Ya tienes cuenta?",
       signIn: "Iniciar sesión",
+      consentBefore: "Acepto el tratamiento de mis datos personales conforme al ",
+      consentLink: "Aviso de Privacidad (KVKK)",
+      consentAfter: ".",
+      consentRequired: "Debes aceptar el aviso de privacidad para crear una cuenta.",
     },
 
     businessForm: {
@@ -858,7 +871,7 @@ export const es: Dictionary = {
         "La seguridad de tus datos personales es importante para nosotros. Este texto resume cómo se tratan tus datos cuando usas Salonor.",
       controllerTitle: "Responsable del tratamiento",
       controllerBody:
-        "En el marco de la Ley n.º 6698 de Protección de Datos Personales (KVKK), el responsable del tratamiento es Salonor Teknoloji A.Ş. Puedes enviar tus preguntas a destek@salonor.com.",
+        "En el marco de la Ley n.º 6698 de Protección de Datos Personales (KVKK), el responsable del tratamiento es Ferhat Gökel, que opera la plataforma Salonor como persona física / empresa individual. Salonor no es actualmente una sociedad anónima. Puedes enviar tus preguntas y solicitudes relativas a la KVKK a destek@salonor.com.",
       dataTitle: "Datos tratados",
       dataBody:
         "Se tratan los datos de tu cuenta (nombre, correo electrónico, teléfono), tu historial de citas, tus salones favoritos y las reseñas que escribes; además de datos de uso básicos para la calidad del servicio.",
@@ -954,6 +967,111 @@ export const es: Dictionary = {
       pendingText: "Enviando...",
       submit: "Enviar solicitud",
       disclaimer: "Tus datos solo se usan para ponernos en contacto contigo.",
+      consentBefore: "Acepto el tratamiento de mis datos personales conforme al ",
+      consentLink: "Aviso de Privacidad (KVKK)",
+      consentAfter: " y que se pongan en contacto conmigo.",
+      consentRequired: "Debes aceptar el aviso de privacidad para continuar.",
+    },
+
+    distanceSales: {
+      metaTitle: "Contrato de Venta a Distancia",
+      title: "Contrato de Venta a Distancia",
+      updated: "23 de junio de 2026",
+      intro:
+        "Este contrato regula los derechos y obligaciones de las partes en relación con la venta en línea de los paquetes de pago de Salonor Business, de conformidad con la Ley de Protección al Consumidor de Türkiye n.º 6502 y el Reglamento sobre Contratos a Distancia.",
+      partiesTitle: "1. Partes",
+      partiesBody:
+        "VENDEDOR: Ferhat Gökel, que opera la plataforma Salonor como persona física / empresa individual. Consulta el Formulario de Información Previa y la página de Contacto para los datos de contacto y dirección. COMPRADOR: el negocio/usuario que adquiere un paquete de Salonor Business.",
+      subjectTitle: "2. Objeto del contrato",
+      subjectBody:
+        "El objeto del contrato es la venta y entrega de la suscripción al software Salonor Business (paquete Inicial, Profesional o Empresarial) pedida electrónicamente por el Comprador, cuyas características y precio de venta se indican en la página de Precios.",
+      productTitle: "3. Servicio y precio",
+      productBody:
+        "El servicio es un software por suscripción que abarca citas, calendario, caja, SMS, informes y otras funciones del panel según el paquete elegido. Los precios de los paquetes, el período de facturación (mensual/anual) y los impuestos aplicables se muestran actualizados en la página de Precios. Los precios no incluyen IVA.",
+      paymentTitle: "4. Pago",
+      paymentBody:
+        "El pago se cobra según el paquete elegido y el período de facturación. Se requiere el pago para que comience la suscripción; tu cuenta la configura nuestro equipo y tus datos de acceso se te envían.",
+      deliveryTitle: "5. Entrega / cumplimiento",
+      deliveryBody:
+        "El servicio es digital; una vez aprobado el pago se configura tu cuenta y se habilita el acceso al panel. Las excepciones al derecho de desistimiento para servicios digitales prestados de inmediato se explican en la Política de Derecho de Desistimiento y Reembolso.",
+      withdrawalTitle: "6. Derecho de desistimiento",
+      withdrawalBody:
+        "El Comprador dispone del derecho de desistimiento de 14 días previsto por la ley. Consulta la página Política de Derecho de Desistimiento y Reembolso para el ejercicio, las excepciones y el proceso de reembolso.",
+      disputeTitle: "7. Resolución de conflictos",
+      disputeBody:
+        "Para los conflictos derivados de este contrato, son competentes los Comités de Arbitraje del Consumidor y los Tribunales del Consumidor dentro de los límites monetarios correspondientes. Para reclamaciones y solicitudes: destek@salonor.com.",
+    },
+
+    preInfo: {
+      metaTitle: "Formulario de Información Previa",
+      title: "Formulario de Información Previa",
+      updated: "23 de junio de 2026",
+      intro:
+        "Este formulario contiene los asuntos sobre los que debes ser informado antes de adquirir los paquetes de pago de Salonor Business, de conformidad con la Ley n.º 6502 y el Reglamento sobre Contratos a Distancia.",
+      sellerTitle: "Información del vendedor",
+      sellerBody:
+        "El vendedor es Ferhat Gökel, que opera la plataforma Salonor como persona física / empresa individual (no una sociedad anónima). Para la dirección completa y los datos fiscales/de contacto rigen los valores actuales del registro company-info; para consultas: destek@salonor.com e isletme@salonor.com.",
+      productTitle: "Características esenciales del servicio",
+      productBody:
+        "El servicio es el software por suscripción Salonor Business para la gestión de citas y del negocio. Las funciones incluidas en los paquetes (Inicial, Profesional, Empresarial) se detallan en la página de Precios.",
+      priceTitle: "Precio y pago",
+      priceBody:
+        "El precio total (impuestos incluidos/excluidos), el período de facturación y la forma de pago se muestran en la pantalla de pedido y en la página de Precios. Los precios no incluyen IVA. La suscripción se renueva según el período elegido.",
+      deliveryTitle: "Cumplimiento y duración",
+      deliveryBody:
+        "El servicio es digital y el acceso se habilita tras la confirmación del pago mediante la configuración de tu cuenta. La duración de la suscripción se determina según el período mensual o anual que elijas.",
+      withdrawalTitle: "Derecho de desistimiento",
+      withdrawalBody:
+        "Tu derecho de desistimiento de 14 días y sus excepciones para los servicios digitales se explican en la página Política de Derecho de Desistimiento y Reembolso. Puedes enviar tu aviso de desistimiento a destek@salonor.com.",
+      complaintTitle: "Reclamaciones y solicitudes",
+      complaintBody:
+        "Puedes enviar tus solicitudes y reclamaciones a destek@salonor.com; para conflictos no resueltos puedes acudir al Comité de Arbitraje del Consumidor o al Tribunal del Consumidor según los límites monetarios legales.",
+    },
+
+    withdrawal: {
+      metaTitle: "Política de Derecho de Desistimiento y Reembolso",
+      title: "Política de Derecho de Desistimiento y Reembolso",
+      updated: "23 de junio de 2026",
+      intro:
+        "Tu derecho de desistimiento y las condiciones de reembolso para los paquetes de pago de Salonor Business se explican a continuación.",
+      rightTitle: "Plazo de desistimiento",
+      rightBody:
+        "En los contratos a distancia, tienes derecho a desistir del contrato en un plazo de 14 días desde la fecha de compra sin necesidad de justificar motivo alguno y sin pagar penalización.",
+      howTitle: "Ejercicio del derecho de desistimiento",
+      howBody:
+        "Para ejercer tu derecho de desistimiento, basta con enviar un aviso claro a destek@salonor.com en un plazo de 14 días. Indica en tu aviso los datos de tu cuenta/negocio y tu solicitud de desistimiento.",
+      exceptionTitle: "Excepción al derecho de desistimiento (servicio digital)",
+      exceptionBody:
+        "Conforme a la legislación, el derecho de desistimiento puede no aplicarse a contenidos/servicios digitales cuya ejecución haya comenzado con el consentimiento del consumidor antes de que expire el plazo de desistimiento y que se presten de inmediato. Por ello, cuando tu cuenta haya sido configurada y se haya habilitado el acceso al panel (iniciada la ejecución), el derecho de desistimiento puede quedar limitado; esto se presenta por separado para tu aprobación durante la compra.",
+      refundTitle: "Proceso de reembolso",
+      refundBody:
+        "Ante una solicitud de desistimiento válida, el importe que has pagado se reembolsa en un plazo de 14 días desde que nos llega tu aviso de desistimiento, con el mismo método de pago que utilizaste y sin coste adicional.",
+      contactTitle: "Contacto",
+      contactBody:
+        "Puedes escribir a destek@salonor.com para tus solicitudes de desistimiento y reembolso.",
+    },
+
+    cookies: {
+      metaTitle: "Política de Cookies",
+      title: "Política de Cookies",
+      updated: "23 de junio de 2026",
+      intro:
+        "Esta política explica qué cookies y tecnologías similares utilizamos cuando usas Salonor y cómo puedes gestionar tus preferencias.",
+      whatTitle: "¿Qué es una cookie?",
+      whatBody:
+        "Las cookies son pequeños archivos de texto que los sitios que visitas almacenan en tu dispositivo. Se utilizan para recordar tus preferencias y mejorar el sitio.",
+      typesTitle: "Cookies que utilizamos",
+      typesBody:
+        "Cookies esenciales: necesarias para funciones básicas como la sesión y la preferencia de idioma (p. ej. la cookie salonor_locale que almacena tu preferencia de idioma y la cookie salonor_cookie_consent que almacena tu consentimiento de cookies). Estas cookies están siempre activas. Cookies analíticas: se usa Vercel Analytics para medir el tráfico y mejorar la experiencia, y solo se cargan si aceptas el consentimiento de cookies.",
+      analyticsTitle: "Analítica y terceros",
+      analyticsBody:
+        "Utilizamos el servicio Vercel Analytics para entender el tráfico del sitio. Las cookies analíticas no se ejecutan a menos que hagas clic en «Aceptar» en el banner de cookies de la parte inferior del sitio; puedes rechazarlas con la opción «Solo esenciales».",
+      manageTitle: "Gestionar tus preferencias",
+      manageBody:
+        "Puedes definir tu preferencia de cookies desde el banner de cookies de la parte inferior del sitio; además, puedes eliminar o bloquear cookies desde la configuración de tu navegador. Bloquear las cookies esenciales puede afectar a algunas funciones del sitio.",
+      contactTitle: "Contacto",
+      contactBody:
+        "Puedes enviar tus preguntas sobre cookies a destek@salonor.com.",
     },
   },
 

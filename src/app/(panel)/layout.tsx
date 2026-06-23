@@ -16,6 +16,24 @@ export default async function PanelLayout({
   const business = await getOwnerBusiness();
   if (!business) redirect("/isletme/kurulum");
 
+  // Askıya alınan işletme (admin active=false yaptı) panele erişemez.
+  if (!business.active) {
+    return (
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-cream px-6 text-center">
+        <h1 className="font-display text-2xl text-ink">Hesabınız askıya alındı</h1>
+        <p className="max-w-md text-ink-mute">
+          İşletme hesabınız geçici olarak askıya alınmıştır. Lütfen destek ile iletişime geçin.
+        </p>
+        <a
+          href="/"
+          className="rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-white"
+        >
+          Ana sayfaya dön
+        </a>
+      </div>
+    );
+  }
+
   const unseenCount = await getUnseenAppointmentCountAction();
 
   return (

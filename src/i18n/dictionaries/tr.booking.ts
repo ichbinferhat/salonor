@@ -78,6 +78,9 @@ export const booking = {
     submitBooking: "Randevuyu onayla — {total}",
     submitting: "Onaylanıyor...",
     paymentNote: "Ödeme salonda yapılır. Ücretsiz iptal hakkın var.",
+    consentBefore: "Randevu oluşturmak için verdiğim kişisel verilerin ",
+    consentLink: "KVKK Aydınlatma Metni",
+    consentAfter: " kapsamında işlenmesini ve randevu için ilgili salonla paylaşılmasını kabul ediyorum.",
   },
 
   // Hata mesajları
@@ -85,6 +88,7 @@ export const booking = {
     nameRequired: "Lütfen adını ve soyadını gir.",
     phoneRequired: "SMS ile onay gönderebilmemiz için geçerli bir cep numarası gir (05XX XXX XX XX).",
     connection: "Bağlantı hatası oluştu. Lütfen tekrar dene.",
+    consentRequired: "Devam etmek için aydınlatma onayını işaretlemen gerekiyor.",
   },
 
   // Özet kartı (sidebar) ve mobil bar

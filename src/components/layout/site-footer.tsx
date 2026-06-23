@@ -65,6 +65,15 @@ export async function SiteFooter() {
         [dict.footer.contact, "/iletisim"],
       ],
     },
+    {
+      title: dict.footer.legalTitle,
+      links: [
+        [dict.footer.distanceSales, "/mesafeli-satis-sozlesmesi"],
+        [dict.footer.preInfo, "/on-bilgilendirme"],
+        [dict.footer.withdrawal, "/cayma-iade"],
+        [dict.footer.cookiePolicy, "/cerez-politikasi"],
+      ],
+    },
   ];
 
   return (
@@ -73,7 +82,7 @@ export async function SiteFooter() {
         aria-hidden
         className="pointer-events-none absolute -top-32 left-1/2 -z-10 h-64 w-[42rem] -translate-x-1/2 rounded-full bg-accent/20 blur-3xl"
       />
-      <div className="relative container-x grid gap-10 py-14 md:grid-cols-[1.6fr_repeat(3,1fr)]">
+      <div className="relative container-x grid gap-10 py-14 sm:grid-cols-2 md:grid-cols-[1.6fr_repeat(4,1fr)]">
         <div>
           <Logo tone="white" />
           <p className="mt-4 max-w-56 text-pretty text-sm leading-relaxed text-white/55">

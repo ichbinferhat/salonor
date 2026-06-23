@@ -50,7 +50,7 @@ export async function chargeAndSendSms(
   const res = await sendSms(phone, body);
   const status = res.status; // sent | mock | failed
 
-  if (status !== "failed") {
+  if (status === "sent") {
     if (prepaid) {
       // Kontör zaten ayrıldı; sadece kaydı düş.
       await db.smsLog
@@ -62,6 +62,17 @@ export async function chargeAndSendSms(
         db.smsLog.create({ data: { businessId, toPhone: phone, body, kind, status, credits: cost } }),
       ]);
     }
+  } else if (status === "mock") {
+    // Sağlayıcı yapılandırılmamış: GERÇEK gönderim yapılmadı → kontör DÜŞME.
+    if (prepaid) {
+      // Toplu gönderimde önceden ayrılmış kontörü iade et.
+      await db.business
+        .update({ where: { id: businessId }, data: { smsCredits: { increment: cost } } })
+        .catch(() => {});
+    }
+    await db.smsLog
+      .create({ data: { businessId, toPhone: phone, body, kind, status: "mock", credits: 0 } })
+      .catch(() => {});
   } else {
     if (prepaid) {
       // Gönderim başarısız: ayrılan kontörü iade et.

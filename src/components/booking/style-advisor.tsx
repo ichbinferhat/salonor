@@ -90,7 +90,7 @@ export function StyleAdvisor({
     setError(null);
     setResult(null);
     try {
-      const res = await suggestStyleAction(businessId, preview, prefs.trim() || undefined);
+      const res = await suggestStyleAction(businessId, preview, prefs.trim() || undefined, consent);
       if (res.ok) setResult({ analysis: res.analysis, recommendations: res.recommendations });
       else setError(res.error);
     } catch {
