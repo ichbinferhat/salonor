@@ -1160,6 +1160,8 @@ export const de: Dictionary = {
     customerNamePlaceholder: "z. B. Ayşe K. (kann leer bleiben)",
     phoneField: "Telefon (für Erinnerung)",
     phonePlaceholder: "05XX XXX XX XX (optional)",
+    pickFromContacts: "Aus Kontakten wählen",
+    pickedNoMobile: "Der gewählte Kontakt hat keine gültige Mobilnummer.",
     servicesField: "Leistungen",
     selectAtLeastOneService: "Wähle mindestens eine Leistung.",
     overflowsDay: "Dieser Termin überschreitet das Tagesende ({end}).",

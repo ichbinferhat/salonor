@@ -1160,6 +1160,8 @@ export const fa: Dictionary = {
     customerNamePlaceholder: "مثلاً عایشه ک. (می‌تواند خالی بماند)",
     phoneField: "تلفن (برای یادآوری)",
     phonePlaceholder: "05XX XXX XX XX (اختیاری)",
+    pickFromContacts: "انتخاب از مخاطبین",
+    pickedNoMobile: "مخاطب انتخاب‌شده شماره موبایل معتبری ندارد.",
     servicesField: "خدمات",
     selectAtLeastOneService: "حداقل یک خدمت انتخاب کن.",
     overflowsDay: "این نوبت از پایان روز ({end}) فراتر می‌رود.",

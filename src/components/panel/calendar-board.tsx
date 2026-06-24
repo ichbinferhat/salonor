@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -11,6 +11,7 @@ import {
   Clock,
   UserX,
   CalendarOff,
+  BookUser,
 } from "lucide-react";
 import {
   createWalkInAction,
@@ -25,6 +26,8 @@ import {
   nowMinutes,
 } from "@/lib/datetime";
 import { formatTl, formatDuration } from "@/lib/format";
+import { formatPhoneTr, parseTrMobile } from "@/lib/phone";
+import { isContactPickerAvailable, pickContact } from "@/lib/native-contacts";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -470,6 +473,42 @@ function NewAppointmentModal({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  // Rehberden seç — yalnızca destekleyen cihazda (native app / Android Chrome) göster.
+  // useSyncExternalStore: sunucuda false, hidrasyon sonrası gerçek değer → uyumsuzluk yok.
+  const canPickContact = useSyncExternalStore(
+    () => () => {},
+    () => isContactPickerAvailable(),
+    () => false,
+  );
+  const [picking, setPicking] = useState(false);
+  const pickingRef = useRef(false);
+  const [pickHint, setPickHint] = useState<string | null>(null);
+
+  async function handlePickContact() {
+    if (pickingRef.current) return; // çift dokunma koruması
+    pickingRef.current = true;
+    setPicking(true);
+    setPickHint(null);
+    try {
+      const c = await pickContact();
+      if (!c) return; // iptal / erişim yok
+      if (c.name) setCustomerName(c.name);
+      if (c.phone) {
+        // Yabancı/sabit hat numarası sessizce TR cep sanılmasın — KATI doğrula.
+        const tr = parseTrMobile(c.phone);
+        if (tr) {
+          setCustomerPhone(formatPhoneTr(tr));
+        } else {
+          setCustomerPhone("");
+          setPickHint(t.pickedNoMobile);
+        }
+      }
+    } finally {
+      pickingRef.current = false;
+      setPicking(false);
+    }
+  }
+
   const chosen = allServices.filter((s) => selected.has(s.id));
   const totalDur = chosen.reduce((s, x) => s + x.durationMin, 0);
   const totalTl = chosen.reduce((s, x) => s + x.priceTl, 0);
@@ -536,6 +575,17 @@ function NewAppointmentModal({
           </div>
         </div>
 
+        {canPickContact && (
+          <button
+            type="button"
+            onClick={handlePickContact}
+            disabled={picking}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-accent/40 bg-accent-soft px-4 py-3 text-sm font-bold text-accent-deep transition-colors hover:bg-accent/15 active:scale-[0.99] disabled:opacity-60"
+          >
+            <BookUser className="size-4" /> {t.pickFromContacts}
+          </button>
+        )}
+
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <Label htmlFor="na-customer">{t.customerNameField}</Label>
@@ -553,11 +603,20 @@ function NewAppointmentModal({
               type="tel"
               inputMode="tel"
               value={customerPhone}
-              onChange={(e) => setCustomerPhone(e.target.value)}
+              onChange={(e) => {
+                setCustomerPhone(e.target.value);
+                if (pickHint) setPickHint(null);
+              }}
               placeholder={t.phonePlaceholder}
             />
           </div>
         </div>
+
+        {pickHint && (
+          <p className="-mt-1 rounded-lg bg-honey-soft px-3 py-2 text-xs font-medium text-honey">
+            {pickHint}
+          </p>
+        )}
 
         <div>
           <Label>{t.servicesField}</Label>

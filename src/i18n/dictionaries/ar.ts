@@ -1160,6 +1160,8 @@ export const ar: Dictionary = {
     customerNamePlaceholder: "مثال: عائشة ك. (يمكن تركه فارغًا)",
     phoneField: "الهاتف (للتذكير)",
     phonePlaceholder: "05XX XXX XX XX (اختياري)",
+    pickFromContacts: "اختيار من جهات الاتصال",
+    pickedNoMobile: "جهة الاتصال المحددة ليس لها رقم جوال صالح.",
     servicesField: "الخدمات",
     selectAtLeastOneService: "اختر خدمة واحدة على الأقل.",
     overflowsDay: "هذا الموعد يتجاوز نهاية اليوم ({end}).",

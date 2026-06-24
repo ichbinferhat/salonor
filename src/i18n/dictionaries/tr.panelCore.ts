@@ -83,6 +83,8 @@ export const panelCore = {
   customerNamePlaceholder: "Örn. Ayşe K. (boş bırakılabilir)",
   phoneField: "Telefon (hatırlatma için)",
   phonePlaceholder: "05XX XXX XX XX (opsiyonel)",
+  pickFromContacts: "Rehberden seç",
+  pickedNoMobile: "Seçilen kişinin geçerli bir cep numarası yok.",
   servicesField: "Hizmetler",
   selectAtLeastOneService: "En az bir hizmet seç.",
   overflowsDay: "Bu randevu gün sonunu ({end}) aşıyor.",

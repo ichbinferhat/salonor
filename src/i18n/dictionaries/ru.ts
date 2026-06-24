@@ -1160,6 +1160,8 @@ export const ru: Dictionary = {
     customerNamePlaceholder: "Напр. Айше К. (можно оставить пустым)",
     phoneField: "Телефон (для напоминания)",
     phonePlaceholder: "05XX XXX XX XX (необязательно)",
+    pickFromContacts: "Выбрать из контактов",
+    pickedNoMobile: "У выбранного контакта нет действительного мобильного номера.",
     servicesField: "Услуги",
     selectAtLeastOneService: "Выберите хотя бы одну услугу.",
     overflowsDay: "Эта запись выходит за конец дня ({end}).",
