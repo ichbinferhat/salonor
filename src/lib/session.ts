@@ -20,13 +20,18 @@ function secretKey() {
   return new TextEncoder().encode(secret);
 }
 
-export async function createSession(session: Session) {
-  const token = await new SignJWT(session)
+/** Oturum JWT'sini imzalar (cookie + native Bearer/Cookie aynı imzayı paylaşsın). */
+export async function signSession(session: Session): Promise<string> {
+  return new SignJWT(session)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("30d")
     .sign(secretKey());
+}
 
+/** Oturumu kurar: JWT'yi imzalar, httpOnly çerez olarak yazar ve jetonu döner. */
+export async function createSession(session: Session): Promise<string> {
+  const token = await signSession(session);
   (await cookies()).set(COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",
@@ -34,6 +39,7 @@ export async function createSession(session: Session) {
     path: "/",
     maxAge: MAX_AGE,
   });
+  return token;
 }
 
 export async function destroySession() {

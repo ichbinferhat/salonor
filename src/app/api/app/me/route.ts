@@ -1,0 +1,35 @@
+import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { getSession } from "@/lib/session";
+import { getOwnerBusiness } from "@/lib/owner";
+
+/**
+ * Oturum/me probe. Native açılışta çağrılır → rolü + işletmeyi + okunmamış bildirim
+ * sayısını döner (cold-start'ta rol tahminini ortadan kaldırır). Yetki, isteğin
+ * taşıdığı salonor_session çerezinden (getSession) gelir.
+ */
+export async function GET() {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ ok: false }, { status: 401 });
+
+  const business = session.role === "OWNER" ? await getOwnerBusiness() : null;
+  let unseen = 0;
+  if (business) {
+    try {
+      unseen = await db.appointment.count({
+        where: { businessId: business.id, seenAt: null, status: "CONFIRMED" },
+      });
+    } catch {
+      /* sayım başarısızsa rozet 0 kalsın — kritik değil */
+    }
+  }
+
+  return NextResponse.json({
+    ok: true,
+    user: { id: session.userId, name: session.name, role: session.role },
+    business: business
+      ? { id: business.id, name: business.name, slug: business.slug, coverImage: business.coverImage }
+      : null,
+    unseen,
+  });
+}
