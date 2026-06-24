@@ -133,13 +133,13 @@ export function KasaPOS({ products, services }: { products: Cat[]; services: Cat
             <h3 className="mb-3 flex items-center gap-2 text-sm font-bold text-ink">
               <ScissorsSquare className="size-4 text-accent" /> {t.services}
             </h3>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
               {services.map((s) => (
                 <button
                   key={s.id}
                   type="button"
                   onClick={() => addLine(s.name, s.priceTl, "service")}
-                  className="rounded-xl border border-line-strong bg-surface px-3 py-2 text-left text-sm transition-colors hover:border-accent hover:bg-accent-faint"
+                  className="min-w-0 rounded-xl border border-line-strong bg-surface px-3 py-2 text-left text-sm transition-colors hover:border-accent hover:bg-accent-faint"
                 >
                   <span className="font-semibold text-ink">{s.name}</span>
                   <span className="ml-2 text-ink-soft">{formatTl(s.priceTl)}</span>
@@ -156,7 +156,7 @@ export function KasaPOS({ products, services }: { products: Cat[]; services: Cat
           {products.length === 0 ? (
             <p className="text-sm text-ink-mute">{t.noProductsHint}</p>
           ) : (
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
               {products.map((p) => {
                 const oos = (p.stock ?? 0) <= 0;
                 return (
@@ -165,7 +165,7 @@ export function KasaPOS({ products, services }: { products: Cat[]; services: Cat
                     type="button"
                     onClick={() => addLine(p.name, p.priceTl, "product", p.id)}
                     disabled={oos}
-                    className="rounded-xl border border-line-strong bg-surface px-3 py-2 text-left text-sm transition-colors hover:border-accent hover:bg-accent-faint disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-line-strong disabled:hover:bg-surface"
+                    className="min-w-0 rounded-xl border border-line-strong bg-surface px-3 py-2 text-left text-sm transition-colors hover:border-accent hover:bg-accent-faint disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-line-strong disabled:hover:bg-surface"
                   >
                     <span className="font-semibold text-ink">{p.name}</span>
                     <span className="ml-2 text-ink-soft">{formatTl(p.priceTl)}</span>
