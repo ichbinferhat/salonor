@@ -31,3 +31,10 @@ export function smsLink(phone: string | null | undefined, text: string): string 
   if (!d) return null;
   return `sms:+${d}?body=${encodeURIComponent(text)}`;
 }
+
+/** Telefon arama bağlantısı (tel:). Numara yoksa null. */
+export function telLink(phone: string | null | undefined): string | null {
+  const d = trPhoneDigits(phone);
+  if (!d) return null;
+  return `tel:+${d}`;
+}

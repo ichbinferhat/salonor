@@ -1213,6 +1213,7 @@ export const de: Dictionary = {
     reminded: "Erinnert",
     undo: "Rückgängig",
     whatsapp: "WhatsApp",
+    call: "Anrufen",
     sms: "SMS",
 
     // Gemeinsame Fallback-Beschriftungen (statischer Text, wenn DB-Daten leer sind)

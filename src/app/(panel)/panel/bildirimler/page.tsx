@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { getOwnerBusiness } from "@/lib/owner";
 import { todayStr, addDaysStr, formatDateTr, minToHHMM, nowMinutes } from "@/lib/datetime";
 import { PanelPageHeader } from "@/components/panel/page-header";
-import { waLink, smsLink } from "@/lib/contact";
+import { waLink, smsLink, telLink } from "@/lib/contact";
 import { ReminderList, type ReminderItem } from "@/components/panel/reminder-list";
 import { NewBookings, type NewBookingItem } from "@/components/panel/new-bookings";
 import { getDictionary } from "@/i18n";
@@ -80,6 +80,7 @@ export default async function NotificationsPage() {
       svc,
       wa: waLink(phone, msg),
       sms: smsLink(phone, msg),
+      tel: telLink(phone),
       sent: !!a.reminderSentAt,
       due,
       hasPhone: !!phone,

@@ -1213,6 +1213,7 @@ export const fa: Dictionary = {
     reminded: "یادآوری شد",
     undo: "بازگرداندن",
     whatsapp: "WhatsApp",
+    call: "تماس",
     sms: "SMS",
 
     // برچسب‌های جایگزین مشترک (متن ثابت هنگام خالی‌بودن داده پایگاه‌داده)

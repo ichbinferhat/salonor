@@ -1213,6 +1213,7 @@ export const es: Dictionary = {
     reminded: "Recordado",
     undo: "Deshacer",
     whatsapp: "WhatsApp",
+    call: "Llamar",
     sms: "SMS",
 
     // Etiquetas de respaldo comunes (texto estático mostrado cuando faltan datos de la BD)

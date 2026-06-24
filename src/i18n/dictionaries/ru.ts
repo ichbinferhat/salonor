@@ -1213,6 +1213,7 @@ export const ru: Dictionary = {
     reminded: "Напоминание отправлено",
     undo: "Отменить",
     whatsapp: "WhatsApp",
+    call: "Позвонить",
     sms: "SMS",
 
     // Общие запасные метки (статический текст при пустых данных из БД)

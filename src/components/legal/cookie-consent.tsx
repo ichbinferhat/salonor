@@ -15,6 +15,10 @@ export function CookieConsent() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
+    // Native uygulamada (WebView, body.in-app) gösterme — bandın `fixed bottom-0`
+    // konumu panel içeriğinin altını örtüyor. Analytics zaten onaysız yüklenmez
+    // (kök layout consent çerezini kontrol eder), bu yüzden KVKK açısından güvenli.
+    if (document.body.classList.contains("in-app")) return;
     const decided = document.cookie
       .split("; ")
       .some((c) => c.startsWith(CONSENT_COOKIE + "="));

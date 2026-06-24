@@ -1162,6 +1162,7 @@ export const en: Dictionary = {
     reminded: "Reminded",
     undo: "Undo",
     whatsapp: "WhatsApp",
+    call: "Call",
     sms: "SMS",
 
     // Shared fallback labels (static text shown when DB data is empty)

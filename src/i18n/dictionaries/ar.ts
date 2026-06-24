@@ -1213,6 +1213,7 @@ export const ar: Dictionary = {
     reminded: "تم التذكير",
     undo: "تراجع",
     whatsapp: "WhatsApp",
+    call: "اتصال",
     sms: "SMS",
 
     // تسميات بديلة مشتركة (نص ثابت يُعرض عندما تكون بيانات قاعدة البيانات فارغة)

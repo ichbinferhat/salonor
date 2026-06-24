@@ -136,6 +136,7 @@ export const panelCore = {
   reminded: "Hatırlatıldı",
   undo: "Geri al",
   whatsapp: "WhatsApp",
+  call: "Ara",
   sms: "SMS",
 
   // Ortak fallback etiketleri (DB verisi boşken gösterilen statik metin)

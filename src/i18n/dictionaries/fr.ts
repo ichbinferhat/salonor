@@ -1214,6 +1214,7 @@ export const fr: Dictionary = {
     reminded: "Rappel envoyé",
     undo: "Annuler",
     whatsapp: "WhatsApp",
+    call: "Appeler",
     sms: "SMS",
 
     // Libellés de repli communs (texte statique affiché lorsque la donnée DB est vide)

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { MessageCircle, Send, Check, Clock, Undo2 } from "lucide-react";
+import { MessageCircle, Phone, Check, Clock, Undo2 } from "lucide-react";
 import { markReminderSentAction } from "@/server/actions/business";
 import { nowMinutes } from "@/lib/datetime";
 import { useDict } from "@/i18n/provider";
@@ -14,6 +14,7 @@ export type ReminderItem = {
   svc: string;
   wa: string | null;
   sms: string | null;
+  tel: string | null;
   sent: boolean;
   due: boolean;
   hasPhone: boolean;
@@ -136,7 +137,7 @@ function Row({
         </p>
       </div>
 
-      {!item.hasPhone || !item.wa || !item.sms ? (
+      {!item.hasPhone || !item.wa || !item.tel ? (
         <span className="rounded-full bg-cream px-3 py-1.5 text-xs font-semibold text-ink-mute">
           {t.noPhone}
         </span>
@@ -166,11 +167,11 @@ function Row({
             <MessageCircle className="size-4" /> {t.whatsapp}
           </a>
           <a
-            href={item.sms}
+            href={item.tel}
             onClick={() => onMark(item.id, true)}
             className="inline-flex items-center gap-1.5 rounded-full border border-line-strong px-3.5 py-2 text-sm font-bold text-ink transition-colors hover:bg-cream"
           >
-            <Send className="size-4" /> {t.sms}
+            <Phone className="size-4" /> {t.call}
           </a>
         </div>
       )}
