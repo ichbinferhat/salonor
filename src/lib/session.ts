@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 import { cache } from "react";
 
@@ -47,7 +47,13 @@ export async function destroySession() {
 }
 
 export const getSession = cache(async (): Promise<Session | null> => {
-  const token = (await cookies()).get(COOKIE_NAME)?.value;
+  // Önce çerez (web + WebView); yoksa Authorization: Bearer (native uygulama —
+  // RN fetch'te Cookie başlığı bazı platformlarda güvenilmez, Bearer her yerde geçer).
+  let token = (await cookies()).get(COOKIE_NAME)?.value;
+  if (!token) {
+    const auth = (await headers()).get("authorization");
+    if (auth && auth.startsWith("Bearer ")) token = auth.slice(7).trim();
+  }
   if (!token) return null;
   try {
     // algorithms pin: yalnızca HS256 kabul et (algoritma karışıklığı/"alg" değişim
