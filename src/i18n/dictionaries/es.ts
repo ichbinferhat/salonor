@@ -874,7 +874,7 @@ export const es: Dictionary = {
         "En el marco de la Ley n.º 6698 de Protección de Datos Personales (KVKK), el responsable del tratamiento es Ferhat Gökel, que opera la plataforma Salonor como persona física / empresa individual. Salonor no es actualmente una sociedad anónima. Puedes enviar tus preguntas y solicitudes relativas a la KVKK a destek@salonor.com.",
       dataTitle: "Datos tratados",
       dataBody:
-        "Se tratan los datos de tu cuenta (nombre, correo electrónico, teléfono), tu historial de citas, tus salones favoritos y las reseñas que escribes; además de datos de uso básicos para la calidad del servicio.",
+        "Se tratan los datos de tu cuenta (nombre, correo electrónico, teléfono), tu historial de citas, tus salones favoritos y las reseñas que escribes; además de datos de uso básicos para la calidad del servicio. En la app de negocio, podemos solicitar acceso a los contactos de tu dispositivo para que puedas crear rápidamente una cita en nombre de un cliente; en ese caso solo se usan el nombre y el teléfono del contacto que selecciones — toda tu lista de contactos permanece en tu dispositivo y nunca se envía a nuestros servidores.",
       purposesTitle: "Fines del tratamiento",
       purposesBody:
         "Tratamos tus datos para crear y gestionar tus citas, enviarte recordatorios de citas (SMS/WhatsApp/correo electrónico), garantizar la seguridad de tu cuenta y mejorar la plataforma.",

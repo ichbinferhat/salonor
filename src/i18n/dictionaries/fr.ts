@@ -875,7 +875,7 @@ export const fr: Dictionary = {
         "Au titre de la loi turque n° 6698 sur la protection des données personnelles (KVKK), le responsable du traitement est Ferhat Gökel, qui exploite la plateforme Salonor en tant que personne physique / entreprise individuelle. Salonor n'est pas actuellement une société anonyme. Pour toute question ou demande au titre de la KVKK, écrivez à destek@salonor.com.",
       dataTitle: "Données traitées",
       dataBody:
-        "Vos informations de compte (nom, e-mail, téléphone), votre historique de rendez-vous, vos salons favoris et les avis que vous publiez ; nous traitons également des données d’usage essentielles pour la qualité du service.",
+        "Vos informations de compte (nom, e-mail, téléphone), votre historique de rendez-vous, vos salons favoris et les avis que vous publiez ; nous traitons également des données d’usage essentielles pour la qualité du service. Dans l’application professionnelle, nous pouvons demander l’accès aux contacts de votre appareil afin de créer rapidement un rendez-vous au nom d’un client ; dans ce cas, seuls le nom et le téléphone du contact que vous sélectionnez sont utilisés — toute votre liste de contacts reste sur votre appareil et n’est jamais envoyée à nos serveurs.",
       purposesTitle: "Finalités du traitement",
       purposesBody:
         "Nous traitons vos données pour créer et gérer vos rendez-vous, vous envoyer des rappels (SMS/WhatsApp/e-mail), assurer la sécurité de votre compte et améliorer la plateforme.",

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getSession } from "@/lib/session";
+import { getSession, signSession } from "@/lib/session";
 import { getOwnerBusiness } from "@/lib/owner";
 
 /**
@@ -24,8 +24,13 @@ export async function GET() {
     }
   }
 
+  // Kayan oturum: her /me çağrısında taze 30 günlük jeton dön → aktif kullanıcı
+  // aylık zorla çıkış yaşamaz (native bunu saklar).
+  const token = await signSession(session);
+
   return NextResponse.json({
     ok: true,
+    token,
     user: { id: session.userId, name: session.name, role: session.role },
     business: business
       ? { id: business.id, name: business.name, slug: business.slug, coverImage: business.coverImage }

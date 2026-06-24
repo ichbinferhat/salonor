@@ -47,6 +47,10 @@ export function LocationPicker({
       },
       center: [lng, lat],
       zoom: 12,
+      // Native uygulama (in-app WebView): tek parmak sayfayı kaydırır, harita iki
+      // parmakla gezilir → dikey scroll tuzağı olmaz. Masaüstü web etkilenmez.
+      cooperativeGestures:
+        typeof document !== "undefined" && document.body.classList.contains("in-app"),
     });
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
 

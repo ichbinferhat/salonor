@@ -827,7 +827,7 @@ export const en: Dictionary = {
         "Under Türkiye's Personal Data Protection Law No. 6698 (KVKK), the data controller is Ferhat Gökel, who operates the Salonor platform as an individual / sole proprietorship. Salonor is not currently a joint-stock company. You can send your questions and KVKK requests to destek@salonor.com.",
       dataTitle: "Data we process",
       dataBody:
-        "Your account details (name, email, phone), booking history, favorite salons and the reviews you write; plus basic usage data to maintain service quality.",
+        "Your account details (name, email, phone), booking history, favorite salons and the reviews you write; plus basic usage data to maintain service quality. In the business app, we may request access to your device contacts so you can quickly create an appointment on a customer's behalf; in that case only the name and phone of the contact you select are used — your full contact list stays on your device and is never sent to our servers.",
       purposesTitle: "Processing purposes",
       purposesBody:
         "We process your data to create and manage your appointments, send you appointment reminders (SMS/WhatsApp/email), keep your account secure and improve the platform.",

@@ -38,7 +38,7 @@ export const legal = {
       "6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) kapsamında veri sorumlusu, Salonor platformunu gerçek kişi / şahıs işletmesi olarak işleten Ferhat Gökel'dir. Salonor şu an bir anonim şirket (A.Ş.) değildir. Sorularını ve KVKK taleplerini destek@salonor.com adresine iletebilirsin.",
     dataTitle: "İşlenen veriler",
     dataBody:
-      "Hesap bilgilerin (ad, e-posta, telefon), randevu geçmişin, favori salonların ve yazdığın yorumlar; ayrıca hizmet kalitesi için temel kullanım verileri işlenir.",
+      "Hesap bilgilerin (ad, e-posta, telefon), randevu geçmişin, favori salonların ve yazdığın yorumlar; ayrıca hizmet kalitesi için temel kullanım verileri işlenir. İşletme uygulamasında, müşteri adına hızlı randevu oluşturabilmen için cihaz rehberine erişim isteyebiliriz; bu durumda yalnızca seçtiğin kişinin adı ve telefonu kullanılır, rehberinin tamamı cihazında kalır ve sunucularımıza gönderilmez.",
     purposesTitle: "İşleme amaçları",
     purposesBody:
       "Randevularını oluşturmak ve yönetmek, sana randevu hatırlatmaları (SMS/WhatsApp/e-posta) göndermek, hesabının güvenliğini sağlamak ve platformu geliştirmek için verilerini işleriz.",

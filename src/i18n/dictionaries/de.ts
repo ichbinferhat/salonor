@@ -874,7 +874,7 @@ export const de: Dictionary = {
         "Im Sinne des türkischen Datenschutzgesetzes Nr. 6698 (KVKK) ist der Verantwortliche Ferhat Gökel, der die Salonor-Plattform als natürliche Person / Einzelunternehmen betreibt. Salonor ist derzeit keine Aktiengesellschaft. Deine Fragen und KVKK-Anfragen kannst du an destek@salonor.com richten.",
       dataTitle: "Verarbeitete Daten",
       dataBody:
-        "Deine Kontodaten (Name, E-Mail, Telefon), dein Terminverlauf, deine Lieblingssalons und deine geschriebenen Bewertungen; außerdem werden zur Sicherung der Servicequalität grundlegende Nutzungsdaten verarbeitet.",
+        "Deine Kontodaten (Name, E-Mail, Telefon), dein Terminverlauf, deine Lieblingssalons und deine geschriebenen Bewertungen; außerdem werden zur Sicherung der Servicequalität grundlegende Nutzungsdaten verarbeitet. In der Business-App können wir Zugriff auf deine Gerätekontakte anfragen, damit du im Namen eines Kunden schnell einen Termin anlegen kannst; dabei werden nur Name und Telefon des von dir gewählten Kontakts verwendet — deine gesamte Kontaktliste bleibt auf deinem Gerät und wird nie an unsere Server gesendet.",
       purposesTitle: "Verarbeitungszwecke",
       purposesBody:
         "Wir verarbeiten deine Daten, um deine Termine zu erstellen und zu verwalten, dir Terminerinnerungen (SMS/WhatsApp/E-Mail) zu senden, die Sicherheit deines Kontos zu gewährleisten und die Plattform zu verbessern.",

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createWalkInAction } from "@/server/actions/business";
+import { rateLimit } from "@/lib/rate-limit";
 
 /**
  * Walk-in randevu oluşturur. createWalkInAction'ı sarar (Serializable çift-rezervasyon
@@ -7,6 +8,12 @@ import { createWalkInAction } from "@/server/actions/business";
  * çerezi (action içinde requireOwnerBusinessId).
  */
 export async function POST(request: Request) {
+  const ip = (request.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "unknown";
+  // Cömert sınır — normal kullanımı engellemez, seri kötüye kullanımı keser.
+  if (!rateLimit(`app-walkin:${ip}`, 40, 60_000).ok) {
+    return NextResponse.json({ ok: false, error: "Çok fazla istek, biraz sonra dene." }, { status: 429 });
+  }
+
   let body: unknown;
   try {
     body = await request.json();

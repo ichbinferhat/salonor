@@ -46,6 +46,21 @@ export async function destroySession() {
   (await cookies()).delete(COOKIE_NAME);
 }
 
+/** Ham bir JWT'yi doğrular (handoff gibi cookie/header dışı bağlamlar için). */
+export async function verifySessionToken(token: string): Promise<Session | null> {
+  if (!token) return null;
+  try {
+    const { payload } = await jwtVerify(token, secretKey(), { algorithms: ["HS256"] });
+    return {
+      userId: payload.userId as string,
+      role: payload.role as SessionRole,
+      name: payload.name as string,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export const getSession = cache(async (): Promise<Session | null> => {
   // Önce çerez (web + WebView); yoksa Authorization: Bearer (native uygulama —
   // RN fetch'te Cookie başlığı bazı platformlarda güvenilmez, Bearer her yerde geçer).

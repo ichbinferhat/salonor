@@ -159,7 +159,10 @@ export function PanelSidebar({
   const prevUnseen = useRef(initialUnseen);
 
   // Yeni randevuları periyodik kontrol et; sayı artarsa ses çal + listeyi tazele.
+  // Native uygulamada (in-app WebView) ATLA — native push + kendi rozeti var; ayrıca
+  // gizli/arka plan WebView'de 30sn poll + "ding" sesi rahatsız edici olur.
   useEffect(() => {
+    if (typeof document !== "undefined" && document.body.classList.contains("in-app")) return;
     let alive = true;
     const check = async () => {
       if (document.hidden) return;
