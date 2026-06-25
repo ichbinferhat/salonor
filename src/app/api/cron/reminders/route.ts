@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { notifyUser } from "@/lib/push";
 import { chargeAndSendSms } from "@/lib/sms-send";
-import { smsConfigured } from "@/lib/sms";
+import { smsConfigured, smsCreditCost } from "@/lib/sms";
 import { signApptToken } from "@/lib/appt-token";
 import { siteUrl } from "@/lib/site-url";
 import { todayStr, addDaysStr, minToHHMM, formatDateTr } from "@/lib/datetime";
@@ -26,6 +26,10 @@ export async function GET(request: Request) {
     if (auth !== `Bearer ${secret}`) {
       return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
     }
+  } else if (process.env.NODE_ENV === "production") {
+    // Üretimde CRON_SECRET tanımsızsa fail-CLOSED: kimliksiz tetikleme, randevu başına
+    // tek-seferlik push/SMS'i erken harcayabilir veya planlı gönderimi bastırabilir.
+    return NextResponse.json({ ok: false, error: "cron_not_configured" }, { status: 503 });
   }
 
   const target = addDaysStr(todayStr(), 1); // yarın
@@ -46,6 +50,14 @@ export async function GET(request: Request) {
 
   for (const a of appts) {
     try {
+      // ÇİFT GÖNDERİM KORUMASI: göndermeden ÖNCE atomik olarak sahiplen. Çakışan
+      // ikinci cron tetiklemesi aynı randevuyu sahiplenemez (count===0 → atla).
+      const claim = await db.appointment.updateMany({
+        where: { id: a.id, reminderSentAt: null },
+        data: { reminderSentAt: new Date() },
+      });
+      if (claim.count === 0) continue;
+
       const token = await signApptToken(a.id);
       const link = `${siteUrl()}/r/${token}`;
       const dateLabel = formatDateTr(a.date, { day: "numeric", month: "long" });
@@ -61,17 +73,14 @@ export async function GET(request: Request) {
         push++;
       }
 
-      // 2) SMS — yalnızca gerçek sağlayıcı tanımlı + kontör varsa
-      if (a.customerPhone && smsConfigured() && a.business.smsCredits > 0) {
+      // 2) SMS — yalnızca gerçek sağlayıcı tanımlı + mesajın TAM kontörü varsa
+      if (a.customerPhone && smsConfigured()) {
         const body = `${a.business.name}: Yarin ${dateLabel} ${time} randevunuz var. Geliyorum/Iptal: ${link}`;
-        await chargeAndSendSms(a.business.id, a.customerPhone, body, "reminder");
-        sms++;
+        if (a.business.smsCredits >= smsCreditCost(body)) {
+          await chargeAndSendSms(a.business.id, a.customerPhone, body, "reminder");
+          sms++;
+        }
       }
-
-      await db.appointment.update({
-        where: { id: a.id },
-        data: { reminderSentAt: new Date() },
-      });
     } catch (e) {
       console.error("reminder cron randevu hatası:", a.id, e);
     }

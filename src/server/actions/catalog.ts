@@ -244,10 +244,25 @@ export async function updateProductAction(_p: CatalogState, formData: FormData):
 export async function adjustStockAction(id: string, delta: number) {
   const businessId = await requireOwnerBusinessId();
   if (!businessId) return;
-  const p = await db.product.findFirst({ where: { id, businessId } });
+  // Sahiplik kontrolü.
+  const p = await db.product.findFirst({ where: { id, businessId }, select: { id: true } });
   if (!p) return;
-  const next = Math.max(0, p.stock + delta);
-  await db.product.update({ where: { id }, data: { stock: next } });
+
+  // ATOMİK stok ayarı (eski oku-değiştir-yaz eşzamanlı güncellemelerde birbirini
+  // eziyordu — "son yazan kazanır"). Artış basit increment; düşüş 0 altına inmeden
+  // koşullu decrement, yetmezse 0'a sabitlenir.
+  if (delta >= 0) {
+    await db.product.updateMany({ where: { id, businessId }, data: { stock: { increment: delta } } });
+  } else {
+    const dec = -delta;
+    const res = await db.product.updateMany({
+      where: { id, businessId, stock: { gte: dec } },
+      data: { stock: { decrement: dec } },
+    });
+    if (res.count === 0) {
+      await db.product.updateMany({ where: { id, businessId }, data: { stock: 0 } });
+    }
+  }
   revalidatePath("/panel/urunler");
 }
 
