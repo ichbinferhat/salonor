@@ -23,6 +23,11 @@ const CSP = [
 
 const nextConfig: NextConfig = {
   images: {
+    // Özel yükleyici: görsel küçültmeyi Render'ın zayıf CPU'sundaki yerleşik
+    // optimizatör yerine doğrudan kaynak CDN'e (Unsplash) yaptırır → fotoğraflar
+    // 2-3 sn gecikme olmadan hızlıca gelir. Detay: ./image-loader.js
+    loader: "custom",
+    loaderFile: "./image-loader.js",
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "i.pravatar.cc" },
