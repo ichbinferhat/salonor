@@ -7,7 +7,7 @@ import type { Locale } from "@/i18n/config";
  * Genel erişime açık "Hesap silme talebi" sayfası.
  * Google Play hesap-silme politikası, uygulamadan bağımsız erişilebilen bir web
  * adresi ister; bu sayfa uygulama-içi silme adımlarını ve veri etkisini açıklar.
- * URL: https://salonor.vercel.app/hesap-sil
+ * URL: https://salonor.com/hesap-sil
  */
 
 type Copy = {

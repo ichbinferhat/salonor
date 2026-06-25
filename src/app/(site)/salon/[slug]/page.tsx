@@ -136,7 +136,7 @@ export default async function SalonPage(props: { params: Promise<{ slug: string 
     name: business.name,
     image: business.coverImage,
     description: business.description,
-    url: `https://salonor.vercel.app/salon/${business.slug}`,
+    url: `https://salonor.com/salon/${business.slug}`,
     telephone: business.phone || undefined,
     priceRange: "₺₺",
     address: {

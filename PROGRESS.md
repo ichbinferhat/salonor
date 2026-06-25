@@ -3,7 +3,7 @@
 Fresha tarzı kuaför/güzellik randevu pazaryeri. Türkçe içerik, marka: **Salonor**.
 Tam yetki: onay beklemeden inşa et, sonunda Vercel'e deploy et (`vercel --prod`, hesap bağlı).
 
-## ✅ DURUM: CANLIDA — https://salonor.vercel.app (2026-06-13, READY)
+## ✅ DURUM: CANLIDA — https://salonor.com (özel domain; altyapı Render, 2026-06-25)
 - Tüm rotalar (public + owner panel + customer hesap) canlıda 200 doğrulandı.
 - **DB: Supabase Postgres'e taşındı** (proje `hncfqwyajobywlrshaaz`, ap-northeast-1/Tokyo).
   Kalıcı — eski geçici Prisma Postgres terk edildi, claim derdi yok.

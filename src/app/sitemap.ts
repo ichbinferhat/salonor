@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { db } from "@/lib/db";
 
-const BASE = "https://salonor.vercel.app";
+const BASE = "https://salonor.com";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [businesses, categories] = await Promise.all([

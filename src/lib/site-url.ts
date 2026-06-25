@@ -7,5 +7,5 @@ export function siteUrl(): string {
   if (explicit) return explicit.replace(/\/$/, "");
   const v = process.env.VERCEL_PROJECT_PRODUCTION_URL;
   if (v) return `https://${v}`;
-  return "https://salonor.vercel.app";
+  return "https://salonor.com";
 }

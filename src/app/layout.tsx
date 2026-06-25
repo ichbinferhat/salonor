@@ -44,7 +44,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const dict = await getDictionary();
   const ogLocale = OG_LOCALE[locale];
   return {
-    metadataBase: new URL("https://salonor.vercel.app"),
+    metadataBase: new URL("https://salonor.com"),
     title: {
       default: "Salonor — Güzellik ve bakım randevusu, saniyeler içinde",
       template: "%s | Salonor",

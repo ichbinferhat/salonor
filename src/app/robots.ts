@@ -7,7 +7,7 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/panel", "/admin", "/hesap", "/giris", "/kayit", "/randevu"],
     },
-    sitemap: "https://salonor.vercel.app/sitemap.xml",
-    host: "https://salonor.vercel.app",
+    sitemap: "https://salonor.com/sitemap.xml",
+    host: "https://salonor.com",
   };
 }
