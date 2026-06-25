@@ -149,11 +149,11 @@ export async function addPublicReviewAction(
     return { error: "Çok fazla yorum gönderdin. Lütfen biraz sonra tekrar dene." };
 
   // SAHTE YORUM / PUAN MANİPÜLASYONU KORUMASI:
-  // - Anonim (girişsiz) yorumlar ONAY BEKLER (hidden=true): vitrinde görünmez,
-  //   puana sayılmaz; admin onaylayınca (göster) yayınlanır.
-  // - Girişli kullanıcı yorumları anında yayında ve puana sayılır (hesap + rate-limit
-  //   bariyeri spam'i sınırlar). Bu işletmede TAMAMLANMIŞ randevusu varsa "doğrulanmış".
-  const pending = !session;
+  // Yalnızca bu işletmede TAMAMLANMIŞ randevusu olan (doğrulanmış) yorum anında
+  // yayınlanıp puana sayılır. Anonim VEYA randevusuz girişli yorum ONAY BEKLER
+  // (hidden=true): vitrinde görünmez, puana sayılmaz; admin onaylayınca yayınlanır.
+  // (Eskiden girişli HERKESİN yorumu anında puana sayılıyordu → randevusuz hesapla
+  // puan şişirme açığı vardı.)
   let verified = false;
   if (session) {
     const completed = await db.appointment.count({
@@ -161,6 +161,7 @@ export async function addPublicReviewAction(
     });
     verified = completed > 0;
   }
+  const pending = !verified;
 
   try {
     await db.review.create({

@@ -14,10 +14,14 @@ import { rateLimit } from "@/lib/rate-limit";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request: Request) {
+  // Gerçek istemci IP'si: önce güvenilir x-real-ip / x-vercel-forwarded-for; ham
+  // x-forwarded-for[0] istemci tarafından sahtelenebildiğinden son çaredir (kod
+  // tabanının geri kalanıyla tutarlı sıra — eskiden x-forwarded-for öncelikliydi).
   const ip =
-    (request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "")
-      .split(",")[0]
-      .trim() || "unknown";
+    request.headers.get("x-real-ip") ||
+    request.headers.get("x-vercel-forwarded-for")?.split(",")[0].trim() ||
+    request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+    "unknown";
   if (!rateLimit(`applogin:${ip}`, 10, 10 * 60 * 1000).ok) {
     return NextResponse.json(
       { ok: false, error: "Çok fazla deneme yaptınız. Lütfen biraz sonra tekrar deneyin." },
@@ -36,6 +40,15 @@ export async function POST(request: Request) {
 
   if (!EMAIL_RE.test(email) || password.length < 6) {
     return NextResponse.json({ ok: false, error: "E-posta veya şifre hatalı." }, { status: 400 });
+  }
+
+  // IP başlığı sahtelenebildiğinden e-posta hedefli ikinci sayaç: tek hesaba karşı
+  // IP rotasyonlu brute-force'u da sınırlar.
+  if (!rateLimit(`apploginem:${email}`, 10, 10 * 60 * 1000).ok) {
+    return NextResponse.json(
+      { ok: false, error: "Çok fazla deneme yaptınız. Lütfen biraz sonra tekrar deneyin." },
+      { status: 429 }
+    );
   }
 
   const user = await db.user.findUnique({ where: { email } });

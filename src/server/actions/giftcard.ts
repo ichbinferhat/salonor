@@ -83,10 +83,12 @@ export async function redeemGiftCardAction(opts: { id: string; amountTl: number 
         where: { id: card.id, businessId, active: true, balanceTl: { gte: amount } },
         data: { balanceTl: { decrement: amount } },
       }),
-      // Bu düşümle bakiye tam sıfırlanıyorsa pasifleştir. Aynı `gte`+`lte`
-      // koşulu yetersiz bakiyeli (düşümün gerçekleşmediği) çeke dokunmaz.
+      // Düşüm SONRASI bakiye sıfıra indiyse pasifleştir. Bu updateMany transaction'da
+      // ilk düşümden SONRA çalışır → balanceTl güncel (düşülmüş) değerdir; koşul `0`
+      // olmalı. (Eski `gte/lte: amount` koşulu, yarı harcanan çekte kalan bakiyeyi
+      // yanlışlıkla pasifleştirip siliyor, tam tüketilen çeki ise hiç kapatmıyordu.)
       db.giftCard.updateMany({
-        where: { id: card.id, businessId, active: true, balanceTl: { gte: amount, lte: amount } },
+        where: { id: card.id, businessId, active: true, balanceTl: 0 },
         data: { active: false },
       }),
     ]);

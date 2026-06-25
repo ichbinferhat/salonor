@@ -342,6 +342,12 @@ export async function createWalkInAction(opts: {
   if (!Number.isInteger(opts.startMin) || opts.startMin < 0 || opts.startMin >= 1440) {
     return { ok: false, error: m.invalidTime };
   }
+  // Tarih kanonik YYYY-MM-DD (geçerli ay/gün) olmalı: date sütunu düz string olduğundan
+  // boş/bozuk tarih ('' veya '2026-13-99') çakışma sorgusunu ve takvimi bozar (online
+  // booking tarihi doğruluyor, walk-in doğrulamıyordu).
+  if (!/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(opts.date)) {
+    return { ok: false, error: m.invalidTime };
+  }
 
   // Personel-hizmet uyumu: panel walk-in'i online booking (booking.ts) ile tutarlı
   // tutmak için, personelin yapamadığı (StaffService ataması olmayan) bir hizmet

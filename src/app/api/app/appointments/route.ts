@@ -8,7 +8,13 @@ import { rateLimit } from "@/lib/rate-limit";
  * çerezi (action içinde requireOwnerBusinessId).
  */
 export async function POST(request: Request) {
-  const ip = (request.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "unknown";
+  // Gerçek istemci IP'si: önce güvenilir x-real-ip / x-vercel-forwarded-for; ham
+  // x-forwarded-for[0] sahtelenebildiğinden son çare (kod tabanıyla tutarlı sıra).
+  const ip =
+    request.headers.get("x-real-ip") ||
+    request.headers.get("x-vercel-forwarded-for")?.split(",")[0].trim() ||
+    request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+    "unknown";
   // Cömert sınır — normal kullanımı engellemez, seri kötüye kullanımı keser.
   if (!rateLimit(`app-walkin:${ip}`, 40, 60_000).ok) {
     return NextResponse.json({ ok: false, error: "Çok fazla istek, biraz sonra dene." }, { status: 429 });
