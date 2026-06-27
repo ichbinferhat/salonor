@@ -29,6 +29,7 @@ export const auth = {
   loginForm: {
     submit: "Giriş yap",
     submitPending: "Giriş yapılıyor...",
+    forgotPassword: "Şifremi unuttum",
     noAccount: "Hesabınız yok mu?",
     contactUs: "Bizimle iletişime geçin",
     tooManyAttempts: "Çok fazla giriş denemesi yaptın. Lütfen birkaç dakika sonra tekrar dene.",

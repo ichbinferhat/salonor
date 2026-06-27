@@ -19,6 +19,11 @@ vi.mock("next/headers", () => ({
     set: (name: string, value: string) => cookieStore.set(name, value),
     delete: (name: string) => cookieStore.delete(name),
   }),
+  // getSession artık native Bearer için headers() de okur (session.ts); testte
+  // Authorization yok → cookie yoluna düşer.
+  headers: async () => ({
+    get: (_name: string): string | null => null,
+  }),
 }));
 
 import { createSession, getSession, destroySession } from "@/lib/session";

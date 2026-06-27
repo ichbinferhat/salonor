@@ -728,6 +728,7 @@ export const de: Dictionary = {
     loginForm: {
       submit: "Anmelden",
       submitPending: "Anmeldung läuft...",
+      forgotPassword: "Passwort vergessen?",
       noAccount: "Noch kein Konto?",
       contactUs: "Kontaktiere uns",
       tooManyAttempts: "Du hast zu viele Anmeldeversuche unternommen. Bitte versuche es in ein paar Minuten erneut.",

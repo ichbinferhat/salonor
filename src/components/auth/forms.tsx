@@ -27,6 +27,11 @@ export function LoginForm({ next }: { next?: string }) {
         <Label htmlFor="password">{t.fields.password}</Label>
         <Input id="password" name="password" type="password" placeholder={t.placeholders.password} required autoComplete="current-password" />
       </div>
+      <div className="-mt-1 text-right">
+        <Link href="/sifremi-unuttum" className="text-sm font-medium text-accent-deep hover:underline">
+          {t.loginForm.forgotPassword}
+        </Link>
+      </div>
       <FormError message={state?.error} />
       <SubmitButton size="lg" className="w-full" pendingText={t.loginForm.submitPending}>
         {t.loginForm.submit}

@@ -728,6 +728,7 @@ export const ar: Dictionary = {
     loginForm: {
       submit: "تسجيل الدخول",
       submitPending: "جارٍ تسجيل الدخول...",
+      forgotPassword: "نسيت كلمة المرور؟",
       noAccount: "ليس لديك حساب؟",
       contactUs: "تواصل معنا",
       tooManyAttempts: "لقد أجريت محاولات دخول كثيرة. يرجى المحاولة مرة أخرى بعد بضع دقائق.",

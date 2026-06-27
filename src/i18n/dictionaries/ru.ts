@@ -728,6 +728,7 @@ export const ru: Dictionary = {
     loginForm: {
       submit: "Войти",
       submitPending: "Выполняется вход...",
+      forgotPassword: "Забыли пароль?",
       noAccount: "Нет аккаунта?",
       contactUs: "Свяжитесь с нами",
       tooManyAttempts: "Слишком много попыток входа. Пожалуйста, повторите через несколько минут.",

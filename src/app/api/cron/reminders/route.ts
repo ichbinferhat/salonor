@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { notifyUser } from "@/lib/push";
 import { chargeAndSendSms } from "@/lib/sms-send";
 import { smsConfigured, smsCreditCost } from "@/lib/sms";
+import { sendEmail, emailConfigured } from "@/lib/email";
+import { emailLayout, esc } from "@/lib/email-templates";
 import { signApptToken } from "@/lib/appt-token";
 import { siteUrl } from "@/lib/site-url";
 import { todayStr, addDaysStr, minToHHMM, formatDateTr } from "@/lib/datetime";
@@ -41,12 +43,14 @@ export async function GET(request: Request) {
       startMin: true,
       customerId: true,
       customerPhone: true,
+      customer: { select: { email: true } },
       business: { select: { id: true, name: true, smsCredits: true } },
     },
   });
 
   let push = 0;
   let sms = 0;
+  let email = 0;
 
   for (const a of appts) {
     try {
@@ -81,10 +85,25 @@ export async function GET(request: Request) {
           sms++;
         }
       }
+
+      // 3) E-posta — kayıtlı müşteriye (bedava; yalnızca RESEND_API_KEY tanımlıysa)
+      if (a.customer?.email && emailConfigured()) {
+        const r = await sendEmail({
+          to: a.customer.email,
+          subject: `${a.business.name} — yarınki randevu hatırlatması`,
+          html: emailLayout({
+            heading: "Randevu hatırlatması",
+            bodyHtml: `Yarın <b>${esc(dateLabel)} ${time}</b> · ${esc(a.business.name)} randevun var.<br/><br/>Geliyor musun? Aşağıdan tek tıkla teyit edebilir veya iptal edebilirsin.`,
+            cta: { label: "Teyit / İptal", url: link },
+          }),
+          text: `${a.business.name}: Yarın ${dateLabel} ${time} randevun var. Teyit/iptal: ${link}`,
+        });
+        if (r.status === "sent") email++;
+      }
     } catch (e) {
       console.error("reminder cron randevu hatası:", a.id, e);
     }
   }
 
-  return NextResponse.json({ ok: true, processed: appts.length, push, sms });
+  return NextResponse.json({ ok: true, processed: appts.length, push, sms, email });
 }

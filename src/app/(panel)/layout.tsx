@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getSession } from "@/lib/session";
+import { getDbVerifiedSession } from "@/lib/auth-guard";
 import { getOwnerBusiness } from "@/lib/owner";
 import { getUnseenAppointmentCountAction } from "@/server/actions/business";
 import { PanelSidebar } from "@/components/panel/sidebar";
@@ -9,7 +9,8 @@ export default async function PanelLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getSession();
+  // Rolü DB'den doğrula (stale-role koruması): rolü düşürülen kullanıcı anında kilitlenir.
+  const session = await getDbVerifiedSession();
   if (!session) redirect("/giris?next=/panel");
   if (session.role !== "OWNER" && session.role !== "ADMIN") redirect("/");
 

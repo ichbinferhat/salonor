@@ -7,6 +7,10 @@ import { hashPassword, verifyPassword } from "@/lib/auth";
 import { createSession, destroySession, getSession } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
 import { getDictionary } from "@/i18n";
+import { signResetToken, readResetToken, hashFingerprint } from "@/lib/pw-reset-token";
+import { sendEmail } from "@/lib/email";
+import { emailLayout, esc } from "@/lib/email-templates";
+import { siteUrl } from "@/lib/site-url";
 
 export type FormState = { error?: string; ok?: boolean; notice?: string } | undefined;
 
@@ -122,6 +126,88 @@ export async function registerBusinessAction(
 
   await createSession({ userId: user.id, role: user.role, name: user.name });
   redirect("/isletme/kurulum");
+}
+
+/**
+ * "Şifremi unuttum" — e-posta alır, kayıtlıysa 1 saatlik sıfırlama bağlantısı yollar.
+ * Enumerasyonu önlemek için hesabın var olup olmadığına bakılmaksızın AYNI yanıt döner.
+ * E-posta yalnızca RESEND_API_KEY tanımlıysa gerçekten gönderilir (yoksa sessiz mock).
+ */
+export async function requestPasswordResetAction(
+  _prev: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const ip = await clientIp();
+  if (!rateLimit(`pwreset:${ip}`, 5, 60 * 60 * 1000).ok) {
+    return { error: "Çok fazla deneme. Lütfen biraz sonra tekrar dene." };
+  }
+
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  if (!EMAIL_RE.test(email)) return { error: "Geçerli bir e-posta adresi girin." };
+
+  const user = await db.user.findUnique({ where: { email } });
+  if (user) {
+    try {
+      const token = await signResetToken(user.id, user.passwordHash);
+      const link = `${siteUrl()}/sifre-sifirla/${token}`;
+      await sendEmail({
+        to: user.email,
+        subject: "Salonor — şifre sıfırlama",
+        html: emailLayout({
+          heading: "Şifreni sıfırla",
+          bodyHtml: `Merhaba ${esc(user.name)},<br/><br/>Hesabının şifresini sıfırlamak için aşağıdaki butona tıkla. Bu bağlantı <b>1 saat</b> geçerlidir. Bu isteği sen yapmadıysan bu e-postayı yok sayman yeterli — şifren değişmez.`,
+          cta: { label: "Şifremi sıfırla", url: link },
+        }),
+        text: `Şifreni sıfırlamak için: ${link} (1 saat geçerli). İsteği sen yapmadıysan yok say.`,
+      });
+    } catch (e) {
+      console.error("şifre sıfırlama e-postası hatası:", e);
+    }
+  }
+
+  // Her durumda aynı yanıt (hesap enumerasyonunu önler).
+  return {
+    ok: true,
+    notice: "Eğer bu e-posta bir hesaba kayıtlıysa, sıfırlama bağlantısı gönderildi. Gelen kutunu (ve spam'i) kontrol et.",
+  };
+}
+
+/**
+ * Sıfırlama bağlantısındaki token ile yeni şifre belirler. Token, kullanıcının
+ * GÜNCEL passwordHash parmak iziyle eşleşmeli (tek-kullanımlık güvencesi).
+ * Başarıda oturum açıp rol bazlı yönlendirir.
+ */
+export async function resetPasswordAction(
+  _prev: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const ip = await clientIp();
+  if (!rateLimit(`pwreset:${ip}`, 10, 60 * 60 * 1000).ok) {
+    return { error: "Çok fazla deneme. Lütfen biraz sonra tekrar dene." };
+  }
+
+  const token = String(formData.get("token") ?? "");
+  const password = String(formData.get("password") ?? "");
+  const password2 = String(formData.get("password2") ?? "");
+  if (password.length < 6) return { error: "Şifre en az 6 karakter olmalı." };
+  if (password !== password2) return { error: "Şifreler eşleşmiyor." };
+
+  const claims = await readResetToken(token);
+  const user = claims ? await db.user.findUnique({ where: { id: claims.uid } }) : null;
+  if (!claims || !user || claims.h !== hashFingerprint(user.passwordHash)) {
+    return {
+      error: "Bağlantı geçersiz veya süresi dolmuş. Lütfen yeni bir sıfırlama isteği gönder.",
+    };
+  }
+
+  await db.user.update({
+    where: { id: user.id },
+    data: { passwordHash: await hashPassword(password) },
+  });
+
+  // Başarılı sıfırlama → otomatik giriş + rol bazlı yönlendirme.
+  await createSession({ userId: user.id, role: user.role, name: user.name });
+  redirect(user.role === "OWNER" ? "/panel" : user.role === "ADMIN" ? "/admin" : "/");
 }
 
 export async function logoutAction() {

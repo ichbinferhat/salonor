@@ -729,6 +729,7 @@ export const fr: Dictionary = {
     loginForm: {
       submit: "Se connecter",
       submitPending: "Connexion en cours...",
+      forgotPassword: "Mot de passe oublié ?",
       noAccount: "Vous n’avez pas de compte ?",
       contactUs: "Contactez-nous",
       tooManyAttempts: "Vous avez effectué trop de tentatives de connexion. Veuillez réessayer dans quelques minutes.",

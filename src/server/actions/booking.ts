@@ -13,6 +13,9 @@ import { isValidTrMobile } from "@/lib/phone";
 import { rateLimit } from "@/lib/rate-limit";
 import { chargeAndSendSms } from "@/lib/sms-send";
 import { smsConfigured } from "@/lib/sms";
+import { sendEmail, emailConfigured } from "@/lib/email";
+import { emailLayout, esc } from "@/lib/email-templates";
+import { siteUrl } from "@/lib/site-url";
 
 /** İstek sahibinin IP'si (hız sınırı anahtarı için). */
 async function clientIp(): Promise<string> {
@@ -275,6 +278,26 @@ export async function createAppointmentAction(opts: {
             body: `${biz.name} • ${dateLabel} ${timeLabel} · Kod: ${code}`,
             url: "/hesap",
           });
+
+          // E-posta onayı — kayıtlı müşteriye (yalnızca RESEND_API_KEY tanımlıysa).
+          if (emailConfigured()) {
+            const u = await db.user.findUnique({
+              where: { id: session.userId },
+              select: { email: true },
+            });
+            if (u?.email) {
+              await sendEmail({
+                to: u.email,
+                subject: `${biz.name} — randevun onaylandı`,
+                html: emailLayout({
+                  heading: "Randevun alındı ✓",
+                  bodyHtml: `<b>${esc(biz.name)}</b><br/>${esc(dateLabel)} · ${timeLabel}<br/>Onay kodu: <b>${esc(code)}</b>`,
+                  cta: { label: "Randevularım", url: `${siteUrl()}/hesap` },
+                }),
+                text: `${biz.name}: Randevun ${dateLabel} ${timeLabel} için onaylandı. Kod: ${code}`,
+              });
+            }
+          }
         }
       } catch (e) {
         console.error("randevu push hatası:", e);

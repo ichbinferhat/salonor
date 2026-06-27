@@ -728,6 +728,7 @@ export const fa: Dictionary = {
     loginForm: {
       submit: "ورود",
       submitPending: "در حال ورود...",
+      forgotPassword: "رمز عبور را فراموش کرده‌اید؟",
       noAccount: "حساب ندارید؟",
       contactUs: "با ما تماس بگیرید",
       tooManyAttempts: "بیش از حد تلاش برای ورود داشتی. لطفاً چند دقیقه بعد دوباره تلاش کن.",

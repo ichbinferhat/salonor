@@ -728,6 +728,7 @@ export const es: Dictionary = {
     loginForm: {
       submit: "Iniciar sesión",
       submitPending: "Iniciando sesión...",
+      forgotPassword: "¿Olvidaste tu contraseña?",
       noAccount: "¿No tienes cuenta?",
       contactUs: "Contáctanos",
       tooManyAttempts: "Has hecho demasiados intentos de inicio de sesión. Por favor, vuelve a intentarlo dentro de unos minutos.",

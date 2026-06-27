@@ -692,6 +692,7 @@ export const en: Dictionary = {
     loginForm: {
       submit: "Sign in",
       submitPending: "Signing in...",
+      forgotPassword: "Forgot password?",
       noAccount: "Don't have an account?",
       contactUs: "Get in touch with us",
       tooManyAttempts: "You've made too many sign-in attempts. Please try again in a few minutes.",

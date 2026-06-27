@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getSession, signSession } from "@/lib/session";
+import { signSession } from "@/lib/session";
+import { getDbVerifiedSession } from "@/lib/auth-guard";
 import { getOwnerBusiness } from "@/lib/owner";
 
 /**
@@ -9,7 +10,8 @@ import { getOwnerBusiness } from "@/lib/owner";
  * taşıdığı salonor_session çerezinden (getSession) gelir.
  */
 export async function GET() {
-  const session = await getSession();
+  // Rolü DB'den doğrula → kayan jeton taze rol taşır (native'de stale-role kapanır).
+  const session = await getDbVerifiedSession();
   if (!session) return NextResponse.json({ ok: false }, { status: 401 });
 
   const business = session.role === "OWNER" ? await getOwnerBusiness() : null;

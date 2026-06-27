@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { LogOut, Globe } from "lucide-react";
-import { getSession } from "@/lib/session";
+import { getDbVerifiedSession } from "@/lib/auth-guard";
 import { logoutAction } from "@/server/actions/auth";
 import { Logo } from "@/components/logo";
 import { RefreshButton } from "@/components/admin/refresh-button";
@@ -13,7 +13,8 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const dict = await getDictionary();
-  const session = await getSession();
+  // Rolü DB'den doğrula (stale-role koruması): yetkisi alınmış kullanıcı anında kilitlenir.
+  const session = await getDbVerifiedSession();
   if (!session) redirect("/giris?next=/admin");
   if (session.role !== "ADMIN") redirect("/");
 
