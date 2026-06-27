@@ -6,8 +6,8 @@ import { getDictionary } from "@/i18n";
 import { interpolate } from "@/i18n/interpolate";
 import type { Dictionary } from "@/i18n/types";
 
-const PROMO_SALON_IMG =
-  "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=400&q=70";
+// Parametresiz — boyut/kalite/format'ı image-loader.js ekler (çift parametre olmasın).
+const PROMO_SALON_IMG = "https://images.unsplash.com/photo-1560066984-138dadb4c035";
 
 /** Bugünün tarihini "14 Haziran Cmt" biçiminde Türkçe döndürür (mockup için). */
 function todayLabel() {

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 import { useDict } from "@/i18n/provider";
 import { interpolate } from "@/i18n/interpolate";
 

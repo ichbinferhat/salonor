@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import maplibregl, { type Map as MlMap } from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 import { Map as MapIcon, X } from "lucide-react";
 import { useDict } from "@/i18n/provider";
 

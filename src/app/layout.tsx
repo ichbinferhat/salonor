@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter } from "next/font/google";
-import "maplibre-gl/dist/maplibre-gl.css";
 import "./globals.css";
 import { cookies, headers } from "next/headers";
 import { Analytics } from "@vercel/analytics/next";
@@ -115,6 +114,9 @@ export default async function RootLayout({
       data-scroll-behavior="smooth"
     >
       <body className={`flex min-h-full flex-col${inApp ? " in-app" : ""}`}>
+        {/* Görsel CDN'lerine erken bağlantı (DNS+TLS) — ilk fotoğraflar daha hızlı gelir. */}
+        <link rel="preconnect" href="https://images.unsplash.com" />
+        <link rel="preconnect" href="https://i.pravatar.cc" />
         <I18nProvider dict={dict} locale={locale}>
           {children}
           <CookieConsent />

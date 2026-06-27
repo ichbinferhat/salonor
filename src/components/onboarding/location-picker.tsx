@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import maplibregl, { type Map as MlMap, type Marker } from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 import { useDict } from "@/i18n/provider";
 
 export const CITY_CENTERS: Record<string, [lng: number, lat: number]> = {

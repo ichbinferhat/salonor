@@ -16,7 +16,11 @@
 export default function imageLoader({ src, width, quality }) {
   if (src.includes("images.unsplash.com")) {
     const url = new URL(src);
-    url.searchParams.set("w", String(width));
+    // Genişlik tavanı: çok büyük ekranlarda Next 1920/2048/3840px isteyebilir;
+    // kapak/kart/avatar görselleri için 1536px fazlasıyla yeterli → gereksiz
+    // megabaytları keser (kalite gözle fark etmez), açılış hızlanır.
+    const w = Math.min(Number(width) || 1536, 1536);
+    url.searchParams.set("w", String(w));
     url.searchParams.set("q", String(quality || 70));
     url.searchParams.set("auto", "format");
     url.searchParams.set("fit", "crop");
