@@ -16,8 +16,17 @@ export default async function CalendarPage(props: {
   const weekday = weekdayOf(date);
 
   const [staff, hours, appointments, serviceCategories] = await Promise.all([
+    // Aktif personel + (pasif olsa bile) o gün randevusu olan personel. Aksi halde
+    // bir personel pasifleştirildiğinde gelecekteki randevuları takvimden sessizce
+    // KAYBOLUR (sütunu olmayan randevu CalendarBoard'da hiç çizilmez).
     db.staff.findMany({
-      where: { businessId: business.id, active: true },
+      where: {
+        businessId: business.id,
+        OR: [
+          { active: true },
+          { appointments: { some: { date, status: { not: "CANCELLED" } } } },
+        ],
+      },
       orderBy: { name: "asc" },
     }),
     db.workingHour.findUnique({

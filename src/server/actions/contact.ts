@@ -1,24 +1,12 @@
 "use server";
 
-import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
+import { getClientIp } from "@/lib/client-ip";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-async function clientIp(): Promise<string> {
-  const h = await headers();
-  // Vercel'in güvenilir gerçek-istemci IP başlığını önce kullan (spoof'a kapalı);
-  // ham x-forwarded-for son çaredir (istemci tarafından sahtelenebilir).
-  return (
-    h.get("x-real-ip") ??
-    h.get("x-vercel-forwarded-for")?.split(",")[0].trim() ??
-    h.get("x-forwarded-for")?.split(",")[0].trim() ??
-    "unknown"
-  );
-}
 
 export type ContactState = { ok: true } | { error: string } | undefined;
 
@@ -40,7 +28,7 @@ export async function submitContactRequestAction(
   if (phone && phone.replace(/\D/g, "").length < 10)
     return { error: "Telefon numarası geçersiz görünüyor." };
 
-  const ip = await clientIp();
+  const ip = await getClientIp();
   if (!rateLimit(`contact:${ip}`, 5, 60 * 60 * 1000).ok)
     return { error: "Çok fazla talep gönderdin. Lütfen biraz sonra tekrar dene." };
 
@@ -70,7 +58,8 @@ async function isAdmin() {
 /** Talebi işlendi/işlenmedi olarak işaretler (yalnızca ADMIN). */
 export async function setContactHandledAction(id: string, handled: boolean) {
   if (!(await isAdmin())) return { ok: false };
-  await db.contactRequest.update({ where: { id }, data: { handled } });
+  // updateMany: kayıt yoksa P2025 fırlatmaz (eşzamanlı silinmiş id → 500 yerine sessiz no-op).
+  await db.contactRequest.updateMany({ where: { id }, data: { handled } });
   revalidatePath("/admin");
   return { ok: true };
 }
@@ -78,7 +67,8 @@ export async function setContactHandledAction(id: string, handled: boolean) {
 /** Talebi siler (yalnızca ADMIN). */
 export async function deleteContactRequestAction(id: string) {
   if (!(await isAdmin())) return { ok: false };
-  await db.contactRequest.delete({ where: { id } });
+  // deleteMany: kayıt yoksa P2025 fırlatmaz (eşzamanlı silinmiş id → 500 yerine sessiz no-op).
+  await db.contactRequest.deleteMany({ where: { id } });
   revalidatePath("/admin");
   return { ok: true };
 }

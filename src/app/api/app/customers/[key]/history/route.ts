@@ -12,7 +12,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ key:
   if (!business) return NextResponse.json({ ok: false }, { status: 401 });
 
   const { key } = await params;
-  const decoded = decodeURIComponent(key);
+  // Next App Router param'ı zaten URL-decode eder; literal '%' içeren bir anahtarda
+  // ikinci decode URIError fırlatır → işlenmeyen 500. Hata olursa ham anahtarı kullan.
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(key);
+  } catch {
+    decoded = key;
+  }
   const where: Prisma.AppointmentWhereInput = decoded.startsWith("walk:")
     ? { businessId: business.id, customerId: null, customerName: decoded.slice(5) }
     : { businessId: business.id, customerId: decoded };

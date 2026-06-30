@@ -20,7 +20,18 @@ export async function GET(request: Request) {
   const weekday = weekdayOf(date);
 
   const [staff, hours, appointments, serviceCategories] = await Promise.all([
-    db.staff.findMany({ where: { businessId: business.id, active: true }, orderBy: { name: "asc" } }),
+    // Aktif personel + (pasif olsa bile) o gün randevusu olan personel — pasifleşen
+    // personelin randevuları takvimden kaybolmasın (page.tsx ile birebir).
+    db.staff.findMany({
+      where: {
+        businessId: business.id,
+        OR: [
+          { active: true },
+          { appointments: { some: { date, status: { not: "CANCELLED" } } } },
+        ],
+      },
+      orderBy: { name: "asc" },
+    }),
     db.workingHour.findUnique({ where: { businessId_weekday: { businessId: business.id, weekday } } }),
     db.appointment.findMany({
       where: { businessId: business.id, date, status: { not: "CANCELLED" } },

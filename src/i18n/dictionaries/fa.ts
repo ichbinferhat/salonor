@@ -750,6 +750,27 @@ export const fa: Dictionary = {
       submitPending: "در حال ساخت حساب...",
       termsNotice: "با ادامه دادن، شرایط استفاده را پذیرفته‌ای.",
     },
+
+    forgotForm: {
+      metaTitle: "فراموشی رمز عبور",
+      title: "رمز عبور خود را فراموش کرده‌اید؟",
+      subtitle: "ایمیل خود را وارد کنید تا لینک بازنشانی را برایتان ارسال کنیم.",
+      submit: "ارسال لینک بازنشانی",
+      submitPending: "در حال ارسال...",
+      backToLogin: "بازگشت به ورود",
+    },
+
+    resetForm: {
+      metaTitle: "بازنشانی رمز عبور",
+      title: "تعیین رمز عبور جدید",
+      subtitle: "یک رمز عبور جدید برای حساب خود وارد کنید.",
+      newPassword: "رمز عبور جدید",
+      newPasswordAgain: "رمز عبور جدید (دوباره)",
+      submit: "به‌روزرسانی رمز عبور",
+      submitPending: "در حال ذخیره...",
+      invalid: "این لینک بازنشانی نامعتبر است یا منقضی شده است (لینک‌ها ۱ ساعت اعتبار دارند).",
+      requestNew: "درخواست لینک جدید",
+    },
   },
 
   account: {
@@ -1220,6 +1241,12 @@ export const fa: Dictionary = {
     // برچسب‌های جایگزین مشترک (متن ثابت هنگام خالی‌بودن داده پایگاه‌داده)
     fallbackCustomer: "مشتری",
     fallbackAppt: "نوبت",
+
+    suspended: {
+      title: "حساب شما معلق شده است",
+      desc: "حساب کسب‌وکار شما به‌طور موقت معلق شده است. لطفاً با پشتیبانی تماس بگیرید.",
+      backHome: "بازگشت به صفحه اصلی",
+    },
   },
 
   panelCatalog: {
@@ -2132,5 +2159,24 @@ export const fa: Dictionary = {
     accept: "می‌پذیرم",
     reject: "فقط موارد ضروری",
     learnMore: "جزئیات",
+  },
+
+  reminder: {
+    metaTitle: "تأیید نوبت",
+    invalidTitle: "لینک نامعتبر است یا منقضی شده است.",
+    invalidDesc: "برای تغییر نوبت خود، لطفاً با سالن تماس بگیرید یا وارد حساب خود شوید.",
+    myAccount: "حساب من",
+    cancelledTitle: "این نوبت لغو شده است.",
+    cancelledDesc: "هر زمان که بخواهید می‌توانید نوبت جدیدی رزرو کنید.",
+    completedTitle: "این نوبت انجام شد. متشکریم!",
+    reminderLabel: "یادآوری نوبت",
+    comingQuestion: "می‌آیید؟",
+    coming: "می‌آیم",
+    cancel: "لغو",
+    confirmedTitle: "عالی، نوبت خود را تأیید کردید!",
+    confirmedDesc: "منتظرتان هستیم. 🎉",
+    cancelledActionTitle: "نوبت شما لغو شد.",
+    cancelledActionDesc: "هر زمان که بخواهید می‌توانید دوباره رزرو کنید.",
+    actionFailed: "خطایی رخ داد، لطفاً دوباره تلاش کنید.",
   },
 };

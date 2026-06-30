@@ -1,25 +1,12 @@
 "use server";
 
-import { headers } from "next/headers";
 import { db } from "@/lib/db";
 import { geminiConfigured, geminiVisionJson, geminiJson } from "@/lib/gemini";
 import { requireOwnerBusinessId } from "@/lib/owner";
 import { rateLimit } from "@/lib/rate-limit";
+import { getClientIp } from "@/lib/client-ip";
 import { getDictionary } from "@/i18n";
 import { todayStr, addDaysStr, WEEKDAYS_TR, minToHHMM } from "@/lib/datetime";
-
-/** İstek sahibinin IP'sini başlıklardan çıkarır (rate limit anahtarı için). */
-async function clientIp(): Promise<string> {
-  const h = await headers();
-  // Vercel'in güvenilir gerçek-istemci IP başlığını önce kullan (spoof'a kapalı);
-  // ham x-forwarded-for son çaredir (istemci tarafından sahtelenebilir).
-  return (
-    h.get("x-real-ip") ??
-    h.get("x-vercel-forwarded-for")?.split(",")[0].trim() ??
-    h.get("x-forwarded-for")?.split(",")[0].trim() ??
-    "unknown"
-  );
-}
 
 export type StyleRecommendation = {
   /** Önerilen stilin kısa başlığı, ör. "Katmanlı Lob Kesim" */
@@ -74,7 +61,7 @@ export async function suggestStyleAction(
     return { ok: false, error: "AI stil danışmanı şu an kullanılamıyor." };
 
   // Kötüye kullanım / maliyet koruması: IP başına saatte 8 analiz.
-  const ip = await clientIp();
+  const ip = await getClientIp();
   const rl = rateLimit(`style:${ip}`, 8, 60 * 60 * 1000);
   if (!rl.ok)
     return {

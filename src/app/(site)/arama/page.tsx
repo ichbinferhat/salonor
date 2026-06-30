@@ -54,8 +54,12 @@ export default async function SearchPage(props: {
         ? [{ ratingCount: "desc" }, { ratingAvg: "desc" }]
         : [{ featured: "desc" }, { ratingAvg: "desc" }];
 
+  // Ölçek koruması: pazaryeri büyüdükçe TÜM aktif işletmeleri (ve harita marker'larını)
+  // tek seferde çekmek ağırlaşır. Üst sınır koy — mevcut ölçeği fazlasıyla kapsar;
+  // bu sınır aşılırsa sayfalama (cursor/offset) eklenmelidir.
+  const SEARCH_LIMIT = 60;
   const [salons, categories, session] = await Promise.all([
-    db.business.findMany({ where, orderBy, include: { category: true } }),
+    db.business.findMany({ where, orderBy, include: { category: true }, take: SEARCH_LIMIT }),
     db.category.findMany(),
     getSession(),
   ]);

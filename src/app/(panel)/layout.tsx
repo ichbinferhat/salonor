@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { getDbVerifiedSession } from "@/lib/auth-guard";
 import { getOwnerBusiness } from "@/lib/owner";
 import { getUnseenAppointmentCountAction } from "@/server/actions/business";
 import { PanelSidebar } from "@/components/panel/sidebar";
+import { getDictionary } from "@/i18n";
 
 export default async function PanelLayout({
   children,
@@ -19,18 +21,20 @@ export default async function PanelLayout({
 
   // Askıya alınan işletme (admin active=false yaptı) panele erişemez.
   if (!business.active) {
+    const dict = await getDictionary();
+    const t = dict.panelCore.suspended;
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-cream px-6 text-center">
-        <h1 className="font-display text-2xl text-ink">Hesabınız askıya alındı</h1>
+        <h1 className="font-display text-2xl text-ink">{t.title}</h1>
         <p className="max-w-md text-ink-mute">
-          İşletme hesabınız geçici olarak askıya alınmıştır. Lütfen destek ile iletişime geçin.
+          {t.desc}
         </p>
-        <a
+        <Link
           href="/"
           className="rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-white"
         >
-          Ana sayfaya dön
-        </a>
+          {t.backHome}
+        </Link>
       </div>
     );
   }

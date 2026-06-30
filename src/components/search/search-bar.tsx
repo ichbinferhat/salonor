@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import { useMounted } from "@/lib/use-mounted";
 import {
   ChevronDown,
   ChevronLeft,
@@ -30,7 +31,8 @@ type Anchor = { top: number; left?: number; right?: number; maxHeight: number };
 export function SearchBar({
   categories,
   defaults = {},
-  variant = "hero",
+  // `variant` prop'u API uyumluluğu için Props'ta tutulur ama şu an render'ı
+  // etkilemiyor (hero/page aynı bileşeni paylaşıyor) — destructure edilmez.
   className = "",
 }: Props) {
   const router = useRouter();
@@ -44,19 +46,16 @@ export function SearchBar({
   const [panel, setPanel] = useState<"type" | "loc" | null>(null); // masaüstü popover
   const [anchor, setAnchor] = useState<Anchor | null>(null);
   const [picker, setPicker] = useState<"type" | "loc" | null>(null); // mobil tam ekran seçici
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
 
   const typeBtnRef = useRef<HTMLButtonElement>(null);
   const locBtnRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => setMounted(true), []);
-
-  // Masaüstü popover'ın konumunu tetikleyici düğmeye göre hesapla
+  // Masaüstü popover'ın konumunu tetikleyici düğmeye göre hesapla. Panel kapalıyken
+  // popover hiç render edilmediğinden (aşağıda `panel &&` ile gated) anchor'ı ayrıca
+  // sıfırlamaya gerek yok; açılınca place() anında taze konumu yazar.
   useEffect(() => {
-    if (!panel) {
-      setAnchor(null);
-      return;
-    }
+    if (!panel) return;
     const place = () => {
       const btn = panel === "type" ? typeBtnRef.current : locBtnRef.current;
       if (!btn) return;

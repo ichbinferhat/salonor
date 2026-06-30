@@ -714,6 +714,27 @@ export const en: Dictionary = {
       submitPending: "Creating account...",
       termsNotice: "By continuing, you agree to the Terms of Use.",
     },
+
+    forgotForm: {
+      metaTitle: "Forgot password",
+      title: "Forgot your password?",
+      subtitle: "Enter your email and we'll send you a reset link.",
+      submit: "Send reset link",
+      submitPending: "Sending...",
+      backToLogin: "Back to sign in",
+    },
+
+    resetForm: {
+      metaTitle: "Reset password",
+      title: "Set a new password",
+      subtitle: "Enter a new password for your account.",
+      newPassword: "New password",
+      newPasswordAgain: "New password (again)",
+      submit: "Update password",
+      submitPending: "Saving...",
+      invalid: "This reset link is invalid or has expired (links are valid for 1 hour).",
+      requestNew: "Request a new link",
+    },
   },
 
   account: {
@@ -1169,6 +1190,12 @@ export const en: Dictionary = {
     // Shared fallback labels (static text shown when DB data is empty)
     fallbackCustomer: "Client",
     fallbackAppt: "Appointment",
+
+    suspended: {
+      title: "Your account has been suspended",
+      desc: "Your business account has been temporarily suspended. Please get in touch with support.",
+      backHome: "Back to home",
+    },
   },
 
   panelCatalog: {
@@ -2081,5 +2108,24 @@ export const en: Dictionary = {
     accept: "Accept",
     reject: "Essential only",
     learnMore: "Details",
+  },
+
+  reminder: {
+    metaTitle: "Appointment confirmation",
+    invalidTitle: "This link is invalid or has expired.",
+    invalidDesc: "To make changes to your appointment, please call the salon or sign in to your account.",
+    myAccount: "My account",
+    cancelledTitle: "This appointment has been cancelled.",
+    cancelledDesc: "You can book a new appointment whenever you like.",
+    completedTitle: "This appointment is complete. Thank you!",
+    reminderLabel: "Appointment reminder",
+    comingQuestion: "Are you coming?",
+    coming: "I'm coming",
+    cancel: "Cancel",
+    confirmedTitle: "Great, you've confirmed your appointment!",
+    confirmedDesc: "We're looking forward to seeing you. 🎉",
+    cancelledActionTitle: "Your appointment has been cancelled.",
+    cancelledActionDesc: "You can book again whenever you like.",
+    actionFailed: "Something went wrong, please try again.",
   },
 };

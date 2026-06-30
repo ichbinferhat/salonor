@@ -2,7 +2,6 @@ import { MessageSquare, AlertTriangle } from "lucide-react";
 import { db } from "@/lib/db";
 import { getOwnerBusiness } from "@/lib/owner";
 import { getDictionary } from "@/i18n";
-import { interpolate } from "@/i18n/interpolate";
 import { smsConfigured } from "@/lib/sms";
 import { normalizePhone, formatPhoneTr } from "@/lib/phone";
 import { PanelPageHeader } from "@/components/panel/page-header";

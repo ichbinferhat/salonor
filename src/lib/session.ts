@@ -22,7 +22,10 @@ function secretKey() {
 
 /** Oturum JWT'sini imzalar (cookie + native Bearer/Cookie aynı imzayı paylaşsın). */
 export async function signSession(session: Session): Promise<string> {
-  return new SignJWT(session)
+  // `p:"session"` amaç claim'i: aynı AUTH_SECRET ile imzalanan şifre-sıfırlama
+  // (p:"pwreset") / randevu (p:"appt") token'larının oturum yerine kullanılmasını
+  // engeller (token karışıklığına karşı savunma-derinliği).
+  return new SignJWT({ ...session, p: "session" })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("30d")
@@ -51,6 +54,7 @@ export async function verifySessionToken(token: string): Promise<Session | null>
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, secretKey(), { algorithms: ["HS256"] });
+    if (payload.p !== "session") return null; // yalnızca oturum amaçlı token kabul edilir
     return {
       userId: payload.userId as string,
       role: payload.role as SessionRole,
@@ -74,6 +78,7 @@ export const getSession = cache(async (): Promise<Session | null> => {
     // algorithms pin: yalnızca HS256 kabul et (algoritma karışıklığı/"alg" değişim
     // saldırılarına karşı savunma-derinliği).
     const { payload } = await jwtVerify(token, secretKey(), { algorithms: ["HS256"] });
+    if (payload.p !== "session") return null; // pwreset/appt token'ı oturum sayılmaz
     return {
       userId: payload.userId as string,
       role: payload.role as SessionRole,

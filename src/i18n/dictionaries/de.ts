@@ -750,6 +750,27 @@ export const de: Dictionary = {
       submitPending: "Konto wird erstellt...",
       termsNotice: "Indem du fortfährst, akzeptierst du die Nutzungsbedingungen.",
     },
+
+    forgotForm: {
+      metaTitle: "Passwort vergessen",
+      title: "Passwort vergessen?",
+      subtitle: "Gib deine E-Mail-Adresse ein und wir senden dir einen Link zum Zurücksetzen.",
+      submit: "Link zum Zurücksetzen senden",
+      submitPending: "Wird gesendet...",
+      backToLogin: "Zurück zur Anmeldung",
+    },
+
+    resetForm: {
+      metaTitle: "Passwort zurücksetzen",
+      title: "Neues Passwort festlegen",
+      subtitle: "Gib ein neues Passwort für dein Konto ein.",
+      newPassword: "Neues Passwort",
+      newPasswordAgain: "Neues Passwort (wiederholen)",
+      submit: "Passwort aktualisieren",
+      submitPending: "Wird gespeichert...",
+      invalid: "Dieser Link zum Zurücksetzen ist ungültig oder abgelaufen (Links sind 1 Stunde gültig).",
+      requestNew: "Neuen Link anfordern",
+    },
   },
 
   account: {
@@ -1220,6 +1241,12 @@ export const de: Dictionary = {
     // Gemeinsame Fallback-Beschriftungen (statischer Text, wenn DB-Daten leer sind)
     fallbackCustomer: "Kunde",
     fallbackAppt: "Termin",
+
+    suspended: {
+      title: "Dein Konto wurde gesperrt",
+      desc: "Dein Geschäftskonto wurde vorübergehend gesperrt. Bitte wende dich an den Support.",
+      backHome: "Zurück zur Startseite",
+    },
   },
 
   panelCatalog: {
@@ -2141,5 +2168,24 @@ export const de: Dictionary = {
     accept: "Akzeptieren",
     reject: "Nur notwendige",
     learnMore: "Details",
+  },
+
+  reminder: {
+    metaTitle: "Terminbestätigung",
+    invalidTitle: "Der Link ist ungültig oder abgelaufen.",
+    invalidDesc: "Um deinen Termin zu ändern, ruf bitte den Salon an oder melde dich in deinem Konto an.",
+    myAccount: "Mein Konto",
+    cancelledTitle: "Dieser Termin wurde storniert.",
+    cancelledDesc: "Du kannst jederzeit einen neuen Termin buchen.",
+    completedTitle: "Dieser Termin ist abgeschlossen. Danke!",
+    reminderLabel: "Terminerinnerung",
+    comingQuestion: "Kommst du?",
+    coming: "Ich komme",
+    cancel: "Stornieren",
+    confirmedTitle: "Super, du hast deinen Termin bestätigt!",
+    confirmedDesc: "Wir freuen uns auf dich. 🎉",
+    cancelledActionTitle: "Dein Termin wurde storniert.",
+    cancelledActionDesc: "Du kannst jederzeit wieder buchen.",
+    actionFailed: "Etwas ist schiefgelaufen, bitte versuche es erneut.",
   },
 };

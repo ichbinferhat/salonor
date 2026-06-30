@@ -751,6 +751,27 @@ export const fr: Dictionary = {
       submitPending: "Création du compte...",
       termsNotice: "En continuant, vous acceptez les Conditions d’utilisation.",
     },
+
+    forgotForm: {
+      metaTitle: "Mot de passe oublié",
+      title: "Mot de passe oublié ?",
+      subtitle: "Saisis ton adresse e-mail et nous t'enverrons un lien de réinitialisation.",
+      submit: "Envoyer le lien de réinitialisation",
+      submitPending: "Envoi en cours...",
+      backToLogin: "Retour à la connexion",
+    },
+
+    resetForm: {
+      metaTitle: "Réinitialiser le mot de passe",
+      title: "Définir un nouveau mot de passe",
+      subtitle: "Saisis un nouveau mot de passe pour ton compte.",
+      newPassword: "Nouveau mot de passe",
+      newPasswordAgain: "Nouveau mot de passe (à nouveau)",
+      submit: "Mettre à jour le mot de passe",
+      submitPending: "Enregistrement...",
+      invalid: "Ce lien de réinitialisation est invalide ou a expiré (les liens sont valables 1 heure).",
+      requestNew: "Demander un nouveau lien",
+    },
   },
 
   account: {
@@ -1221,6 +1242,12 @@ export const fr: Dictionary = {
     // Libellés de repli communs (texte statique affiché lorsque la donnée DB est vide)
     fallbackCustomer: "Client",
     fallbackAppt: "Rendez-vous",
+
+    suspended: {
+      title: "Ton compte a été suspendu",
+      desc: "Le compte de ton entreprise a été temporairement suspendu. Contacte le support.",
+      backHome: "Retour à l'accueil",
+    },
   },
 
   panelCatalog: {
@@ -2133,5 +2160,24 @@ export const fr: Dictionary = {
     accept: "Tout accepter",
     reject: "Essentiels uniquement",
     learnMore: "En savoir plus",
+  },
+
+  reminder: {
+    metaTitle: "Confirmation du rendez-vous",
+    invalidTitle: "Le lien est invalide ou a expiré.",
+    invalidDesc: "Pour modifier ton rendez-vous, appelle le salon ou connecte-toi à ton compte.",
+    myAccount: "Mon compte",
+    cancelledTitle: "Ce rendez-vous a été annulé.",
+    cancelledDesc: "Tu peux prendre un nouveau rendez-vous quand tu veux.",
+    completedTitle: "Ce rendez-vous est terminé. Merci !",
+    reminderLabel: "Rappel de rendez-vous",
+    comingQuestion: "Tu viens ?",
+    coming: "Je viens",
+    cancel: "Annuler",
+    confirmedTitle: "Parfait, tu as confirmé ton rendez-vous !",
+    confirmedDesc: "Nous t'attendons avec impatience. 🎉",
+    cancelledActionTitle: "Ton rendez-vous a été annulé.",
+    cancelledActionDesc: "Tu peux réserver à nouveau quand tu veux.",
+    actionFailed: "Une erreur s'est produite, réessaie.",
   },
 };

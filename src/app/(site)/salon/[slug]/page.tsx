@@ -35,12 +35,16 @@ export async function generateMetadata(props: {
   const [business, dict, locale] = await Promise.all([
     db.business.findUnique({
       where: { slug },
-      select: { name: true, district: true, city: true, description: true, coverImage: true },
+      select: { name: true, district: true, city: true, description: true, coverImage: true, active: true },
     }),
     getDictionary(),
     getLocale(),
   ]);
-  if (!business) return { title: dict.salon.notFoundTitle };
+  // Sayfa gövdesi (SalonPage) pasif işletmede notFound() yapar → metadata da
+  // aynı kararı vermeli: aksi halde 404 yanıtına tam başlık/OG basılır ve pasif
+  // salon arama motorlarına indekslenebilir.
+  if (!business || !business.active)
+    return { title: dict.salon.notFoundTitle, robots: { index: false, follow: false } };
   const title = `${business.name} — ${business.district}, ${business.city}`;
   const description =
     business.description?.trim() ||

@@ -47,6 +47,10 @@ export function AiInsights({ fallback }: { fallback: string[] }) {
     };
   }, []);
 
+  // Mount'ta gerçek AI verisini çek (dış sistemle senkronizasyon). load() içindeki
+  // setState("loading") başlangıç değeriyle aynı olduğundan cascade yoktur; bu kural
+  // mount-veri-çekme için yanlış-pozitiftir.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => load(), [load]);
 
   return (

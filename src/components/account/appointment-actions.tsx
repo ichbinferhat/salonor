@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useActionState } from "react";
 import { Star, CheckCircle2, ExternalLink } from "lucide-react";
 import {
@@ -64,16 +64,14 @@ export function ReviewButton({
   const [open, setOpen] = useState(false);
   const [rating, setRating] = useState(5);
   const [hover, setHover] = useState(0);
-  const [submitted, setSubmitted] = useState(false);
   const [state, action] = useActionState<FormState, FormData>(
     createReviewAction,
     undefined
   );
 
-  // Başarılı gönderimde modalı kapatma; teşekkür + Google adımını göster.
-  useEffect(() => {
-    if (state?.ok) setSubmitted(true);
-  }, [state]);
+  // Başarılı gönderimde teşekkür + Google adımını göster — action sonucundan
+  // TÜRETİLİR (ayrı state + effect gerekmez; setState-in-effect cascade'i de yok).
+  const submitted = !!state?.ok;
 
   // Önceki oturumda zaten değerlendirilmiş: sadece (varsa) Google'da paylaş.
   if (alreadyReviewed && !submitted) {

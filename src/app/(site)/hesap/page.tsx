@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { CalendarX2 } from "lucide-react";
 import { db } from "@/lib/db";
+import type { Prisma } from "@/generated/prisma/client";
 import { getSession } from "@/lib/session";
 import { getDictionary } from "@/i18n";
 import { interpolate } from "@/i18n/interpolate";
@@ -114,20 +115,16 @@ export default async function AppointmentsPage() {
   );
 }
 
-type ApptWithRelations = Awaited<
-  ReturnType<typeof getAppointmentsForType>
->[number];
-
-function getAppointmentsForType() {
-  return db.appointment.findMany({
-    include: {
-      business: { select: { name: true, slug: true, coverImage: true, district: true, city: true, googlePlaceId: true } },
-      staff: { select: { name: true } },
-      items: { select: { name: true } },
-      review: { select: { id: true } },
-    },
-  });
-}
+// Randevu + ilişkili veri tipi: dummy fonksiyon yerine Prisma'nın resmi payload
+// tipinden türetilir (ölü kod yok; aynı tip garantisi).
+type ApptWithRelations = Prisma.AppointmentGetPayload<{
+  include: {
+    business: { select: { name: true; slug: true; coverImage: true; district: true; city: true; googlePlaceId: true } };
+    staff: { select: { name: true } };
+    items: { select: { name: true } };
+    review: { select: { id: true } };
+  };
+}>;
 
 function AppointmentCard({
   appt,

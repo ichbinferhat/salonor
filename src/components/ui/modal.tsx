@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { useDict } from "@/i18n/provider";
+import { useMounted } from "@/lib/use-mounted";
 
 export function Modal({
   open,
@@ -19,19 +20,60 @@ export function Modal({
   maxW?: string;
 }) {
   const dict = useDict();
+  const panelRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
 
   // Portal yalnızca tarayıcıda; SSR uyumsuzluğunu önlemek için mount bekle.
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useMounted();
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const panel = panelRef.current;
+    // Açılış öncesi odaklı öğeyi sakla — kapanışta geri verilecek (klavye/SR kullanıcısı
+    // diyalogdan çıkınca tetikleyiciye döner).
+    const prevActive = document.activeElement as HTMLElement | null;
+
+    const focusables = () =>
+      panel
+        ? Array.from(
+            panel.querySelectorAll<HTMLElement>(
+              'a[href],button:not([disabled]),textarea,input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])'
+            )
+          ).filter((el) => el.offsetParent !== null)
+        : [];
+
+    // Açılışta odağı diyaloğun ilk öğesine (yoksa panelin kendisine) taşı.
+    (focusables()[0] ?? panel)?.focus();
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      // Focus trap: Tab/Shift+Tab odağı diyalog içinde döngüye sokar (arka plana kaçmaz).
+      const items = focusables();
+      if (items.length === 0) {
+        e.preventDefault();
+        return;
+      }
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement;
+      if (e.shiftKey && (active === first || active === panel)) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
+      prevActive?.focus?.();
     };
   }, [open, onClose]);
 
@@ -44,6 +86,7 @@ export function Modal({
       className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center"
       role="dialog"
       aria-modal="true"
+      aria-labelledby={title ? titleId : undefined}
     >
       <button
         className="anim-fade absolute inset-0 cursor-default bg-ink-strong/50 backdrop-blur-[2px] [animation-duration:150ms]"
@@ -52,11 +95,15 @@ export function Modal({
         tabIndex={-1}
       />
       <div
-        className={`anim-rise relative z-10 max-h-[92dvh] w-full ${maxW} overflow-y-auto rounded-t-3xl bg-surface p-6 shadow-pop [animation-duration:220ms] sm:rounded-3xl`}
+        ref={panelRef}
+        tabIndex={-1}
+        className={`anim-rise relative z-10 max-h-[92dvh] w-full ${maxW} overflow-y-auto rounded-t-3xl bg-surface p-6 shadow-pop outline-none [animation-duration:220ms] sm:rounded-3xl`}
       >
         <div className="mb-4 flex items-start justify-between gap-4">
           {title ? (
-            <h2 className="font-display text-xl font-bold tracking-[-0.01em] text-balance text-ink">{title}</h2>
+            <h2 id={titleId} className="font-display text-xl font-bold tracking-[-0.01em] text-balance text-ink">
+              {title}
+            </h2>
           ) : (
             <span />
           )}

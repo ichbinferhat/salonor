@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Wallet, Receipt } from "lucide-react";
 import { db } from "@/lib/db";
 import { getDictionary } from "@/i18n";
-import { interpolate } from "@/i18n/interpolate";
 import { getOwnerBusiness } from "@/lib/owner";
 import { todayStr } from "@/lib/datetime";
 import { formatTl } from "@/lib/format";

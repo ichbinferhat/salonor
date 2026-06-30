@@ -2,27 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
 import { db } from "@/lib/db";
 import { getSession, createSession, destroySession } from "@/lib/session";
 import { hashPassword, verifyPassword } from "@/lib/auth";
-import { todayStr } from "@/lib/datetime";
+import { todayStr, nowMinutes } from "@/lib/datetime";
 import { rateLimit } from "@/lib/rate-limit";
+import { getClientIp } from "@/lib/client-ip";
 import { recomputeBusinessRating } from "@/lib/rating";
 import { getDictionary } from "@/i18n";
 import type { FormState } from "./auth";
-
-async function clientIp(): Promise<string> {
-  const h = await headers();
-  // Vercel'in güvenilir gerçek-istemci IP başlığını önce kullan (spoof'a kapalı);
-  // ham x-forwarded-for son çaredir (istemci tarafından sahtelenebilir).
-  return (
-    h.get("x-real-ip") ??
-    h.get("x-vercel-forwarded-for")?.split(",")[0].trim() ??
-    h.get("x-forwarded-for")?.split(",")[0].trim() ??
-    "unknown"
-  );
-}
 
 export async function toggleFavoriteAction(businessId: string, slug: string) {
   const session = await getSession();
@@ -48,11 +36,16 @@ export async function cancelAppointmentAction(appointmentId: string) {
 
   const appt = await db.appointment.findUnique({
     where: { id: appointmentId },
-    select: { customerId: true, status: true, date: true, business: { select: { slug: true } } },
+    select: { customerId: true, status: true, date: true, startMin: true, business: { select: { slug: true } } },
   });
 
   if (!appt || appt.customerId !== session.userId) return;
-  if (appt.status !== "CONFIRMED" || appt.date < todayStr()) return;
+  if (appt.status !== "CONFIRMED") return;
+  // Geçmiş randevu iptal edilemez — GÜN değil SAAT hassasiyetinde: bugün ama saati
+  // çoktan başlamış bir randevu da geçmiştir (raporlarda ciro/prim'e sayılan
+  // gerçekleşmiş işi sonradan iptalle silmeyi engeller).
+  const today = todayStr();
+  if (appt.date < today || (appt.date === today && appt.startMin <= nowMinutes())) return;
 
   await db.appointment.update({
     where: { id: appointmentId },
@@ -144,7 +137,7 @@ export async function addPublicReviewAction(
   const session = await getSession();
   if (!session && nameInput.length < 2) return { error: "Lütfen adını gir." };
 
-  const ip = await clientIp();
+  const ip = await getClientIp();
   if (!rateLimit(`review:${ip}`, 3, 60 * 60 * 1000).ok)
     return { error: "Çok fazla yorum gönderdin. Lütfen biraz sonra tekrar dene." };
 
@@ -152,10 +145,17 @@ export async function addPublicReviewAction(
   // Yalnızca bu işletmede TAMAMLANMIŞ randevusu olan (doğrulanmış) yorum anında
   // yayınlanıp puana sayılır. Anonim VEYA randevusuz girişli yorum ONAY BEKLER
   // (hidden=true): vitrinde görünmez, puana sayılmaz; admin onaylayınca yayınlanır.
-  // (Eskiden girişli HERKESİN yorumu anında puana sayılıyordu → randevusuz hesapla
-  // puan şişirme açığı vardı.)
   let verified = false;
   if (session) {
+    // MÜŞTERİ BAŞINA TEK YORUM: tek bir tamamlanmış randevu, SINIRSIZ "doğrulanmış"
+    // yorumla puanı şişirmeye/çökertmeye yetmesin. Bu işletmeye daha önce yorum
+    // yapılmışsa (puana sayılan VEYA onay bekleyen) yenisi reddedilir.
+    const existing = await db.review.findFirst({
+      where: { businessId: business.id, customerId: session.userId },
+      select: { id: true },
+    });
+    if (existing) return { error: "Bu işletmeye zaten bir değerlendirme yaptın." };
+
     const completed = await db.appointment.count({
       where: { businessId: business.id, customerId: session.userId, status: "COMPLETED" },
     });

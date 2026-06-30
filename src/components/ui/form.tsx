@@ -58,8 +58,13 @@ export function FieldHint({ children }: { children: ReactNode }) {
 
 export function FormError({ message }: { message?: string | null }) {
   if (!message) return null;
+  // role="alert" (assertive canlı bölge): gönderim sonrası beliren hata ekran
+  // okuyucuya otomatik seslendirilir (aksi halde görme engelli kullanıcı hatayı fark etmez).
   return (
-    <div className="rounded-xl border border-rose/20 bg-rose-soft px-4 py-3 text-sm font-medium text-rose">
+    <div
+      role="alert"
+      className="rounded-xl border border-rose/20 bg-rose-soft px-4 py-3 text-sm font-medium text-rose"
+    >
       {message}
     </div>
   );
@@ -68,7 +73,10 @@ export function FormError({ message }: { message?: string | null }) {
 export function FormSuccess({ message }: { message?: string | null }) {
   if (!message) return null;
   return (
-    <div className="rounded-xl border border-mint/20 bg-mint-soft px-4 py-3 text-sm font-medium text-mint">
+    <div
+      role="status"
+      className="rounded-xl border border-mint/20 bg-mint-soft px-4 py-3 text-sm font-medium text-mint"
+    >
       {message}
     </div>
   );

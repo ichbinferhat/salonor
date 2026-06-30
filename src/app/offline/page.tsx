@@ -1,6 +1,8 @@
 // Çevrimdışı yedek sayfası. Service worker, ağ koptuğunda bunu gösterir.
 // Dış CSS yüklenemeyebileceği için stiller satır içi (inline) verildi.
-export const metadata = { title: "Çevrimdışı" };
+// Bu sayfa SW önbelleğinden statik servis edilir (sunucu YOK → getDictionary
+// çalışmaz); bu yüzden iki dilli (Türkçe + İngilizce) sabit metin kullanılır.
+export const metadata = { title: "Çevrimdışı / Offline" };
 
 export default function OfflinePage() {
   return (
@@ -50,11 +52,16 @@ export default function OfflinePage() {
           </svg>
         </div>
         <h1 style={{ margin: "0 0 8px", fontSize: "22px", fontWeight: 800, color: "#131b2e" }}>
-          Bağlantı yok
+          Bağlantı yok / No connection
         </h1>
         <p style={{ margin: "0 0 24px", color: "#4a5470", fontSize: "15px", lineHeight: 1.5 }}>
           İnternet bağlantın kesildi. Bağlanınca Salonor kaldığın yerden devam edecek.
+          <br />
+          <span style={{ opacity: 0.75 }}>
+            You&apos;re offline. Salonor will continue where you left off once you reconnect.
+          </span>
         </p>
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- offline kurtarma: tam yeniden yükleme (Link soft-nav offline state'i temizlemez) */}
         <a
           href="/"
           style={{
@@ -68,7 +75,7 @@ export default function OfflinePage() {
             borderRadius: "999px",
           }}
         >
-          Tekrar dene
+          Tekrar dene / Retry
         </a>
       </div>
     </div>

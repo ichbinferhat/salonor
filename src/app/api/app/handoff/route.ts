@@ -23,19 +23,26 @@ export async function GET(request: Request) {
   const host = request.headers.get("x-forwarded-host") || url.host;
   const proto = request.headers.get("x-forwarded-proto") || url.protocol.replace(":", "");
 
+  // GÜVENLİK: Oturum jetonu URL query'sinde (?token=) taşındığından, hedef sayfaya
+  // geçişte bu URL'in Referer başlığıyla sızmasını engelle (no-referrer).
+  const noRef = (res: NextResponse) => {
+    res.headers.set("Referrer-Policy", "no-referrer");
+    return res;
+  };
+
   // Public hedef: oturum/çerez gerekmez → doğrudan yönlen (eskiden /panel'e eziliyordu;
   // yasal sayfa linkleri kırıktı → mağaza inceleme riski).
   if (isPublicTarget) {
-    return NextResponse.redirect(`${proto}://${host}${to}`);
+    return noRef(NextResponse.redirect(`${proto}://${host}${to}`));
   }
 
   // Jetonu doğrula + rol kontrolü. Geçersizse çerez KURMA, girişe yönlen.
   const session = await verifySessionToken(token);
   if (!session || (session.role !== "OWNER" && session.role !== "ADMIN")) {
-    return NextResponse.redirect(`${proto}://${host}/giris`);
+    return noRef(NextResponse.redirect(`${proto}://${host}/giris`));
   }
 
-  const res = NextResponse.redirect(`${proto}://${host}${to}`);
+  const res = noRef(NextResponse.redirect(`${proto}://${host}${to}`));
   res.cookies.set("salonor_session", token, {
     httpOnly: true,
     sameSite: "lax",

@@ -23,6 +23,7 @@ import { panelOther } from "./tr.panelOther";
 import { onboarding } from "./tr.onboarding";
 import { admin } from "./tr.admin";
 import { consent } from "./tr.consent";
+import { reminder } from "./tr.reminder";
 
 export const tr = {
   common,
@@ -204,4 +205,5 @@ export const tr = {
   onboarding,
   admin,
   consent,
+  reminder,
 } satisfies Record<string, unknown>;

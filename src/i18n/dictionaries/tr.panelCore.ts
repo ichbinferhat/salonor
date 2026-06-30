@@ -142,4 +142,11 @@ export const panelCore = {
   // Ortak fallback etiketleri (DB verisi boşken gösterilen statik metin)
   fallbackCustomer: "Müşteri",
   fallbackAppt: "Randevu",
+
+  // Askıya alınan işletme ekranı (panel layout)
+  suspended: {
+    title: "Hesabınız askıya alındı",
+    desc: "İşletme hesabınız geçici olarak askıya alınmıştır. Lütfen destek ile iletişime geçin.",
+    backHome: "Ana sayfaya dön",
+  },
 };

@@ -36,7 +36,9 @@ export default async function BookingPage(props: {
     },
   });
 
-  if (!business) notFound();
+  // Pasif/askıya alınmış işletme her yerde gizliyken (arama/listeler) doğrudan URL
+  // ile randevu sihirbazına gelinmesini engelle (createAppointmentAction da ayrıca korur).
+  if (!business || !business.active) notFound();
 
   // Önümüzdeki 14 gün; kapalı günler işaretli
   const today = todayStr();

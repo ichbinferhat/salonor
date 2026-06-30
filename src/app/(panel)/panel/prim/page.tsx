@@ -28,12 +28,19 @@ export default async function CommissionPage() {
         date: { gte: from, lte: today },
         status: { in: ["CONFIRMED", "COMPLETED"] },
       },
-      select: { staffId: true, totalTl: true },
+      select: { staffId: true, totalTl: true, status: true, date: true },
     }),
   ]);
 
+  // Prim yalnızca GERÇEKLEŞEN işten hesaplanır: tamamlanmış + günü geçmiş onaylı.
+  // Bugünün henüz yaşanmamış CONFIRMED randevuları (iptal/gelinmedi olabilir) primi
+  // şişirmesin — Raporlar/Giderler ile birebir `earned` mantığı.
+  const earned = appts.filter(
+    (a) => a.status === "COMPLETED" || (a.status === "CONFIRMED" && a.date < today)
+  );
+
   const agg = new Map<string, { count: number; revenue: number }>();
-  for (const a of appts) {
+  for (const a of earned) {
     const c = agg.get(a.staffId) ?? { count: 0, revenue: 0 };
     c.count += 1;
     c.revenue += a.totalTl;

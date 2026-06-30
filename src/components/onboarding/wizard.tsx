@@ -16,11 +16,11 @@ import {
 } from "lucide-react";
 import { createBusinessAction, type OnboardingData } from "@/server/actions/business";
 import { LocationPicker, CITY_CENTERS } from "./location-picker";
-import { WEEKDAYS_TR } from "@/lib/datetime";
+import { weekdayName } from "@/lib/datetime";
 import { Logo } from "@/components/logo";
 import { Input, Label, Textarea } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { useDict } from "@/i18n/provider";
+import { useDict, useLocale } from "@/i18n/provider";
 import { interpolate } from "@/i18n/interpolate";
 
 type Category = { slug: string; name: string; emoji: string };
@@ -71,6 +71,7 @@ export function OnboardingWizard({
 }) {
   const router = useRouter();
   const t = useDict().onboarding;
+  const locale = useLocale();
   const [step, setStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -346,7 +347,7 @@ export function OnboardingWizard({
                             : "border-line bg-surface text-ink hover:border-accent/40 hover:shadow-card"
                         }`}
                       >
-                        {WEEKDAYS_TR[wd]}
+                        {weekdayName(locale, wd, { weekday: "long" })}
                       </button>
                     );
                   })}

@@ -25,7 +25,12 @@ export function LocationPicker({
   const mapRef = useRef<MlMap | null>(null);
   const markerRef = useRef<Marker | null>(null);
   const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
+  // En güncel onChange'i ref'te tut — AMA render sırasında değil effect'te yaz
+  // (render'da ref.current'a yazmak React derleyici kuralını ihlal eder). Harita
+  // olay callback'leri her zaman effect sonrası tetiklendiğinden değer günceldir.
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;

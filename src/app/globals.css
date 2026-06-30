@@ -10,7 +10,9 @@
   --color-ink: #131b2e;
   --color-ink-strong: #0b1222;
   --color-ink-soft: #4a5470;
-  --color-ink-mute: #79819b;
+  /* ink-mute küçük ikincil metinlerde sık kullanılır; beyaz/krem zeminde WCAG AA
+     (≥4.5:1 normal metin) eşiğini geçecek şekilde koyulaştırıldı (eski #79819b ~3.7:1). */
+  --color-ink-mute: #636b86;
 
   /* Menekşe vurgu */
   --color-accent: #6c4df6;

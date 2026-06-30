@@ -142,6 +142,60 @@ const NAV_SECTIONS = [
   },
 ] as const;
 
+/**
+ * Kenar çubuğu navigasyon linkleri — MODÜL SEVİYESİNDE tanımlı (PanelSidebar içinde
+ * DEĞİL): bir bileşeni render içinde tanımlayıp <NavLinks/> ile kullanmak her render'da
+ * yeni tip kimliği üretir; React tüm <nav> alt ağacını söküp yeniden kurar (state/odak
+ * kaybı + gereksiz remount). Prop olarak alıp kararlı kimlik korunur.
+ */
+function NavLinks({
+  pathname,
+  unseen,
+  t,
+  onNav,
+}: {
+  pathname: string;
+  unseen: number;
+  t: ReturnType<typeof useDict>["panelCore"];
+  onNav?: () => void;
+}) {
+  return (
+    <nav className="flex flex-col gap-4">
+      {NAV_SECTIONS.map((section) => (
+        <div key={section.titleKey} className="flex flex-col gap-1">
+          <p className="px-3.5 pb-0.5 text-[11px] font-bold uppercase tracking-wider text-white/35">
+            {t[section.titleKey]}
+          </p>
+          {section.items.map(([href, labelKey, Icon]) => {
+            const active = href === "/panel" ? pathname === href : pathname.startsWith(href);
+            const badge = href === "/panel/bildirimler" && unseen > 0 ? unseen : 0;
+            return (
+              <Link
+                key={href}
+                href={href}
+                onClick={onNav}
+                className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${
+                  active
+                    ? "bg-gradient-to-r from-accent to-[#7c5cff] text-white shadow-[0_4px_14px_-4px_rgba(108,77,246,0.7)]"
+                    : "text-white/65 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                <Icon className="size-4.5 shrink-0" />
+                <span className="flex-1">{t[labelKey]}</span>
+                {badge > 0 && (
+                  <span className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-rose px-1.5 py-0.5 text-[11px] font-bold leading-none text-white">
+                    {badge > 99 ? "99+" : badge}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+        </div>
+      ))}
+    </nav>
+  );
+}
+
 export function PanelSidebar({
   businessName,
   businessSlug,
@@ -186,48 +240,16 @@ export function PanelSidebar({
     };
   }, [router]);
 
-  // Sunucu (layout) yeni bir sayı gönderdiğinde — ör. randevu onaylanıp
-  // router.refresh çağrıldığında — rozeti anında güncelle.
-  useEffect(() => {
+  // Sunucu (layout) yeni bir sayı gönderdiğinde rozeti anında güncelle — RENDER
+  // sırasında prop değişimini izleyerek (setState-in-effect cascade'i yerine).
+  // prevUnseen.current'ı burada YAZMAYIZ: artış zaten poll yolundan geçtiğinden
+  // (orada prevUnseen.current = n yapılır) güncel kalır; render'da ref yazmak ayrıca
+  // "render sırasında ref" kuralını ihlal ederdi.
+  const [prevInitial, setPrevInitial] = useState(initialUnseen);
+  if (initialUnseen !== prevInitial) {
+    setPrevInitial(initialUnseen);
     setUnseen(initialUnseen);
-    prevUnseen.current = initialUnseen;
-  }, [initialUnseen]);
-
-  const NavLinks = ({ onNav }: { onNav?: () => void }) => (
-    <nav className="flex flex-col gap-4">
-      {NAV_SECTIONS.map((section) => (
-        <div key={section.titleKey} className="flex flex-col gap-1">
-          <p className="px-3.5 pb-0.5 text-[11px] font-bold uppercase tracking-wider text-white/35">
-            {t[section.titleKey]}
-          </p>
-          {section.items.map(([href, labelKey, Icon]) => {
-            const active = href === "/panel" ? pathname === href : pathname.startsWith(href);
-            const badge = href === "/panel/bildirimler" && unseen > 0 ? unseen : 0;
-            return (
-              <Link
-                key={href}
-                href={href}
-                onClick={onNav}
-                className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all ${
-                  active
-                    ? "bg-gradient-to-r from-accent to-[#7c5cff] text-white shadow-[0_4px_14px_-4px_rgba(108,77,246,0.7)]"
-                    : "text-white/65 hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                <Icon className="size-4.5 shrink-0" />
-                <span className="flex-1">{t[labelKey]}</span>
-                {badge > 0 && (
-                  <span className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-rose px-1.5 py-0.5 text-[11px] font-bold leading-none text-white">
-                    {badge > 99 ? "99+" : badge}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </div>
-      ))}
-    </nav>
-  );
+  }
 
   return (
     <>
@@ -241,7 +263,7 @@ export function PanelSidebar({
           <p className="truncate text-sm font-bold text-white">{businessName}</p>
         </div>
         <div className="no-scrollbar mt-4 flex-1 overflow-y-auto">
-          <NavLinks />
+          <NavLinks pathname={pathname} unseen={unseen} t={t} />
         </div>
         <div className="space-y-1 border-t border-white/10 pt-3">
           <Link
@@ -285,7 +307,7 @@ export function PanelSidebar({
               </button>
             </div>
             <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto">
-              <NavLinks onNav={() => setOpen(false)} />
+              <NavLinks pathname={pathname} unseen={unseen} t={t} onNav={() => setOpen(false)} />
             </div>
             <div className="shrink-0 space-y-1 border-t border-white/10 pt-3">
               <Link

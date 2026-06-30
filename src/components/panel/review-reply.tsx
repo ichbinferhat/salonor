@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { Reply, Pencil } from "lucide-react";
 import { replyReviewAction, type ActionState } from "@/server/actions/business";
 import { useDict } from "@/i18n/provider";
@@ -21,9 +21,14 @@ export function ReviewReply({
   const [editing, setEditing] = useState(false);
   const [state, action] = useActionState<ActionState, FormData>(replyReviewAction, undefined);
 
-  useEffect(() => {
+  // Yanıt başarıyla kaydedilince düzenleme modunu kapat — RENDER sırasında, önceki
+  // action sonucuyla karşılaştırarak (React'in önerdiği "dış değişimde state ayarla"
+  // deseni; setState-in-effect cascade'i yerine).
+  const [seenState, setSeenState] = useState(state);
+  if (state !== seenState) {
+    setSeenState(state);
     if (state?.ok) setEditing(false);
-  }, [state]);
+  }
 
   if (existingReply && !editing) {
     return (

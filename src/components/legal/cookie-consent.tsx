@@ -22,6 +22,9 @@ export function CookieConsent() {
     const decided = document.cookie
       .split("; ")
       .some((c) => c.startsWith(CONSENT_COOKIE + "="));
+    // Mount'ta tarayıcı çerezini okuyup bandı göster/gizle — SSR'de document yok,
+    // bu yüzden effect zorunlu (tek seferlik dış-durum okuması; cascade değil).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setShow(!decided);
   }, []);
 

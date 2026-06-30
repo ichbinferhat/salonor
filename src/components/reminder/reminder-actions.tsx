@@ -3,12 +3,14 @@
 import { useState, useTransition } from "react";
 import { Check, X, Loader2, CalendarCheck2 } from "lucide-react";
 import { confirmByTokenAction, cancelByTokenAction } from "@/server/actions/reminder";
+import { useDict } from "@/i18n/provider";
 
 /** Hatırlatma teyit sayfasındaki "Geliyorum / İptal" butonları (token ile yetkili). */
 export function ReminderActions({ token }: { token: string }) {
   const [pending, start] = useTransition();
   const [done, setDone] = useState<null | "confirmed" | "cancelled">(null);
   const [error, setError] = useState<string | null>(null);
+  const t = useDict().reminder;
 
   function act(kind: "confirm" | "cancel") {
     setError(null);
@@ -18,7 +20,7 @@ export function ReminderActions({ token }: { token: string }) {
           ? await confirmByTokenAction(token)
           : await cancelByTokenAction(token);
       if (!r.ok) {
-        setError(r.error ?? "İşlem yapılamadı, lütfen tekrar dene.");
+        setError(r.error ?? t.actionFailed);
         return;
       }
       setDone(kind === "confirm" ? "confirmed" : "cancelled");
@@ -29,8 +31,8 @@ export function ReminderActions({ token }: { token: string }) {
     return (
       <div className="rounded-2xl bg-mint-soft p-5 text-center">
         <CalendarCheck2 className="mx-auto size-8 text-mint" />
-        <p className="mt-2 font-semibold text-ink">Harika, randevunu teyit ettin!</p>
-        <p className="mt-1 text-sm text-ink-soft">Seni bekliyoruz. 🎉</p>
+        <p className="mt-2 font-semibold text-ink">{t.confirmedTitle}</p>
+        <p className="mt-1 text-sm text-ink-soft">{t.confirmedDesc}</p>
       </div>
     );
 
@@ -38,8 +40,8 @@ export function ReminderActions({ token }: { token: string }) {
     return (
       <div className="rounded-2xl bg-cream p-5 text-center">
         <X className="mx-auto size-8 text-ink-mute" />
-        <p className="mt-2 font-semibold text-ink">Randevun iptal edildi.</p>
-        <p className="mt-1 text-sm text-ink-soft">Dilediğinde tekrar randevu alabilirsin.</p>
+        <p className="mt-2 font-semibold text-ink">{t.cancelledActionTitle}</p>
+        <p className="mt-1 text-sm text-ink-soft">{t.cancelledActionDesc}</p>
       </div>
     );
 
@@ -56,7 +58,7 @@ export function ReminderActions({ token }: { token: string }) {
           className="flex flex-1 items-center justify-center gap-2 rounded-full bg-ink px-4 py-3 font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
         >
           {pending ? <Loader2 className="size-5 animate-spin" /> : <Check className="size-5" />}
-          Geliyorum
+          {t.coming}
         </button>
         <button
           type="button"
@@ -65,7 +67,7 @@ export function ReminderActions({ token }: { token: string }) {
           className="flex flex-1 items-center justify-center gap-2 rounded-full border border-line-strong px-4 py-3 font-semibold text-ink transition hover:border-rose/50 hover:text-rose disabled:opacity-50"
         >
           <X className="size-5" />
-          İptal et
+          {t.cancel}
         </button>
       </div>
     </div>

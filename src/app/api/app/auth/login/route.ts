@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { verifyPassword } from "@/lib/auth";
 import { createSession } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
+import { clientIpFromHeaders } from "@/lib/client-ip";
 
 /**
  * Native uygulama girişi. loginAction (server action) mantığını yansıtır ama
@@ -14,14 +15,9 @@ import { rateLimit } from "@/lib/rate-limit";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request: Request) {
-  // Gerçek istemci IP'si: önce güvenilir x-real-ip / x-vercel-forwarded-for; ham
-  // x-forwarded-for[0] istemci tarafından sahtelenebildiğinden son çaredir (kod
-  // tabanının geri kalanıyla tutarlı sıra — eskiden x-forwarded-for öncelikliydi).
-  const ip =
-    request.headers.get("x-real-ip") ||
-    request.headers.get("x-vercel-forwarded-for")?.split(",")[0].trim() ||
-    request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
-    "unknown";
+  // Gerçek istemci IP'si: spoof'lanabilir sol-uç XFF / x-real-ip yerine güvenilen
+  // son proxy hop'u (lib/client-ip ile tüm kod tabanı tek mantığı paylaşır).
+  const ip = clientIpFromHeaders(request.headers);
   if (!rateLimit(`applogin:${ip}`, 10, 10 * 60 * 1000).ok) {
     return NextResponse.json(
       { ok: false, error: "Çok fazla deneme yaptınız. Lütfen biraz sonra tekrar deneyin." },

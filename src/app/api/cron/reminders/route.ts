@@ -102,6 +102,13 @@ export async function GET(request: Request) {
       }
     } catch (e) {
       console.error("reminder cron randevu hatası:", a.id, e);
+      // Gönderim sırasında beklenmedik hata (ör. e-posta/SMS sağlayıcı geçici kesinti):
+      // sahiplenmeyi geri al ki bir sonraki cron tekrar denesin — tek hatırlatma
+      // kalıcı olarak "yanmasın". (Nadir bir çift-hatırlatma, hatırlatmanın hiç
+      // gitmemesine yeğdir.)
+      await db.appointment
+        .updateMany({ where: { id: a.id }, data: { reminderSentAt: null } })
+        .catch(() => {});
     }
   }
 

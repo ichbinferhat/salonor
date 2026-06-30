@@ -56,16 +56,24 @@ export async function redeemPointsAction(opts: {
 
   try {
     await db.$transaction(async (tx) => {
-      // Bakiye kontrolü işlem içinde tekrar yapılır (yarış koşulu önlenir)
-      const account = await tx.loyaltyAccount.findFirst({ where: { id: opts.accountId, businessId } });
-      if (!account) throw new Error("NOT_FOUND");
-      if (account.points < points) throw new Error("INSUFFICIENT");
-      await tx.loyaltyAccount.update({
-        where: { id: account.id },
+      // ATOMİK koşullu düşüm: WHERE points>=harcama olan TEK update ifadesi satırı
+      // kilitleyip günceller; eşzamanlı iki harcama yarışında ikincisi koşulu
+      // sağlamazsa count=0 döner → bakiye ASLA eksiye düşmez (önceki oku-kontrol-yaz
+      // deseni Read Committed altında çift-harcamaya açıktı).
+      const dec = await tx.loyaltyAccount.updateMany({
+        where: { id: opts.accountId, businessId, points: { gte: points } },
         data: { points: { decrement: points } },
       });
+      if (dec.count === 0) {
+        // Düşüm olmadı: hesap yok mu, yoksa bakiye mi yetersiz — ayırt et.
+        const exists = await tx.loyaltyAccount.findFirst({
+          where: { id: opts.accountId, businessId },
+          select: { id: true },
+        });
+        throw new Error(exists ? "INSUFFICIENT" : "NOT_FOUND");
+      }
       await tx.loyaltyTxn.create({
-        data: { accountId: account.id, delta: -points, reason: opts.reason?.trim() || "Puan kullanımı" },
+        data: { accountId: opts.accountId, delta: -points, reason: opts.reason?.trim() || "Puan kullanımı" },
       });
     });
     revalidatePath("/panel/para-puan");

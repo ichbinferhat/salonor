@@ -51,4 +51,25 @@ export const auth = {
     submitPending: "Hesap oluşturuluyor...",
     termsNotice: "Devam ederek Kullanım Şartları'nı kabul etmiş olursunuz.",
   },
+
+  forgotForm: {
+    metaTitle: "Şifremi unuttum",
+    title: "Şifreni mi unuttun?",
+    subtitle: "E-posta adresini gir, sana bir sıfırlama bağlantısı gönderelim.",
+    submit: "Sıfırlama bağlantısı gönder",
+    submitPending: "Gönderiliyor...",
+    backToLogin: "Girişe dön",
+  },
+
+  resetForm: {
+    metaTitle: "Şifre sıfırla",
+    title: "Yeni şifre belirle",
+    subtitle: "Hesabın için yeni bir şifre gir.",
+    newPassword: "Yeni şifre",
+    newPasswordAgain: "Yeni şifre (tekrar)",
+    submit: "Şifreyi güncelle",
+    submitPending: "Kaydediliyor...",
+    invalid: "Bu sıfırlama bağlantısı geçersiz veya süresi dolmuş (bağlantılar 1 saat geçerlidir).",
+    requestNew: "Yeni bağlantı iste",
+  },
 };

@@ -750,6 +750,27 @@ export const es: Dictionary = {
       submitPending: "Creando cuenta...",
       termsNotice: "Al continuar, aceptas los Términos de uso.",
     },
+
+    forgotForm: {
+      metaTitle: "Olvidé mi contraseña",
+      title: "¿Olvidaste tu contraseña?",
+      subtitle: "Introduce tu correo electrónico y te enviaremos un enlace para restablecerla.",
+      submit: "Enviar enlace de restablecimiento",
+      submitPending: "Enviando...",
+      backToLogin: "Volver al inicio de sesión",
+    },
+
+    resetForm: {
+      metaTitle: "Restablecer contraseña",
+      title: "Establece una nueva contraseña",
+      subtitle: "Introduce una nueva contraseña para tu cuenta.",
+      newPassword: "Nueva contraseña",
+      newPasswordAgain: "Nueva contraseña (de nuevo)",
+      submit: "Actualizar contraseña",
+      submitPending: "Guardando...",
+      invalid: "Este enlace de restablecimiento no es válido o ha caducado (los enlaces son válidos durante 1 hora).",
+      requestNew: "Solicitar un nuevo enlace",
+    },
   },
 
   account: {
@@ -1220,6 +1241,12 @@ export const es: Dictionary = {
     // Etiquetas de respaldo comunes (texto estático mostrado cuando faltan datos de la BD)
     fallbackCustomer: "Cliente",
     fallbackAppt: "Cita",
+
+    suspended: {
+      title: "Tu cuenta ha sido suspendida",
+      desc: "La cuenta de tu negocio ha sido suspendida temporalmente. Ponte en contacto con soporte.",
+      backHome: "Volver al inicio",
+    },
   },
 
   panelCatalog: {
@@ -2141,5 +2168,24 @@ export const es: Dictionary = {
     accept: "Aceptar",
     reject: "Solo las necesarias",
     learnMore: "Más información",
+  },
+
+  reminder: {
+    metaTitle: "Confirmación de la cita",
+    invalidTitle: "El enlace no es válido o ha caducado.",
+    invalidDesc: "Para modificar tu cita, llama al salón o inicia sesión en tu cuenta.",
+    myAccount: "Mi cuenta",
+    cancelledTitle: "Esta cita ha sido cancelada.",
+    cancelledDesc: "Puedes reservar una nueva cita cuando quieras.",
+    completedTitle: "Esta cita se ha completado. ¡Gracias!",
+    reminderLabel: "Recordatorio de cita",
+    comingQuestion: "¿Vas a venir?",
+    coming: "Voy a ir",
+    cancel: "Cancelar",
+    confirmedTitle: "¡Genial, has confirmado tu cita!",
+    confirmedDesc: "Te esperamos. 🎉",
+    cancelledActionTitle: "Tu cita ha sido cancelada.",
+    cancelledActionDesc: "Puedes reservar de nuevo cuando quieras.",
+    actionFailed: "Algo salió mal, inténtalo de nuevo.",
   },
 };

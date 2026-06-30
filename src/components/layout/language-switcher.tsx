@@ -13,6 +13,11 @@ import {
 } from "@/i18n/config";
 import { useLocale } from "@/i18n/provider";
 
+/** Dil çerezini yazar (modül seviyesinde — bileşen render derlemesi dışında tutulur). */
+function writeLocaleCookie(loc: Locale) {
+  document.cookie = `${LOCALE_COOKIE}=${loc}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
+}
+
 /** Dil değiştirici — çerezi ayarlar ve sayfayı yeniler (sunucu yeni dille render eder). */
 export function LanguageSwitcher() {
   const current = useLocale();
@@ -29,7 +34,7 @@ export function LanguageSwitcher() {
   }, []);
 
   function pick(loc: Locale) {
-    document.cookie = `${LOCALE_COOKIE}=${loc}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
+    writeLocaleCookie(loc);
     setOpen(false);
     if (loc !== current) router.refresh();
   }

@@ -45,6 +45,9 @@ export default function GlobalError({
             >
               Tekrar dene
             </button>
+            {/* Kritik hata kurtarması: <Link> soft-nav bozuk React ağacını korur;
+                tam yeniden yükleme için bilinçli <a> kullanılır. */}
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a
               href="/"
               className="inline-flex h-12 select-none items-center justify-center whitespace-nowrap rounded-full border border-line-strong bg-surface px-6 text-base font-semibold text-ink transition-all duration-150 hover:border-ink/40 hover:bg-cream"

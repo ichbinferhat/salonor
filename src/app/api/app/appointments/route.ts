@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createWalkInAction } from "@/server/actions/business";
 import { rateLimit } from "@/lib/rate-limit";
+import { clientIpFromHeaders } from "@/lib/client-ip";
 
 /**
  * Walk-in randevu oluşturur. createWalkInAction'ı sarar (Serializable çift-rezervasyon
@@ -8,13 +9,9 @@ import { rateLimit } from "@/lib/rate-limit";
  * çerezi (action içinde requireOwnerBusinessId).
  */
 export async function POST(request: Request) {
-  // Gerçek istemci IP'si: önce güvenilir x-real-ip / x-vercel-forwarded-for; ham
-  // x-forwarded-for[0] sahtelenebildiğinden son çare (kod tabanıyla tutarlı sıra).
-  const ip =
-    request.headers.get("x-real-ip") ||
-    request.headers.get("x-vercel-forwarded-for")?.split(",")[0].trim() ||
-    request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
-    "unknown";
+  // Gerçek istemci IP'si: spoof'lanabilir sol-uç XFF / x-real-ip yerine güvenilen
+  // son proxy hop'u (lib/client-ip — tüm kod tabanı tek mantık).
+  const ip = clientIpFromHeaders(request.headers);
   // Cömert sınır — normal kullanımı engellemez, seri kötüye kullanımı keser.
   if (!rateLimit(`app-walkin:${ip}`, 40, 60_000).ok) {
     return NextResponse.json({ ok: false, error: "Çok fazla istek, biraz sonra dene." }, { status: 429 });

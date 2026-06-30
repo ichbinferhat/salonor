@@ -22,7 +22,7 @@ vi.mock("next/headers", () => ({
   // getSession artık native Bearer için headers() de okur (session.ts); testte
   // Authorization yok → cookie yoluna düşer.
   headers: async () => ({
-    get: (_name: string): string | null => null,
+    get: (): string | null => null,
   }),
 }));
 
@@ -74,6 +74,32 @@ describe("session — JWT round-trip ve doğrulama", () => {
       .setProtectedHeader({ alg: "HS256" })
       .setIssuedAt(Math.floor(Date.now() / 1000) - 7200)
       .setExpirationTime(Math.floor(Date.now() / 1000) - 3600) // 1 saat önce dolmuş
+      .sign(key);
+    cookieStore.set("salonor_session", token);
+    expect(await getSession()).toBeNull();
+  });
+
+  it("p:'session' amacı olmayan token reddedilir (pwreset/appt token oturum sayılmaz)", async () => {
+    const { SignJWT } = await import("jose");
+    const key = new TextEncoder().encode(process.env.AUTH_SECRET!);
+    // DOĞRU anahtarla imzalı (imza/exp geçerli) AMA amaç claim'i p:"pwreset" —
+    // aynı AUTH_SECRET ile imzalanan şifre-sıfırlama token'ı oturum olarak kabul EDİLMEMELİ.
+    const token = await new SignJWT({ userId: "x", role: "ADMIN", name: "Reset", p: "pwreset" })
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime("30d")
+      .sign(key);
+    cookieStore.set("salonor_session", token);
+    expect(await getSession()).toBeNull();
+  });
+
+  it("p claim'i hiç olmayan (eski) token reddedilir", async () => {
+    const { SignJWT } = await import("jose");
+    const key = new TextEncoder().encode(process.env.AUTH_SECRET!);
+    const token = await new SignJWT({ userId: "x", role: "OWNER", name: "Eski" })
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime("30d")
       .sign(key);
     cookieStore.set("salonor_session", token);
     expect(await getSession()).toBeNull();

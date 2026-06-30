@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
-import { headers } from "next/headers";
 import { db } from "@/lib/db";
 import { notifyUser } from "@/lib/push";
 import { getSession, createSession } from "@/lib/session";
@@ -11,24 +10,12 @@ import { getAvailableSlots, generateCode, type Slot } from "@/lib/slots";
 import { todayStr, addDaysStr, minToHHMM, formatDateTr } from "@/lib/datetime";
 import { isValidTrMobile } from "@/lib/phone";
 import { rateLimit } from "@/lib/rate-limit";
+import { getClientIp } from "@/lib/client-ip";
 import { chargeAndSendSms } from "@/lib/sms-send";
 import { smsConfigured } from "@/lib/sms";
 import { sendEmail, emailConfigured } from "@/lib/email";
 import { emailLayout, esc } from "@/lib/email-templates";
 import { siteUrl } from "@/lib/site-url";
-
-/** İstek sahibinin IP'si (hız sınırı anahtarı için). */
-async function clientIp(): Promise<string> {
-  const h = await headers();
-  // Vercel'in güvenilir gerçek-istemci IP başlığını önce kullan (spoof'a kapalı);
-  // ham x-forwarded-for son çaredir (istemci tarafından sahtelenebilir).
-  return (
-    h.get("x-real-ip") ??
-    h.get("x-vercel-forwarded-for")?.split(",")[0].trim() ??
-    h.get("x-forwarded-for")?.split(",")[0].trim() ??
-    "unknown"
-  );
-}
 
 export async function fetchSlotsAction(opts: {
   businessId: string;
@@ -56,7 +43,7 @@ export async function validateCampaignAction(
   code: string
 ): Promise<{ ok: true; code: string; discountPct: number } | { ok: false; error: string }> {
   // Kupon kodu tahmini/enumerasyonunu sınırla (IP başına 10 dk'da 15 deneme).
-  const ip = await clientIp();
+  const ip = await getClientIp();
   if (!rateLimit(`coupon:${ip}`, 15, 10 * 60 * 1000).ok) {
     return { ok: false, error: "Çok fazla deneme. Lütfen biraz sonra tekrar dene." };
   }
@@ -105,12 +92,23 @@ export async function createAppointmentAction(opts: {
 
   // Misafir rezervasyon spam koruması (IP başına saatte 8).
   if (!session) {
-    const ip = await clientIp();
+    const ip = await getClientIp();
     if (!rateLimit(`book:${ip}`, 8, 60 * 60 * 1000).ok)
       return { ok: false, error: "Çok fazla randevu denemesi. Lütfen biraz sonra tekrar dene." };
   }
 
   try {
+    // İşletme pasif/askıya alınmışsa randevu alınamaz: salon her yerde gizliyken
+    // (arama/listeler) randevu sihirbazına doğrudan URL ile gelinip rezervasyon
+    // yapılmasını engeller. (Sihirbaz sayfası da notFound ile ayrıca korunur.)
+    const business = await db.business.findUnique({
+      where: { id: opts.businessId },
+      select: { active: true },
+    });
+    if (!business || !business.active) {
+      return { ok: false, error: "Bu işletme şu anda randevu almıyor." };
+    }
+
     const services = await db.service.findMany({
       where: { id: { in: opts.serviceIds }, businessId: opts.businessId },
     });
@@ -327,7 +325,7 @@ export async function inlineLoginAction(opts: {
   // Kaba kuvvet / credential-stuffing koruması: form girişiyle (auth.ts loginAction)
   // AYNI kovayı paylaşır (`login:IP`), böylece iki giriş yolu TOPLAMDA 10 dk'da 10
   // denemeyle sınırlıdır — saldırgan denemeleri iki yola bölerek limiti aşamaz.
-  const ip = await clientIp();
+  const ip = await getClientIp();
   if (!rateLimit(`login:${ip}`, 10, 10 * 60 * 1000).ok) {
     return { ok: false, error: "Çok fazla deneme. Lütfen birkaç dakika sonra tekrar dene." };
   }
@@ -351,7 +349,7 @@ export async function inlineRegisterAction(opts: {
   password: string;
 }): Promise<InlineAuthResult> {
   // Kayıt suistimali (kitle hesap oluşturma) koruması: IP başına saatte 8 kayıt.
-  const ip = await clientIp();
+  const ip = await getClientIp();
   if (!rateLimit(`register:${ip}`, 8, 60 * 60 * 1000).ok) {
     return { ok: false, error: "Çok fazla deneme. Lütfen birazdan tekrar dene." };
   }

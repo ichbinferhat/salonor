@@ -750,6 +750,27 @@ export const ar: Dictionary = {
       submitPending: "جارٍ إنشاء الحساب...",
       termsNotice: "بالمتابعة فإنك توافق على شروط الاستخدام.",
     },
+
+    forgotForm: {
+      metaTitle: "نسيت كلمة المرور",
+      title: "هل نسيت كلمة المرور؟",
+      subtitle: "أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين.",
+      submit: "إرسال رابط إعادة التعيين",
+      submitPending: "جارٍ الإرسال...",
+      backToLogin: "العودة إلى تسجيل الدخول",
+    },
+
+    resetForm: {
+      metaTitle: "إعادة تعيين كلمة المرور",
+      title: "تعيين كلمة مرور جديدة",
+      subtitle: "أدخل كلمة مرور جديدة لحسابك.",
+      newPassword: "كلمة المرور الجديدة",
+      newPasswordAgain: "كلمة المرور الجديدة (مرة أخرى)",
+      submit: "تحديث كلمة المرور",
+      submitPending: "جارٍ الحفظ...",
+      invalid: "رابط إعادة التعيين هذا غير صالح أو انتهت صلاحيته (الروابط صالحة لمدة ساعة واحدة).",
+      requestNew: "طلب رابط جديد",
+    },
   },
 
   account: {
@@ -1220,6 +1241,12 @@ export const ar: Dictionary = {
     // تسميات بديلة مشتركة (نص ثابت يُعرض عندما تكون بيانات قاعدة البيانات فارغة)
     fallbackCustomer: "العميل",
     fallbackAppt: "موعد",
+
+    suspended: {
+      title: "تم تعليق حسابك",
+      desc: "تم تعليق حساب نشاطك التجاري مؤقتًا. يُرجى التواصل مع الدعم.",
+      backHome: "العودة إلى الصفحة الرئيسية",
+    },
   },
 
   panelCatalog: {
@@ -2132,5 +2159,24 @@ export const ar: Dictionary = {
     accept: "أوافق",
     reject: "الضرورية فقط",
     learnMore: "التفاصيل",
+  },
+
+  reminder: {
+    metaTitle: "تأكيد الموعد",
+    invalidTitle: "الرابط غير صالح أو انتهت صلاحيته.",
+    invalidDesc: "لإجراء تغييرات على موعدك، يُرجى الاتصال بالصالون أو تسجيل الدخول إلى حسابك.",
+    myAccount: "حسابي",
+    cancelledTitle: "تم إلغاء هذا الموعد.",
+    cancelledDesc: "يمكنك حجز موعد جديد متى شئت.",
+    completedTitle: "تم إنجاز هذا الموعد. شكرًا لك!",
+    reminderLabel: "تذكير بالموعد",
+    comingQuestion: "هل ستأتي؟",
+    coming: "سأحضر",
+    cancel: "إلغاء",
+    confirmedTitle: "رائع، لقد أكدت موعدك!",
+    confirmedDesc: "في انتظارك. 🎉",
+    cancelledActionTitle: "تم إلغاء موعدك.",
+    cancelledActionDesc: "يمكنك الحجز مرة أخرى متى شئت.",
+    actionFailed: "حدث خطأ ما، يُرجى المحاولة مرة أخرى.",
   },
 };

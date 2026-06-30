@@ -124,9 +124,12 @@ export function CalendarBoard({
   const [nowMin, setNowMin] = useState<number | null>(null);
   useEffect(() => {
     if (date !== today) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setNowMin(null);
       return;
     }
+    // Dakika başı "şu an" çizgisini güncelleyen zamanlayıcı (dış sistem aboneliği —
+    // effect'in asıl amacı).
     const tick = () => setNowMin(nowMinutes());
     tick();
     const id = setInterval(tick, 60_000);

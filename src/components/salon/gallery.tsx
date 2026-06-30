@@ -20,13 +20,27 @@ export function Gallery({ images, name }: { images: string[]; name: string }) {
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    // Açılış öncesi odaklı öğeyi sakla → kapanışta geri ver (klavye/SR kullanıcısı
+    // galeriden çıkınca tetikleyici küçük resme döner).
+    const prevActive = document.activeElement as HTMLElement | null;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        return;
+      }
+      // Focus trap: tek etkileşimli öğe (Kapat) olduğundan odağı içeride tut.
+      if (e.key === "Tab") {
+        e.preventDefault();
+        closeRef.current?.focus();
+      }
+    };
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
     closeRef.current?.focus();
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
+      prevActive?.focus?.();
     };
   }, [open]);
 
@@ -78,7 +92,12 @@ export function Gallery({ images, name }: { images: string[]; name: string }) {
       </div>
 
       {open && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-ink-strong/95 p-4 sm:p-8" role="dialog" aria-modal="true">
+        <div
+          className="fixed inset-0 z-50 overflow-y-auto bg-ink-strong/95 p-4 sm:p-8"
+          role="dialog"
+          aria-modal="true"
+          aria-label={interpolate(dict.salon.allPhotos, { n: images.length })}
+        >
           <div className="mx-auto max-w-3xl">
             <div className="sticky top-0 z-10 mb-4 flex justify-end pt-2">
               <button

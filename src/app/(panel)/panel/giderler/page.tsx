@@ -26,17 +26,21 @@ export default async function ExpensesPage() {
   const today = todayStr();
   const month = today.slice(0, 7); // YYYY-MM
 
-  const [expenses, revenueAgg, saleAgg] = await Promise.all([
+  const [expenses, completedAgg, confirmedPastAgg, saleAgg] = await Promise.all([
     db.expense.findMany({
       where: { businessId: business.id, date: { startsWith: month } },
       orderBy: [{ date: "desc" }, { createdAt: "desc" }],
     }),
+    // CİRO yalnızca GERÇEKLEŞEN işten: tamamlanmış (ayın tamamı) + günü geçmiş onaylı
+    // randevular. Bugünün henüz yaşanmamış CONFIRMED randevuları kâra yazılmaz
+    // (Raporlar sayfasındaki `earned` mantığıyla birebir tutarlı — gelecek randevu
+    // ciroyu/net kârı şişirmesin).
     db.appointment.aggregate({
-      where: {
-        businessId: business.id,
-        date: { startsWith: month },
-        status: { in: ["CONFIRMED", "COMPLETED"] },
-      },
+      where: { businessId: business.id, date: { startsWith: month }, status: "COMPLETED" },
+      _sum: { totalTl: true },
+    }),
+    db.appointment.aggregate({
+      where: { businessId: business.id, date: { gte: `${month}-01`, lt: today }, status: "CONFIRMED" },
       _sum: { totalTl: true },
     }),
     // Kasa & Adisyon (POS) satışları da ciroya dahil
@@ -47,7 +51,7 @@ export default async function ExpensesPage() {
   ]);
 
   const expenseTotal = expenses.reduce((s, e) => s + e.amountTl, 0);
-  const apptRevenue = revenueAgg._sum.totalTl ?? 0;
+  const apptRevenue = (completedAgg._sum.totalTl ?? 0) + (confirmedPastAgg._sum.totalTl ?? 0);
   const saleRevenue = saleAgg._sum.totalTl ?? 0;
   const revenue = apptRevenue + saleRevenue;
   const net = revenue - expenseTotal;

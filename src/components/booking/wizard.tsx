@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -162,9 +162,11 @@ export function BookingWizard({
     });
   }
 
-  // Tarih/personel/hizmet değişince slotları yenile
+  // Tarih/personel/hizmet değişince slotları yenile (sunucudan slot verisi çekme —
+  // dış sistemle senkronizasyon; loadSlots içeride setSlots/setSlotsError yapar).
   useEffect(() => {
     if (step !== 2 || selected.size === 0) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadSlots();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step, date, staffChoice, selected, totalDur, business.id]);
@@ -239,6 +241,15 @@ export function BookingWizard({
       }
     });
   }
+
+  // Erişilebilirlik: adım ilerleyince "Devam" düğmesini içeren blok DOM'dan kalkar ve
+  // odak body'ye düşer. Yeni adımın içerik kapsayıcısına programatik odak vererek
+  // klavye/ekran-okuyucu kullanıcısının kaldığı yerden devam etmesini sağla.
+  // (Koşulsuz hook — erken return'lardan ÖNCE tanımlanır.)
+  const stepWrapRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (step > 0) stepWrapRef.current?.focus();
+  }, [step]);
 
   /* ─── Başarı ekranı ─── */
   if (success) {
@@ -322,7 +333,7 @@ export function BookingWizard({
       </div>
 
       <div className="grid items-start gap-8 lg:grid-cols-[1fr_360px]">
-        <div className="min-w-0">
+        <div className="min-w-0 outline-none" ref={stepWrapRef} tabIndex={-1}>
           {/* ─── Adım 1: Hizmetler ─── */}
           {step === 0 && (
             <div className="anim-rise space-y-7">

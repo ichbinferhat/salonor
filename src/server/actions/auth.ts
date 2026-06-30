@@ -1,11 +1,12 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
+import { after } from "next/server";
 import { db } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/auth";
 import { createSession, destroySession, getSession } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
+import { getClientIp } from "@/lib/client-ip";
 import { getDictionary } from "@/i18n";
 import { signResetToken, readResetToken, hashFingerprint } from "@/lib/pw-reset-token";
 import { sendEmail } from "@/lib/email";
@@ -15,18 +16,6 @@ import { siteUrl } from "@/lib/site-url";
 export type FormState = { error?: string; ok?: boolean; notice?: string } | undefined;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-async function clientIp(): Promise<string> {
-  const h = await headers();
-  // Vercel'in güvenilir gerçek-istemci IP başlığını önce kullan (spoof'a kapalı);
-  // ham x-forwarded-for son çaredir (istemci tarafından sahtelenebilir).
-  return (
-    h.get("x-real-ip") ??
-    h.get("x-vercel-forwarded-for")?.split(",")[0].trim() ??
-    h.get("x-forwarded-for")?.split(",")[0].trim() ??
-    "unknown"
-  );
-}
 
 function safeNext(raw: FormDataEntryValue | null, fallback: string) {
   const v = typeof raw === "string" ? raw : "";
@@ -41,8 +30,14 @@ export async function loginAction(_prev: FormState, formData: FormData): Promise
   const password = String(formData.get("password") ?? "");
 
   // Kaba kuvvet (brute-force) şifre denemelerini sınırla: IP başına 10 dk'da 10 deneme.
-  const ip = await clientIp();
-  if (!rateLimit(`login:${ip}`, 10, 10 * 60 * 1000).ok) {
+  const ip = await getClientIp();
+  // Hesap-hedefli ikinci sayaç (per-email): IP başlığı sahtelenebildiğinden ya da
+  // botnet/proxy ile döndürülebildiğinden, tek bir hesaba karşı IP-rotasyonlu
+  // brute-force'u da sınırlar — native login route'taki `apploginem` ile simetrik.
+  if (
+    !rateLimit(`login:${ip}`, 10, 10 * 60 * 1000).ok ||
+    (EMAIL_RE.test(email) && !rateLimit(`loginem:${email}`, 10, 10 * 60 * 1000).ok)
+  ) {
     const dict = await getDictionary();
     return { error: dict.auth.loginForm.tooManyAttempts };
   }
@@ -65,7 +60,7 @@ export async function loginAction(_prev: FormState, formData: FormData): Promise
 
 export async function registerAction(_prev: FormState, formData: FormData): Promise<FormState> {
   // Kayıt suistimali koruması: IP başına saatte 8 kayıt (inline kayıtla aynı kova).
-  const ip = await clientIp();
+  const ip = await getClientIp();
   if (!rateLimit(`register:${ip}`, 8, 60 * 60 * 1000).ok) {
     const dict = await getDictionary();
     return { error: dict.auth.loginForm.tooManyAttempts };
@@ -103,7 +98,7 @@ export async function registerBusinessAction(
   formData: FormData
 ): Promise<FormState> {
   // Kayıt suistimali koruması: IP başına saatte 8 kayıt (diğer kayıt yollarıyla aynı kova).
-  const ip = await clientIp();
+  const ip = await getClientIp();
   if (!rateLimit(`register:${ip}`, 8, 60 * 60 * 1000).ok) {
     const dict = await getDictionary();
     return { error: dict.auth.loginForm.tooManyAttempts };
@@ -137,32 +132,42 @@ export async function requestPasswordResetAction(
   _prev: FormState,
   formData: FormData
 ): Promise<FormState> {
-  const ip = await clientIp();
-  if (!rateLimit(`pwreset:${ip}`, 5, 60 * 60 * 1000).ok) {
-    return { error: "Çok fazla deneme. Lütfen biraz sonra tekrar dene." };
-  }
-
+  const ip = await getClientIp();
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   if (!EMAIL_RE.test(email)) return { error: "Geçerli bir e-posta adresi girin." };
 
+  // Hız sınırı: hem IP hem HEDEF e-posta başına — bir kurbanın gelen kutusunu
+  // (ve bizim e-posta kotamızı) sıfırlama mailiyle spam'lemeyi de sınırlar.
+  if (
+    !rateLimit(`pwreset:${ip}`, 5, 60 * 60 * 1000).ok ||
+    !rateLimit(`pwresetem:${email}`, 5, 60 * 60 * 1000).ok
+  ) {
+    return { error: "Çok fazla deneme. Lütfen biraz sonra tekrar dene." };
+  }
+
   const user = await db.user.findUnique({ where: { email } });
   if (user) {
-    try {
-      const token = await signResetToken(user.id, user.passwordHash);
-      const link = `${siteUrl()}/sifre-sifirla/${token}`;
-      await sendEmail({
-        to: user.email,
-        subject: "Salonor — şifre sıfırlama",
-        html: emailLayout({
-          heading: "Şifreni sıfırla",
-          bodyHtml: `Merhaba ${esc(user.name)},<br/><br/>Hesabının şifresini sıfırlamak için aşağıdaki butona tıkla. Bu bağlantı <b>1 saat</b> geçerlidir. Bu isteği sen yapmadıysan bu e-postayı yok sayman yeterli — şifren değişmez.`,
-          cta: { label: "Şifremi sıfırla", url: link },
-        }),
-        text: `Şifreni sıfırlamak için: ${link} (1 saat geçerli). İsteği sen yapmadıysan yok say.`,
-      });
-    } catch (e) {
-      console.error("şifre sıfırlama e-postası hatası:", e);
-    }
+    // E-posta gönderimini yanıt YOLUNDAN çıkar (after): yanıt süresi hesabın
+    // var olup olmamasına göre değişmesin → enumerasyon zamanlama-sızıntısı kapanır.
+    const u = user;
+    after(async () => {
+      try {
+        const token = await signResetToken(u.id, u.passwordHash);
+        const link = `${siteUrl()}/sifre-sifirla/${token}`;
+        await sendEmail({
+          to: u.email,
+          subject: "Salonor — şifre sıfırlama",
+          html: emailLayout({
+            heading: "Şifreni sıfırla",
+            bodyHtml: `Merhaba ${esc(u.name)},<br/><br/>Hesabının şifresini sıfırlamak için aşağıdaki butona tıkla. Bu bağlantı <b>1 saat</b> geçerlidir. Bu isteği sen yapmadıysan bu e-postayı yok sayman yeterli — şifren değişmez.`,
+            cta: { label: "Şifremi sıfırla", url: link },
+          }),
+          text: `Şifreni sıfırlamak için: ${link} (1 saat geçerli). İsteği sen yapmadıysan yok say.`,
+        });
+      } catch (e) {
+        console.error("şifre sıfırlama e-postası hatası:", e);
+      }
+    });
   }
 
   // Her durumda aynı yanıt (hesap enumerasyonunu önler).
@@ -181,7 +186,7 @@ export async function resetPasswordAction(
   _prev: FormState,
   formData: FormData
 ): Promise<FormState> {
-  const ip = await clientIp();
+  const ip = await getClientIp();
   if (!rateLimit(`pwreset:${ip}`, 10, 60 * 60 * 1000).ok) {
     return { error: "Çok fazla deneme. Lütfen biraz sonra tekrar dene." };
   }

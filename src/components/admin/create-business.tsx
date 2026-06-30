@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { X, Plus, CheckCircle2, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import {
@@ -27,9 +27,11 @@ export function CreateBusiness() {
     undefined
   );
 
-  useEffect(() => {
-    if (open) setPw((p) => p || genPassword());
-  }, [open]);
+  // Modalı aç + ilk parolayı üret (effect yerine olay anında — setState-in-effect yok).
+  function openModal() {
+    setOpen(true);
+    setPw((p) => p || genPassword());
+  }
 
   function close() {
     setOpen(false);
@@ -42,7 +44,7 @@ export function CreateBusiness() {
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={openModal}
         className="inline-flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-accent-deep active:scale-[0.98]"
       >
         <Plus className="size-4" /> {dict.admin.createButton}

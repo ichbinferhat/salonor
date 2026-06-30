@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
-import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import { notifyUser } from "@/lib/push";
@@ -50,10 +49,34 @@ export async function createBusinessAction(
   if (data.name.trim().length < 2) return { ok: false, error: "İşletme adı gerekli." };
   if (data.services.length === 0) return { ok: false, error: "En az bir hizmet ekle." };
 
+  // Sunucu-tarafı sınır doğrulaması (action herkese açık; istemci doğrulamasına
+  // güvenilmez). Kardeş action'larla (saveServiceAction, updateHoursAction) AYNI
+  // sınırlar — bozuk değerler kalıcılaşmasın (ör. openMin>=closeMin → o gün hiç slot
+  // üretilmez ve salon sessizce kapalı görünür; negatif/aşırı fiyat raporları bozar).
+  if (
+    !Number.isInteger(data.openMin) ||
+    !Number.isInteger(data.closeMin) ||
+    data.openMin < 0 ||
+    data.closeMin > 1440 ||
+    data.openMin >= data.closeMin
+  ) {
+    return { ok: false, error: "Çalışma saatleri geçersiz (açılış kapanıştan önce olmalı)." };
+  }
+  if (!Number.isFinite(data.lat) || !Number.isFinite(data.lng)) {
+    return { ok: false, error: "Konum geçersiz." };
+  }
+  for (const s of data.services) {
+    if (s.name.trim().length < 2) return { ok: false, error: "Her hizmetin adı gerekli." };
+    if (!Number.isFinite(s.durationMin) || s.durationMin < 5 || s.durationMin > 1440)
+      return { ok: false, error: `"${s.name}" için geçerli bir süre gir (5-1440 dk).` };
+    if (!Number.isFinite(s.priceTl) || s.priceTl < 0 || s.priceTl > 100_000_000)
+      return { ok: false, error: `"${s.name}" için geçerli bir fiyat gir.` };
+  }
+
   const category = await db.category.findUnique({ where: { slug: data.categorySlug } });
   if (!category) return { ok: false, error: "Geçersiz kategori." };
 
-  // Benzersiz slug üret
+  // Benzersiz slug üret (ön-kontrol yaygın çakışmayı önler)
   const base = slugify(data.name) || "salon";
   let slug = base;
   let n = 1;
@@ -64,46 +87,60 @@ export async function createBusinessAction(
   const cover =
     "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=1200&auto=format&fit=crop";
 
-  await db.business.create({
-    data: {
-      slug,
-      name: data.name.trim(),
-      description: data.description.trim() || `${data.name.trim()} — ${category.name}`,
-      phone: data.phone.trim(),
-      address: data.address.trim(),
-      district: data.district.trim(),
-      city: data.city.trim(),
-      lat: data.lat,
-      lng: data.lng,
-      coverImage: cover,
-      ownerId: session.userId,
-      categoryId: category.id,
-      images: { create: [{ url: cover, sort: 0 }] },
-      hours: {
-        create: Array.from({ length: 7 }, (_, weekday) => ({
-          weekday,
-          openMin: data.openMin,
-          closeMin: data.closeMin,
-          closed: data.closedDays.includes(weekday),
-        })),
-      },
-      serviceCategories: {
-        create: {
-          name: "Hizmetler",
-          sort: 0,
-          services: {
-            create: data.services.map((s, i) => ({
-              name: s.name.trim(),
-              durationMin: s.durationMin,
-              priceTl: s.priceTl,
-              sort: i,
-              business: { connect: { slug } },
-            })),
-          },
+  const buildData = (s: string) => ({
+    slug: s,
+    name: data.name.trim(),
+    description: data.description.trim() || `${data.name.trim()} — ${category.name}`,
+    phone: data.phone.trim(),
+    address: data.address.trim(),
+    district: data.district.trim(),
+    city: data.city.trim(),
+    lat: data.lat,
+    lng: data.lng,
+    coverImage: cover,
+    ownerId: session.userId,
+    categoryId: category.id,
+    images: { create: [{ url: cover, sort: 0 }] },
+    hours: {
+      create: Array.from({ length: 7 }, (_, weekday) => ({
+        weekday,
+        openMin: data.openMin,
+        closeMin: data.closeMin,
+        closed: data.closedDays.includes(weekday),
+      })),
+    },
+    serviceCategories: {
+      create: {
+        name: "Hizmetler",
+        sort: 0,
+        services: {
+          create: data.services.map((sv, i) => ({
+            name: sv.name.trim(),
+            durationMin: sv.durationMin,
+            priceTl: sv.priceTl,
+            sort: i,
+            business: { connect: { slug: s } },
+          })),
         },
       },
     },
   });
+
+  // Eşzamanlı onboarding (TOCTOU) aynı slug'a yarışırsa create P2002 fırlatır:
+  // ön-kontrol slug'u alındıysa kısa sayısal ek ile yeniden dene — kullanıcıya
+  // çirkin 500 yerine kesin başarı.
+  for (let attempt = 0; ; attempt++) {
+    try {
+      await db.business.create({ data: buildData(slug) });
+      break;
+    } catch (e) {
+      if ((e as { code?: string })?.code === "P2002" && attempt < 4) {
+        slug = `${base}-${++n}`;
+        continue;
+      }
+      throw e;
+    }
+  }
 
   revalidatePath("/panel");
   return { ok: true, slug };

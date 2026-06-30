@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { verifyApptToken } from "@/lib/appt-token";
-import { todayStr } from "@/lib/datetime";
+import { todayStr, nowMinutes } from "@/lib/datetime";
 
 /**
  * Tek-tık teyit/iptal akışı (hatırlatma mesajındaki linkten gelir).
@@ -29,16 +29,17 @@ export async function cancelByTokenAction(
   if (!aid) return { ok: false, error: "Bağlantı geçersiz veya süresi dolmuş." };
   const appt = await db.appointment.findUnique({
     where: { id: aid },
-    select: { status: true, date: true },
+    select: { status: true, date: true, startMin: true },
   });
   if (!appt) return { ok: false, error: "Randevu bulunamadı." };
   if (appt.status === "CANCELLED") return { ok: true };
   if (appt.status === "COMPLETED")
     return { ok: false, error: "Tamamlanmış randevu iptal edilemez." };
-  // Günü geçmiş randevu, token 7 gün geçerli olsa bile iptal edilemez: raporlarda
-  // ciroya/prim'e sayılan geçmiş randevuyu silmesini engeller (müşteri-iptal
-  // guard'ı account.ts:55 ile simetrik).
-  if (appt.date < todayStr())
+  // Geçmiş randevu, token 7 gün geçerli olsa bile iptal edilemez: raporlarda
+  // ciroya/prim'e sayılan gerçekleşmiş işi silmeyi engeller. GÜN değil SAAT
+  // hassasiyetinde (müşteri-iptal guard'ı account.ts ile simetrik).
+  const today = todayStr();
+  if (appt.date < today || (appt.date === today && appt.startMin <= nowMinutes()))
     return { ok: false, error: "Geçmiş randevu iptal edilemez." };
   await db.appointment.update({ where: { id: aid }, data: { status: "CANCELLED" } });
   revalidatePath("/panel/takvim");
