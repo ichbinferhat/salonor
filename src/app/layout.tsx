@@ -44,12 +44,13 @@ export async function generateMetadata(): Promise<Metadata> {
   const ogLocale = OG_LOCALE[locale];
   return {
     metadataBase: new URL("https://salonor.com"),
+    // Sekme/arama başlığı ve açıklaması da aktif dile göre (eskiden sabit Türkçeydi →
+    // 7 yabancı dilde de Türkçe <title> görünüyordu). OG/twitter zaten dict kullanıyor.
     title: {
-      default: "Salonor — Güzellik ve bakım randevusu, saniyeler içinde",
+      default: dict.common.ogTitle,
       template: "%s | Salonor",
     },
-    description:
-      "Kuaför, berber, spa ve güzellik salonlarını keşfet; uygun saati seç, randevunu anında ayırt. Türkiye'nin randevu platformu Salonor.",
+    description: dict.common.ogDescription,
     applicationName: "Salonor",
     keywords: [
       "kuaför randevu",

@@ -274,11 +274,26 @@ export async function saveStaffAction(_p: ActionState, formData: FormData): Prom
   return { ok: true };
 }
 
-export async function toggleStaffActiveAction(staffId: string) {
-  const businessId = await requireOwnerBusinessId();
-  if (!businessId) return;
-  const st = await db.staff.findFirst({ where: { id: staffId, businessId } });
+export async function toggleStaffActiveAction(
+  staffId: string
+): Promise<{ error: string } | void> {
+  const business = await getOwnerBusiness();
+  if (!business) return;
+  const st = await db.staff.findFirst({ where: { id: staffId, businessId: business.id } });
   if (!st) return;
+
+  // Reaktivasyon (pasif→aktif) plan personel limitine TABİDİR: aksi halde sahip
+  // personeli pasifleştirip yeniden aktif ederek ücretli planın aktif-personel üst
+  // sınırını sınırsızca aşabilir (saveStaffAction'daki ekleme limitiyle simetrik).
+  if (!st.active) {
+    const plan = isPlanKey(business.plan) ? PLANS[business.plan] : PLANS.baslangic;
+    const activeCount = await db.staff.count({ where: { businessId: business.id, active: true } });
+    if (activeCount >= plan.staff) {
+      const m = (await getDictionary()).panelCatalog.staff;
+      return { error: interpolate(m.staffLimitReached, { limit: plan.staff, plan: plan.name }) };
+    }
+  }
+
   await db.staff.update({ where: { id: staffId }, data: { active: !st.active } });
   revalidatePath("/panel/personel");
   revalidatePath("/panel/takvim");

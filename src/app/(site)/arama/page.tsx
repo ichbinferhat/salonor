@@ -13,7 +13,7 @@ import { interpolate } from "@/i18n/interpolate";
 
 export async function generateMetadata(): Promise<Metadata> {
   const dict = await getDictionary();
-  return { title: dict.search.metaTitle };
+  return { title: dict.search.metaTitle, alternates: { canonical: "/arama" } };
 }
 
 type SearchParams = {

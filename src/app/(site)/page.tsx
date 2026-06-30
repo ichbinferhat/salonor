@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { MapPin } from "lucide-react";
 import { getDictionary } from "@/i18n";
@@ -12,6 +13,9 @@ import { Reviews } from "@/components/home/reviews";
 import { ServicesDirectory } from "@/components/home/services-directory";
 import { SalonCard } from "@/components/salon-card";
 import { RatingStars } from "@/components/ui/rating-stars";
+
+// Kendine işaret eden canonical (anasayfa). Salon dışı sayfalarda eksikti.
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 const CATEGORY_ORDER = [
   "kuafor",

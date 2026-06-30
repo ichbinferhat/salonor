@@ -101,7 +101,12 @@ export function StaffManager({
                   <Scissors className="size-3.5" /> {t.manageServices}
                 </Button>
                 <button
-                  onClick={() => startTransition(() => toggleStaffActiveAction(m.id))}
+                  onClick={() =>
+                    startTransition(async () => {
+                      const res = await toggleStaffActiveAction(m.id);
+                      if (res?.error) alert(res.error);
+                    })
+                  }
                   disabled={isPending}
                   className="flex items-center gap-1.5 rounded-full border border-line-strong px-3 py-1.5 text-sm font-semibold text-ink-soft transition-colors hover:border-ink/40"
                 >

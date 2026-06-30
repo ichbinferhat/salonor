@@ -23,6 +23,15 @@ export function Modal({
   const panelRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
 
+  // onClose çoğunlukla satır-içi ok fonksiyonu olarak gelir (her render'da yeni kimlik).
+  // Onu ref'te güncel tutarız ki ana efekt BAĞIMLILIĞINA koymak zorunda kalmayalım:
+  // aksi halde modal AÇIKKEN ebeveynin her render'ında (ör. yıldıza tıklama) efekt
+  // temizlenip yeniden çalışır, odağı tetikleyiciye geri verip ilk öğeye zıplatır (odak çalma).
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
   // Portal yalnızca tarayıcıda; SSR uyumsuzluğunu önlemek için mount bekle.
   const mounted = useMounted();
 
@@ -47,7 +56,7 @@ export function Modal({
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (e.key !== "Tab") return;
@@ -75,7 +84,7 @@ export function Modal({
       document.body.style.overflow = "";
       prevActive?.focus?.();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open || !mounted) return null;
 
