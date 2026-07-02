@@ -137,18 +137,24 @@ Ayrıntılı açıklamalar ve örnek değerler için: **`.env.example`**.
 
 ---
 
-## 5b. Hatırlatma / bildirim cron'ları (DIŞ tetikleyici ile)
+## 5b. Hatırlatma / bildirim cron'ları (Supabase pg_cron ile)
 
-Render'da yerleşik cron YOK (`vercel.json` crons Render'da çalışmaz). İki uç, harici
-ücretsiz cron (**cron-job.org**) ile `?key=<CRON_SECRET>` verilerek tetiklenir:
+Render'da yerleşik cron YOK (`vercel.json` crons Render'da çalışmaz). Tetikleme, zaten
+var olan **Supabase veritabanının** `pg_cron` + `pg_net` uzantılarıyla yapılır — dış cron
+servisi/hesabı GEREKMEZ. İki iş `cron.schedule` ile kayıtlı (pg_cron **UTC** kullanır):
 
-| Uç                          | Sıklık        | İş                                                    |
-|-----------------------------|---------------|------------------------------------------------------|
-| `/api/cron/reminders`       | Günde 1 (19:00 TR) | ERTESİ GÜN randevularına hatırlatma (push+WA+e-posta). |
-| `/api/cron/reminders-3h`    | Her 10-15 dk  | Bugün ~3 saat içindeki randevulara 2. hatırlatma.    |
+| İş adı                     | Zamanlama (UTC) | Uç / İş                                              |
+|----------------------------|-----------------|------------------------------------------------------|
+| `salonor-reminders-daily`  | `0 16 * * *` (=19:00 TR) | ERTESİ GÜN randevularına hatırlatma.          |
+| `salonor-reminders-3h`     | `*/10 * * * *`  | Bugün ~3 saat içindeki randevulara 2. hatırlatma.    |
 
-- Tetik URL biçimi: `https://salonor.com/api/cron/reminders-3h?key=<CRON_SECRET>`
-- Anlık **randevu onayı** cron değildir — booking anında (`createAppointmentAction`) WhatsApp gider.
+Her iş `net.http_get('https://salonor.com/api/cron/reminders[-3h]?key=<CRON_SECRET>')` çağırır.
+- **Yönetim (SQL):** liste `select jobname,schedule,active from cron.job;` · log
+  `select * from cron.job_run_details order by start_time desc limit 20;` · çıktı
+  `select id,status_code,error_msg from net._http_response order by id desc;` · sil
+  `select cron.unschedule('salonor-reminders-3h');`
+- **Yan fayda:** 10 dk'lık ping Render'ı uyanık tutar (cold-start biter) + Supabase'i aktif tutar.
+- Anlık **randevu onayı** cron DEĞİL — booking anında (`createAppointmentAction`) WhatsApp gider.
 - WhatsApp mesaj biçimi tek yerde: `src/lib/appt-message.ts` (onay + iki hatırlatma ortak).
 - Aynı gün <3 saat rezervasyonda 3s-hatırlatma booking'de `reminder3hSentAt` ile bastırılır.
 
