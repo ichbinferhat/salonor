@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { notifyUser } from "@/lib/push";
 import { chargeAndSendSms } from "@/lib/sms-send";
 import { smsConfigured, smsCreditCost } from "@/lib/sms";
+import { sendWhatsApp, whatsappConfigured } from "@/lib/whatsapp";
 import { sendEmail, emailConfigured } from "@/lib/email";
 import { emailLayout, esc } from "@/lib/email-templates";
 import { signApptToken } from "@/lib/appt-token";
@@ -16,7 +17,9 @@ export const maxDuration = 60;
  * Otomatik randevu hatırlatma cron'u (Vercel Cron — vercel.json'da günlük tetiklenir).
  * Yarınki ONAYLI + henüz hatırlatılmamış randevulara:
  *  - mobil PUSH (bedava, uygulaması olan müşteriye)
- *  - SMS (yalnızca gerçek sağlayıcı + kontör varsa; yoksa atlanır, mock'ta kontör düşmez)
+ *  - WhatsApp (WaMessage kuruluysa; bağlı numaradan — SMS'ten önceliklidir)
+ *  - SMS (yalnızca gerçek sağlayıcı + kontör varsa VE WhatsApp gitmediyse; mock'ta kontör düşmez)
+ *  - E-posta (bedava; RESEND_API_KEY tanımlıysa)
  * gönderir; mesaj tek-tık "Geliyorum / İptal" linki içerir. reminderSentAt ile çift gönderim önlenir.
  *
  * Güvenlik: CRON_SECRET tanımlıysa Authorization: Bearer <secret> zorunlu.
@@ -49,6 +52,7 @@ export async function GET(request: Request) {
   });
 
   let push = 0;
+  let wa = 0;
   let sms = 0;
   let email = 0;
 
@@ -77,8 +81,26 @@ export async function GET(request: Request) {
         push++;
       }
 
-      // 2) SMS — yalnızca gerçek sağlayıcı tanımlı + mesajın TAM kontörü varsa
-      if (a.customerPhone && smsConfigured()) {
+      // 2) WhatsApp — WaMessage (resmi olmayan; bağlı numaradan). Kuruluysa ÖNCELİKLİ:
+      // gittiyse aynı kişiye ayrıca SMS atılmaz (çift mesaj + çift maliyet önlenir).
+      let waSent = false;
+      if (a.customerPhone && whatsappConfigured()) {
+        const body = `${a.business.name} — randevu hatırlatması\nYarın ${dateLabel} ${time} randevunuz var.\nTeyit veya iptal için: ${link}`;
+        const r = await sendWhatsApp(a.customerPhone, body);
+        if (r.status === "sent") {
+          wa++;
+          waSent = true;
+          // Anti-ban: mesajlar arasına küçük bir nefes payı koy (blast görünmesin).
+          // WHATSAPP_SEND_DELAY_MS ile ayarlanır (boş/geçersiz → 1200; "0" → kapalı).
+          const raw = process.env.WHATSAPP_SEND_DELAY_MS;
+          const parsed = raw == null || raw.trim() === "" ? 1200 : Number(raw);
+          const delay = Number.isFinite(parsed) && parsed >= 0 ? parsed : 1200;
+          if (delay > 0) await new Promise((res) => setTimeout(res, Math.min(delay, 5000)));
+        }
+      }
+
+      // 3) SMS — WhatsApp gitmediyse VE gerçek sağlayıcı tanımlı + mesajın TAM kontörü varsa
+      if (!waSent && a.customerPhone && smsConfigured()) {
         const body = `${a.business.name}: Yarin ${dateLabel} ${time} randevunuz var. Geliyorum/Iptal: ${link}`;
         if (a.business.smsCredits >= smsCreditCost(body)) {
           await chargeAndSendSms(a.business.id, a.customerPhone, body, "reminder");
@@ -86,7 +108,7 @@ export async function GET(request: Request) {
         }
       }
 
-      // 3) E-posta — kayıtlı müşteriye (bedava; yalnızca RESEND_API_KEY tanımlıysa)
+      // 4) E-posta — kayıtlı müşteriye (bedava; yalnızca RESEND_API_KEY tanımlıysa)
       if (a.customer?.email && emailConfigured()) {
         const r = await sendEmail({
           to: a.customer.email,
@@ -112,5 +134,5 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.json({ ok: true, processed: appts.length, push, sms, email });
+  return NextResponse.json({ ok: true, processed: appts.length, push, wa, sms, email });
 }
