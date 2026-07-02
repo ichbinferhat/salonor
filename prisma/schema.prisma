@@ -196,7 +196,8 @@ model Appointment {
   status       AppointmentStatus @default(CONFIRMED)
   totalTl      Int
   note         String?
-  reminderSentAt DateTime?       // hatırlatma gönderildiyse işaretlenir (çift gönderimi önler)
+  reminderSentAt DateTime?       // ertesi-gün hatırlatması gönderildiyse işaretlenir (çift gönderimi önler)
+  reminder3hSentAt DateTime?     // randevudan ~3 saat önce hatırlatma gönderildiyse işaretlenir (ayrı kanal)
   seenAt       DateTime?         // işletme sahibi yeni randevuyu gördü/onayladıysa işaretlenir (bildirim sayacı)
   createdAt    DateTime          @default(now())
   items        AppointmentItem[]

@@ -9,43 +9,51 @@ import { emailLayout, esc } from "@/lib/email-templates";
 import { signApptShort } from "@/lib/appt-token";
 import { buildApptMessage } from "@/lib/appt-message";
 import { siteUrl } from "@/lib/site-url";
-import { todayStr, addDaysStr, minToHHMM, formatDateTr } from "@/lib/datetime";
+import { todayStr, nowMinutes, addDaysStr, minToHHMM, formatDateTr } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 /**
- * Otomatik randevu hatırlatma cron'u (Vercel Cron — vercel.json'da günlük tetiklenir).
- * Yarınki ONAYLI + henüz hatırlatılmamış randevulara:
- *  - mobil PUSH (bedava, uygulaması olan müşteriye)
- *  - WhatsApp (WaMessage kuruluysa; bağlı numaradan — SMS'ten önceliklidir)
- *  - SMS (yalnızca gerçek sağlayıcı + kontör varsa VE WhatsApp gitmediyse; mock'ta kontör düşmez)
- *  - E-posta (bedava; RESEND_API_KEY tanımlıysa)
- * gönderir; mesaj tek-tık "Geliyorum / İptal" linki içerir. reminderSentAt ile çift gönderim önlenir.
+ * 3 SAATLİK randevu hatırlatma cron'u (2. hatırlatma — ertesi-gün cron'undan AYRI).
+ * Önümüzdeki ~3 saat içinde başlayacak, henüz 3s-hatırlatması yapılmamış ONAYLI
+ * randevulara push + WhatsApp (SMS'ten öncelikli) + e-posta gönderir. `reminder3hSentAt`
+ * ile çift gönderim önlenir. SIK çalışmalı (ör. 10-15 dk'da bir DIŞ cron ile — cron-job.org).
+ * Pencere gece yarısını aşarsa (now+180 > 1440) ertesi günün erken saatleri de sorgulanır.
  *
- * Güvenlik: CRON_SECRET tanımlıysa Authorization: Bearer <secret> zorunlu.
+ * Not: Aynı gün + 3 saatten yakın YENİ rezervasyonlar booking sırasında reminder3hSentAt
+ * ile işaretlenir (onay mesajı yeterli) → burada MÜKERRER gönderilmez.
+ *
+ * Güvenlik: CRON_SECRET tanımlıysa Authorization: Bearer <secret> VEYA ?key=<secret>.
  */
+const LEAD_MIN = 180; // 3 saat
+
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET;
   if (secret) {
-    // İki yöntem kabul edilir: Authorization: Bearer <secret> (tercih edilen) VEYA
-    // ?key=<secret> query parametresi (basit harici cron servisleri için — ör. cron-job.org
-    // header ayarı yapmadan). Query'deki sır ilgili servis loglarında görünebilir; bu uç
-    // yalnızca planlı hatırlatmayı tetikler (veri sızdırmaz), risk düşük kabul edildi.
     const auth = request.headers.get("authorization");
     const keyParam = new URL(request.url).searchParams.get("key");
     if (auth !== `Bearer ${secret}` && keyParam !== secret) {
       return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
     }
   } else if (process.env.NODE_ENV === "production") {
-    // Üretimde CRON_SECRET tanımsızsa fail-CLOSED: kimliksiz tetikleme, randevu başına
-    // tek-seferlik push/SMS'i erken harcayabilir veya planlı gönderimi bastırabilir.
     return NextResponse.json({ ok: false, error: "cron_not_configured" }, { status: 503 });
   }
 
-  const target = addDaysStr(todayStr(), 1); // yarın
+  const today = todayStr();
+  const now = nowMinutes();
+  const wrap = now + LEAD_MIN - 1440; // > 0 → pencere gece yarısını aşıyor
+  const tomorrow = addDaysStr(today, 1);
+
   const appts = await db.appointment.findMany({
-    where: { date: target, status: "CONFIRMED", reminderSentAt: null },
+    where: {
+      status: "CONFIRMED",
+      reminder3hSentAt: null,
+      OR: [
+        { date: today, startMin: { gt: now, lte: now + LEAD_MIN } },
+        ...(wrap > 0 ? [{ date: tomorrow, startMin: { gte: 0, lte: wrap } }] : []),
+      ],
+    },
     select: {
       id: true,
       code: true,
@@ -68,39 +76,41 @@ export async function GET(request: Request) {
 
   for (const a of appts) {
     try {
-      // ÇİFT GÖNDERİM KORUMASI: göndermeden ÖNCE atomik olarak sahiplen. Çakışan
-      // ikinci cron tetiklemesi aynı randevuyu sahiplenemez (count===0 → atla).
+      // ÇİFT GÖNDERİM KORUMASI: göndermeden önce atomik sahiplen.
       const claim = await db.appointment.updateMany({
-        where: { id: a.id, reminderSentAt: null },
-        data: { reminderSentAt: new Date() },
+        where: { id: a.id, reminder3hSentAt: null },
+        data: { reminder3hSentAt: new Date() },
       });
       if (claim.count === 0) continue;
 
       const link = `${siteUrl()}/r/${signApptShort(a.code)}?iptal=1`;
-      const dateLabel = formatDateTr(a.date, { day: "numeric", month: "long" });
       const time = minToHHMM(a.startMin);
+      const isToday = a.date === today;
+      const dayWord = isToday ? "Bugün" : "Yarın";
+      const services = a.items.map((i) => i.name).join(", ");
 
       // 1) Push — uygulaması olan müşteriye (bedava)
       if (a.customerId) {
         await notifyUser(a.customerId, {
           title: `${a.business.name} — randevu hatırlatma`,
-          body: `Yarın ${time} randevun var. İptal için dokun.`,
+          body: `${dayWord} ${time} randevun ${isToday ? "yaklaşıyor" : "var"}. İptal için dokun.`,
           url: "/hesap",
         });
         push++;
       }
 
-      // 2) WhatsApp — WaMessage (resmi olmayan; bağlı numaradan). Kuruluysa ÖNCELİKLİ:
-      // gittiyse aynı kişiye ayrıca SMS atılmaz (çift mesaj + çift maliyet önlenir).
+      // 2) WhatsApp — WaMessage (kuruluysa; SMS'ten öncelikli)
       let waSent = false;
       if (a.customerPhone && whatsappConfigured()) {
         const body = buildApptMessage({
           intro: "🔔 Randevu hatırlatması",
-          lead: `yarın ${a.business.name} randevunuz var:`,
+          lead: isToday
+            ? `bugün ${a.business.name} randevunuz yaklaşıyor:`
+            : `yarın ${a.business.name} randevunuz var:`,
           customerName: a.customerName,
           date: a.date,
           startMin: a.startMin,
-          services: a.items.map((i) => i.name).join(", "),
+          services,
           staffName: a.staff?.name,
           cancelUrl: link,
         });
@@ -108,8 +118,6 @@ export async function GET(request: Request) {
         if (r.status === "sent") {
           wa++;
           waSent = true;
-          // Anti-ban: mesajlar arasına küçük bir nefes payı koy (blast görünmesin).
-          // WHATSAPP_SEND_DELAY_MS ile ayarlanır (boş/geçersiz → 1200; "0" → kapalı).
           const raw = process.env.WHATSAPP_SEND_DELAY_MS;
           const parsed = raw == null || raw.trim() === "" ? 1200 : Number(raw);
           const delay = Number.isFinite(parsed) && parsed >= 0 ? parsed : 1200;
@@ -117,37 +125,34 @@ export async function GET(request: Request) {
         }
       }
 
-      // 3) SMS — WhatsApp gitmediyse VE gerçek sağlayıcı tanımlı + mesajın TAM kontörü varsa
+      // 3) SMS — WhatsApp gitmediyse ve gerçek sağlayıcı + kontör varsa
       if (!waSent && a.customerPhone && smsConfigured()) {
-        const body = `${a.business.name}: Yarin ${dateLabel} ${time} randevunuz var. Iptal: ${link}`;
+        const body = `${a.business.name}: ${dayWord} ${time} randevunuz var. Iptal: ${link}`;
         if (a.business.smsCredits >= smsCreditCost(body)) {
           await chargeAndSendSms(a.business.id, a.customerPhone, body, "reminder");
           sms++;
         }
       }
 
-      // 4) E-posta — kayıtlı müşteriye (bedava; yalnızca RESEND_API_KEY tanımlıysa)
+      // 4) E-posta — kayıtlı müşteriye (bedava; RESEND_API_KEY tanımlıysa)
       if (a.customer?.email && emailConfigured()) {
+        const dateLabel = formatDateTr(a.date, { day: "numeric", month: "long" });
         const r = await sendEmail({
           to: a.customer.email,
-          subject: `${a.business.name} — yarınki randevu hatırlatması`,
+          subject: `${a.business.name} — randevu hatırlatması (${dayWord.toLowerCase()} ${time})`,
           html: emailLayout({
             heading: "Randevu hatırlatması",
-            bodyHtml: `Yarın <b>${esc(dateLabel)} ${time}</b> · ${esc(a.business.name)} randevun var.<br/><br/>Gelemeyeceksen aşağıdan tek tıkla iptal edebilirsin.`,
+            bodyHtml: `${dayWord} <b>${esc(dateLabel)} ${time}</b> · ${esc(a.business.name)} randevun var.<br/><br/>Gelemeyeceksen aşağıdan tek tıkla iptal edebilirsin.`,
             cta: { label: "İptal", url: link },
           }),
-          text: `${a.business.name}: Yarın ${dateLabel} ${time} randevun var. İptal: ${link}`,
+          text: `${a.business.name}: ${dayWord} ${time} randevun var. İptal: ${link}`,
         });
         if (r.status === "sent") email++;
       }
     } catch (e) {
-      console.error("reminder cron randevu hatası:", a.id, e);
-      // Gönderim sırasında beklenmedik hata (ör. e-posta/SMS sağlayıcı geçici kesinti):
-      // sahiplenmeyi geri al ki bir sonraki cron tekrar denesin — tek hatırlatma
-      // kalıcı olarak "yanmasın". (Nadir bir çift-hatırlatma, hatırlatmanın hiç
-      // gitmemesine yeğdir.)
+      console.error("3h reminder cron randevu hatası:", a.id, e);
       await db.appointment
-        .updateMany({ where: { id: a.id }, data: { reminderSentAt: null } })
+        .updateMany({ where: { id: a.id }, data: { reminder3hSentAt: null } })
         .catch(() => {});
     }
   }

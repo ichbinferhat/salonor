@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { verifyApptToken } from "@/lib/appt-token";
+import { verifyApptShort } from "@/lib/appt-token";
 import { minToHHMM } from "@/lib/datetime";
 import { ReminderActions } from "@/components/reminder/reminder-actions";
 import { getDictionary, getLocale } from "@/i18n";
@@ -16,15 +16,21 @@ export async function generateMetadata(): Promise<Metadata> {
 /** Tek-tık hatırlatma teyit sayfası (mesajdaki linkten gelir, giriş gerekmez). */
 export default async function ReminderConfirmPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ token: string }>;
+  searchParams: Promise<{ iptal?: string }>;
 }) {
   const { token } = await params;
-  const aid = await verifyApptToken(token);
+  const { iptal } = await searchParams;
+  // Randevu onay mesajındaki link ?iptal=1 ile gelir → yalnızca iptal seçeneği göster
+  // ("teyit" gereksiz). Hatırlatma linkleri parametresiz → hem geliyorum hem iptal.
+  const cancelOnly = iptal === "1" || iptal === "true";
+  const code = verifyApptShort(token);
 
-  const appt = aid
+  const appt = code
     ? await db.appointment.findUnique({
-        where: { id: aid },
+        where: { code },
         select: {
           status: true,
           date: true,
@@ -85,8 +91,12 @@ export default async function ReminderConfirmPage({
                 <span className="font-semibold">{minToHHMM(appt.startMin)}</span>
               </p>
             </div>
-            <p className="mt-4 mb-3 text-center text-sm text-ink-soft">{t.comingQuestion}</p>
-            <ReminderActions token={token} />
+            {!cancelOnly && (
+              <p className="mt-4 mb-3 text-center text-sm text-ink-soft">{t.comingQuestion}</p>
+            )}
+            <div className={cancelOnly ? "mt-4" : ""}>
+              <ReminderActions token={token} cancelOnly={cancelOnly} />
+            </div>
           </>
         )}
       </div>

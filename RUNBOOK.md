@@ -126,10 +126,31 @@ Ayrıntılı açıklamalar ve örnek değerler için: **`.env.example`**.
 | `NETGSM_HEADER`  | Gelecek   | Onaylı SMS gönderici başlığı.                                      |
 | `RESEND_API_KEY` | Gelecek   | E-posta gönderimi (Resend). Yoksa e-posta atlanır.                |
 | `SENTRY_DSN`     | Gelecek   | Hata izleme. Yoksa Sentry kapalı.                                  |
-| `CRON_SECRET`    | Gelecek   | Cron uç noktalarını koruyan paylaşılan gizli anahtar.             |
+| `CRON_SECRET`    | Mevcut    | Cron uç noktalarını koruyan gizli anahtar (Render'da tanımlı).    |
+| `WHATSAPP_PROVIDER` | Mevcut | `wamessage` → otomatik WhatsApp aktif; boşsa mock.               |
+| `WAMESSAGE_API_URL` | Mevcut | WhatsApp API taban host (`https://api.toplusms.app`).            |
+| `WAMESSAGE_API_KEY` | Mevcut | WaMessage `x-api-key` (panel → API Key Göster).                  |
+| `WAMESSAGE_REG_ID`  | Mevcut | Bağlı WhatsApp cihazının `registration_id`'si.                   |
 
 > Vercel'de değişken eklerken Bölüm 2'deki uyarıya dikkat
 > (`vercel env add` bozuk → panel/REST API).
+
+---
+
+## 5b. Hatırlatma / bildirim cron'ları (DIŞ tetikleyici ile)
+
+Render'da yerleşik cron YOK (`vercel.json` crons Render'da çalışmaz). İki uç, harici
+ücretsiz cron (**cron-job.org**) ile `?key=<CRON_SECRET>` verilerek tetiklenir:
+
+| Uç                          | Sıklık        | İş                                                    |
+|-----------------------------|---------------|------------------------------------------------------|
+| `/api/cron/reminders`       | Günde 1 (19:00 TR) | ERTESİ GÜN randevularına hatırlatma (push+WA+e-posta). |
+| `/api/cron/reminders-3h`    | Her 10-15 dk  | Bugün ~3 saat içindeki randevulara 2. hatırlatma.    |
+
+- Tetik URL biçimi: `https://salonor.com/api/cron/reminders-3h?key=<CRON_SECRET>`
+- Anlık **randevu onayı** cron değildir — booking anında (`createAppointmentAction`) WhatsApp gider.
+- WhatsApp mesaj biçimi tek yerde: `src/lib/appt-message.ts` (onay + iki hatırlatma ortak).
+- Aynı gün <3 saat rezervasyonda 3s-hatırlatma booking'de `reminder3hSentAt` ile bastırılır.
 
 ---
 

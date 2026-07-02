@@ -7,7 +7,8 @@ import { notifyUser } from "@/lib/push";
 import { getSession, createSession } from "@/lib/session";
 import { hashPassword, verifyPassword } from "@/lib/auth";
 import { getAvailableSlots, generateCode, type Slot } from "@/lib/slots";
-import { todayStr, addDaysStr, minToHHMM, formatDateTr } from "@/lib/datetime";
+import { todayStr, addDaysStr, minToHHMM, formatDateTr, nowMinutes } from "@/lib/datetime";
+import { buildApptMessage } from "@/lib/appt-message";
 import { isValidTrMobile } from "@/lib/phone";
 import { rateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/client-ip";
@@ -16,7 +17,7 @@ import { smsConfigured } from "@/lib/sms";
 import { sendWhatsApp, whatsappConfigured } from "@/lib/whatsapp";
 import { sendEmail, emailConfigured } from "@/lib/email";
 import { emailLayout, esc } from "@/lib/email-templates";
-import { signApptToken } from "@/lib/appt-token";
+import { signApptShort } from "@/lib/appt-token";
 import { siteUrl } from "@/lib/site-url";
 
 export async function fetchSlotsAction(opts: {
@@ -202,6 +203,11 @@ export async function createAppointmentAction(opts: {
               status: "CONFIRMED",
               totalTl,
               note: opts.note?.trim() || null,
+              // Aynı gün + 3 saatten yakın rezervasyonda onay mesajı zaten yakın-vadeli
+              // hatırlatma görevi görür → 3 saatlik cron'un MÜKERRER mesaj + çift kredi
+              // harcamasını baştan engelle (reminder3hSentAt'i şimdiden işaretle).
+              reminder3hSentAt:
+                opts.date === today && opts.startMin - nowMinutes() <= 180 ? new Date() : null,
               items: {
                 create: services.map((s) => ({
                   serviceId: s.id,
@@ -279,26 +285,26 @@ export async function createAppointmentAction(opts: {
             const appt = await db.appointment.findUnique({
               where: { code },
               select: {
-                id: true,
                 staff: { select: { name: true } },
                 items: { select: { name: true } },
               },
             });
             const staffName = appt?.staff?.name ?? "";
             const svcNames = (appt?.items ?? []).map((i) => i.name).join(", ");
-            const token = appt ? await signApptToken(appt.id) : null;
-            const link = token ? `${siteUrl()}/r/${token}` : "";
-            const msg = [
-              "✅ Randevunuz alındı!",
-              biz.name,
-              `📅 ${dateLabel} ${timeLabel}`,
-              svcNames ? `💇 ${svcNames}` : "",
-              staffName ? `👤 ${staffName}` : "",
-              `Onay kodu: ${code}`,
-              link ? `İptal veya teyit: ${link}` : "",
-            ]
-              .filter(Boolean)
-              .join("\n");
+            // Kısa, imzalı iptal linki (?iptal=1 → sayfa yalnızca iptal seçeneği gösterir).
+            const link = `${siteUrl()}/r/${signApptShort(code)}?iptal=1`;
+            const msg = buildApptMessage({
+              intro: "✅ Randevunuz oluşturuldu!",
+              lead: `${biz.name} randevu detaylarınız:`,
+              customerName: custName,
+              date: opts.date,
+              startMin: opts.startMin,
+              services: svcNames,
+              staffName,
+              code,
+              cancelUrl: link,
+              closing: "Görüşmek üzere! 🙌",
+            });
             await sendWhatsApp(custPhone, msg);
           } catch (e) {
             console.error("randevu WhatsApp onay hatası:", e);

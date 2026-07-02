@@ -5,15 +5,20 @@ import { Check, X, Loader2, CalendarCheck2 } from "lucide-react";
 import { confirmByTokenAction, cancelByTokenAction } from "@/server/actions/reminder";
 import { useDict } from "@/i18n/provider";
 
-/** Hatırlatma teyit sayfasındaki "Geliyorum / İptal" butonları (token ile yetkili). */
-export function ReminderActions({ token }: { token: string }) {
+/**
+ * Hatırlatma sayfasındaki eylem butonları (token ile yetkili).
+ * cancelOnly=true → yalnızca "İptal" butonu (randevu onay mesajının linki için).
+ */
+export function ReminderActions({ token, cancelOnly = false }: { token: string; cancelOnly?: boolean }) {
   const [pending, start] = useTransition();
+  const [acting, setActing] = useState<null | "confirm" | "cancel">(null);
   const [done, setDone] = useState<null | "confirmed" | "cancelled">(null);
   const [error, setError] = useState<string | null>(null);
   const t = useDict().reminder;
 
   function act(kind: "confirm" | "cancel") {
     setError(null);
+    setActing(kind);
     start(async () => {
       const r =
         kind === "confirm"
@@ -51,22 +56,32 @@ export function ReminderActions({ token }: { token: string }) {
         <p className="rounded-xl bg-rose/10 px-3 py-2 text-sm font-medium text-rose">{error}</p>
       )}
       <div className="flex gap-3">
-        <button
-          type="button"
-          onClick={() => act("confirm")}
-          disabled={pending}
-          className="flex flex-1 items-center justify-center gap-2 rounded-full bg-ink px-4 py-3 font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
-        >
-          {pending ? <Loader2 className="size-5 animate-spin" /> : <Check className="size-5" />}
-          {t.coming}
-        </button>
+        {!cancelOnly && (
+          <button
+            type="button"
+            onClick={() => act("confirm")}
+            disabled={pending}
+            className="flex flex-1 items-center justify-center gap-2 rounded-full bg-ink px-4 py-3 font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+          >
+            {pending && acting === "confirm" ? (
+              <Loader2 className="size-5 animate-spin" />
+            ) : (
+              <Check className="size-5" />
+            )}
+            {t.coming}
+          </button>
+        )}
         <button
           type="button"
           onClick={() => act("cancel")}
           disabled={pending}
           className="flex flex-1 items-center justify-center gap-2 rounded-full border border-line-strong px-4 py-3 font-semibold text-ink transition hover:border-rose/50 hover:text-rose disabled:opacity-50"
         >
-          <X className="size-5" />
+          {pending && acting === "cancel" ? (
+            <Loader2 className="size-5 animate-spin" />
+          ) : (
+            <X className="size-5" />
+          )}
           {t.cancel}
         </button>
       </div>
