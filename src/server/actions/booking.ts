@@ -271,15 +271,9 @@ export async function createAppointmentAction(opts: {
         if (!biz) return;
         const dateLabel = formatDateTr(opts.date, { day: "numeric", month: "long" });
         const timeLabel = minToHHMM(opts.startMin);
-        // İşletme sahibine anlık "yeni randevu" bildirimi.
-        await notifyUser(biz.ownerId, {
-          title: "Yeni randevu 🎉",
-          body: `${custName || "Misafir"} • ${dateLabel} ${timeLabel}`,
-          url: "/panel/bildirimler",
-        });
-
-        // Müşteriye ANLIK WhatsApp randevu onayı (WaMessage kuruluysa; girişli/misafir
-        // farketmez, telefon varsa). Salon + tarih/saat + personel + hizmet + kod + iptal linki.
+        // Müşteriye ANLIK WhatsApp randevu onayı — EN ÖNCE gönderilir ki müşteri mesajı
+        // işletme-push'unu beklemesin (gecikmeyi en aza indir). WaMessage kuruluysa;
+        // girişli/misafir farketmez, telefon varsa. Salon + tarih/saat + personel + hizmet + kod + iptal.
         if (custPhone && whatsappConfigured()) {
           try {
             const appt = await db.appointment.findUnique({
@@ -310,6 +304,13 @@ export async function createAppointmentAction(opts: {
             console.error("randevu WhatsApp onay hatası:", e);
           }
         }
+
+        // İşletme sahibine anlık "yeni randevu" bildirimi (müşteri WhatsApp'ından sonra).
+        await notifyUser(biz.ownerId, {
+          title: "Yeni randevu 🎉",
+          body: `${custName || "Misafir"} • ${dateLabel} ${timeLabel}`,
+          url: "/panel/bildirimler",
+        });
 
         // Girişli müşteriye randevu onay bildirimi.
         if (session?.userId) {
