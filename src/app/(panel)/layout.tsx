@@ -19,8 +19,10 @@ export default async function PanelLayout({
   const business = await getOwnerBusiness();
   if (!business) redirect("/isletme/kurulum");
 
-  // Askıya alınan işletme (admin active=false yaptı) panele erişemez.
-  if (!business.active) {
+  // Yalnızca GERÇEKTEN askıya alınmış işletme panele erişemez. Taslak (yeni, henüz
+  // aktifleştirilmemiş: active=false ama suspended=false) sahibi panele girip bilgilerini
+  // TAMAMLAYABİLİR — yayına alma sonra admin tarafından yapılır.
+  if (business.suspended) {
     const dict = await getDictionary();
     const t = dict.panelCore.suspended;
     return (

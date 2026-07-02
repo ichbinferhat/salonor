@@ -76,7 +76,8 @@ model Business {
   promoUntil  String?  // YYYY-MM-DD; bu tarihe kadar gösterilir (boş = süresiz)
   coverImage  String
   featured    Boolean  @default(false)
-  active      Boolean  @default(true)
+  active      Boolean  @default(true)  // yayında mı (public: arama/vitrin/randevu). Taslak/askıda = false.
+  suspended   Boolean  @default(false) // admin GERÇEKTEN askıya aldı → sahip panele giremez. Taslak (yeni, henüz aktifleştirilmemiş) suspended=false: sahip bilgileri tamamlayabilir.
   plan        String   @default("baslangic") // baslangic | profesyonel | kurumsal
   planStartedAt DateTime? // abonelik/paket başlangıcı (elden tahsilatta admin ayarlar)
   planExpiresAt DateTime? // abonelik bitiş tarihi; geçince panelde uyarı gösterilir (otomatik tahsilat YOK — Ferhat elden alıyor)

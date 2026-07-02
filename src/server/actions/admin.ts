@@ -64,7 +64,9 @@ export async function setFeaturedAction(businessId: string, featured: boolean) {
 /** İşletmeyi askıya al / aktifleştir (yalnızca ADMIN). Pasif işletme vitrinde görünmez. */
 export async function setBusinessActiveAction(businessId: string, active: boolean) {
   if (!(await isAdmin())) return { ok: false };
-  await db.business.update({ where: { id: businessId }, data: { active } });
+  // Aktifleştir → yayında + askı kalkar. Pasifleştir → GERÇEK askıya alma (sahip panele
+  // giremez). Yeni taslaklar suspended=false başlar → sahip bilgileri tamamlayabilir.
+  await db.business.update({ where: { id: businessId }, data: { active, suspended: !active } });
   revalidatePath("/admin");
   revalidatePath("/");
   return { ok: true };
