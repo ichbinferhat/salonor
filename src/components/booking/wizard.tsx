@@ -18,11 +18,11 @@ import {
 import type { Slot } from "@/lib/slots";
 import { minToHHMM } from "@/lib/datetime";
 import { formatTl, formatDuration } from "@/lib/format";
-import { isValidTrMobile } from "@/lib/phone";
+import { buildIntlPhone, DIAL_CODES } from "@/lib/phone";
 import { RatingStars } from "@/components/ui/rating-stars";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Input, Label, Textarea, FormError } from "@/components/ui/form";
+import { Input, Label, Textarea, Select, FormError } from "@/components/ui/form";
 import { StyleAdvisor } from "@/components/booking/style-advisor";
 import { useDict, useLocale } from "@/i18n/provider";
 import { interpolate } from "@/i18n/interpolate";
@@ -117,6 +117,7 @@ export function BookingWizard({
   const [note, setNote] = useState("");
   const [custName, setCustName] = useState(initialUserName ?? "");
   const [custPhone, setCustPhone] = useState("");
+  const [dialCode, setDialCode] = useState("90"); // ülke kodu (varsayılan Türkiye +90)
   // KVKK aydınlatma onayı — yalnızca misafir (girişsiz) rezervasyonda zorunlu.
   const [consent, setConsent] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -205,12 +206,14 @@ export function BookingWizard({
       setError(b.errors.nameRequired);
       return;
     }
-    // Telefon misafirde zorunlu; girişli kullanıcıda opsiyonel ama doluysa geçerli olmalı.
-    if (!isAuthed && !isValidTrMobile(custPhone)) {
+    // Telefon: ülke kodu + girilen numara → uluslararası biçim. Misafirde zorunlu;
+    // girişli kullanıcıda opsiyonel ama doluysa geçerli olmalı.
+    const intlPhone = buildIntlPhone(dialCode, custPhone);
+    if (!isAuthed && !intlPhone) {
       setError(b.errors.phoneRequired);
       return;
     }
-    if (custPhone.trim() && !isValidTrMobile(custPhone)) {
+    if (custPhone.trim() && !intlPhone) {
       setError(b.errors.phoneRequired);
       return;
     }
@@ -231,7 +234,7 @@ export function BookingWizard({
           startMin: time,
           note,
           customerName: custName,
-          customerPhone: custPhone,
+          customerPhone: intlPhone ?? "",
           campaignCode: applied?.code,
         });
         if (res.ok) setSuccess({ code: res.code, couponDropped: res.couponDropped });
@@ -622,14 +625,31 @@ export function BookingWizard({
                     <Label htmlFor="cust-phone">
                       {isAuthed ? b.confirm.phoneLabelOptional : b.confirm.phoneLabel}
                     </Label>
-                    <Input
-                      id="cust-phone"
-                      type="tel"
-                      inputMode="tel"
-                      value={custPhone}
-                      onChange={(e) => setCustPhone(e.target.value)}
-                      placeholder={b.confirm.phonePlaceholder}
-                    />
+                    <div className="flex gap-2">
+                      <div className="w-28 shrink-0">
+                        <Select
+                          value={dialCode}
+                          onChange={(e) => setDialCode(e.target.value)}
+                          aria-label="Ülke kodu"
+                        >
+                          {DIAL_CODES.map((c) => (
+                            <option key={c.code} value={c.dial}>
+                              {c.flag} +{c.dial}
+                            </option>
+                          ))}
+                        </Select>
+                      </div>
+                      <div className="flex-1">
+                        <Input
+                          id="cust-phone"
+                          type="tel"
+                          inputMode="tel"
+                          value={custPhone}
+                          onChange={(e) => setCustPhone(e.target.value)}
+                          placeholder={b.confirm.phonePlaceholder}
+                        />
+                      </div>
+                    </div>
                     <p className="mt-1.5 text-xs text-ink-mute">
                       {b.confirm.phoneHint}
                     </p>

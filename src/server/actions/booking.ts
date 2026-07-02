@@ -9,7 +9,7 @@ import { hashPassword, verifyPassword } from "@/lib/auth";
 import { getAvailableSlots, generateCode, type Slot } from "@/lib/slots";
 import { todayStr, addDaysStr, minToHHMM, formatDateTr, nowMinutes } from "@/lib/datetime";
 import { buildApptMessage } from "@/lib/appt-message";
-import { isValidTrMobile } from "@/lib/phone";
+import { isValidIntlPhone } from "@/lib/phone";
 import { rateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/client-ip";
 import { chargeAndSendSms } from "@/lib/sms-send";
@@ -73,14 +73,16 @@ export async function createAppointmentAction(opts: {
   const session = await getSession();
   const custName = (opts.customerName ?? "").trim();
   const custPhone = (opts.customerPhone ?? "").trim();
+  // Telefon uluslararası biçimde gelir (ülke kodu + numara, E.164 rakamları). İstemci
+  // ülke seçicisiyle birleştirir; sunucu yalnızca makul uzunluğu (8-15 hane) doğrular.
   if (!session) {
     if (custName.length < 3) return { ok: false, error: "Lütfen adını ve soyadını gir." };
-    if (!isValidTrMobile(custPhone))
-      return { ok: false, error: "Geçerli bir cep telefonu numarası gir (05XX XXX XX XX)." };
-  } else if (custPhone && !isValidTrMobile(custPhone)) {
+    if (!isValidIntlPhone(custPhone))
+      return { ok: false, error: "Geçerli bir telefon numarası gir." };
+  } else if (custPhone && !isValidIntlPhone(custPhone)) {
     // Girişli kullanıcıda telefon opsiyonel; ancak doluysa geçerli olmalı
-    // (bozuk numaranın kaydedilmesini ve teyit SMS'inin boşa gitmesini engelle).
-    return { ok: false, error: "Geçerli bir cep telefonu numarası gir (05XX XXX XX XX)." };
+    // (bozuk numaranın kaydedilmesini ve teyit mesajının boşa gitmesini engelle).
+    return { ok: false, error: "Geçerli bir telefon numarası gir." };
   }
 
   if (!opts.serviceIds.length) return { ok: false, error: "En az bir hizmet seçmelisin." };
