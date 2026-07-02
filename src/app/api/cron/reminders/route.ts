@@ -44,9 +44,20 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: false, error: "cron_not_configured" }, { status: 503 });
   }
 
-  const target = addDaysStr(todayStr(), 1); // yarın
+  const today = todayStr();
+  const target = addDaysStr(today, 1); // yarın
+  // BUGÜN oluşturulan randevuya "ertesi-gün hatırlatması" GÖNDERME: onay mesajı zaten
+  // yeni gitti → hemen ardından hatırlatma spam olur (müşteri 15:51'de yarına randevu
+  // alıp 16:00 cron'unda hatırlatma yiyordu). Aynı-gün randevular 3-saat hatırlatmasıyla
+  // zaten yakalanır. Yalnızca DAHA ÖNCE (dün/önceki günler) alınmış yarınki randevulara hatırlat.
+  const todayMidnight = new Date(`${today}T00:00:00+03:00`); // İstanbul (UTC+3, DST yok)
   const appts = await db.appointment.findMany({
-    where: { date: target, status: "CONFIRMED", reminderSentAt: null },
+    where: {
+      date: target,
+      status: "CONFIRMED",
+      reminderSentAt: null,
+      createdAt: { lt: todayMidnight },
+    },
     select: {
       id: true,
       code: true,
