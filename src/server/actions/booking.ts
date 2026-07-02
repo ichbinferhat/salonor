@@ -9,7 +9,7 @@ import { hashPassword, verifyPassword } from "@/lib/auth";
 import { getAvailableSlots, generateCode, type Slot } from "@/lib/slots";
 import { todayStr, addDaysStr, minToHHMM, formatDateTr, nowMinutes } from "@/lib/datetime";
 import { buildApptMessage } from "@/lib/appt-message";
-import { isValidIntlPhone } from "@/lib/phone";
+import { isValidIntlPhone, langFromPhone } from "@/lib/phone";
 import { rateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/client-ip";
 import { chargeAndSendSms } from "@/lib/sms-send";
@@ -290,16 +290,16 @@ export async function createAppointmentAction(opts: {
             // Kısa, imzalı iptal linki (?iptal=1 → sayfa yalnızca iptal seçeneği gösterir).
             const link = `${siteUrl()}/r/${signApptShort(code)}?iptal=1`;
             const msg = buildApptMessage({
-              intro: "✅ Randevunuz oluşturuldu!",
-              lead: `${biz.name} randevu detaylarınız:`,
+              kind: "confirm",
+              lang: langFromPhone(custPhone),
               customerName: custName,
+              businessName: biz.name,
               date: opts.date,
               startMin: opts.startMin,
               services: svcNames,
               staffName,
               code,
               cancelUrl: link,
-              closing: "Görüşmek üzere! 🙌",
             });
             await sendWhatsApp(custPhone, msg);
           } catch (e) {

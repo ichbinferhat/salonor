@@ -8,6 +8,7 @@ import { sendEmail, emailConfigured } from "@/lib/email";
 import { emailLayout, esc } from "@/lib/email-templates";
 import { signApptShort } from "@/lib/appt-token";
 import { buildApptMessage } from "@/lib/appt-message";
+import { langFromPhone } from "@/lib/phone";
 import { siteUrl } from "@/lib/site-url";
 import { todayStr, nowMinutes, addDaysStr, minToHHMM, formatDateTr } from "@/lib/datetime";
 
@@ -103,11 +104,10 @@ export async function GET(request: Request) {
       let waSent = false;
       if (a.customerPhone && whatsappConfigured()) {
         const body = buildApptMessage({
-          intro: "🔔 Randevu hatırlatması",
-          lead: isToday
-            ? `bugün ${a.business.name} randevunuz yaklaşıyor:`
-            : `yarın ${a.business.name} randevunuz var:`,
+          kind: isToday ? "3hToday" : "3hTomorrow",
+          lang: langFromPhone(a.customerPhone),
           customerName: a.customerName,
+          businessName: a.business.name,
           date: a.date,
           startMin: a.startMin,
           services,

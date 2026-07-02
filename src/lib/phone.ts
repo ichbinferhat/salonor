@@ -73,3 +73,37 @@ export function isValidIntlPhone(raw: string): boolean {
   const d = (raw ?? "").replace(/\D/g, "");
   return d.length >= 8 && d.length <= 15;
 }
+
+/** Ülke (çevirme) kodu → mesaj dili. Listede olmayan/çözülemeyen → "tr". */
+const DIAL_TO_LANG: Record<string, string> = {
+  "90": "tr",
+  "994": "tr", // Azerbaycan (Azerice ≈ Türkçe)
+  "49": "de",
+  "43": "de", // Avusturya
+  "41": "de", // İsviçre (çok dilli; varsayılan Almanca)
+  "31": "nl",
+  "32": "nl", // Belçika (çok dilli; varsayılan Felemenkçe)
+  "33": "fr",
+  "44": "en",
+  "1": "en", // ABD/Kanada
+  "46": "sv",
+  "45": "da",
+  "47": "no",
+  "39": "it",
+  "34": "es",
+};
+
+/**
+ * Saklı E.164 telefon rakamlarından mesaj dilini çıkarır (ülke koduna göre).
+ * Bilinen kodları UZUN→KISA eşler ("994" önce "99"; "49" önce "4"). Çözülemezse "tr"
+ * (eski/ülke-kodsuz TR numaraları da doğru şekilde tr'ye düşer).
+ */
+export function langFromPhone(rawE164: string | null | undefined): string {
+  const d = (rawE164 ?? "").replace(/\D/g, "");
+  if (!d) return "tr";
+  const dials = Object.keys(DIAL_TO_LANG).sort((a, b) => b.length - a.length);
+  for (const dial of dials) {
+    if (d.startsWith(dial)) return DIAL_TO_LANG[dial];
+  }
+  return "tr";
+}
