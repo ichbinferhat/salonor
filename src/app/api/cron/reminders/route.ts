@@ -27,8 +27,13 @@ export const maxDuration = 60;
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET;
   if (secret) {
+    // İki yöntem kabul edilir: Authorization: Bearer <secret> (tercih edilen) VEYA
+    // ?key=<secret> query parametresi (basit harici cron servisleri için — ör. cron-job.org
+    // header ayarı yapmadan). Query'deki sır ilgili servis loglarında görünebilir; bu uç
+    // yalnızca planlı hatırlatmayı tetikler (veri sızdırmaz), risk düşük kabul edildi.
     const auth = request.headers.get("authorization");
-    if (auth !== `Bearer ${secret}`) {
+    const keyParam = new URL(request.url).searchParams.get("key");
+    if (auth !== `Bearer ${secret}` && keyParam !== secret) {
       return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
     }
   } else if (process.env.NODE_ENV === "production") {
