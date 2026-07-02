@@ -13,8 +13,10 @@ import { rateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/client-ip";
 import { chargeAndSendSms } from "@/lib/sms-send";
 import { smsConfigured } from "@/lib/sms";
+import { sendWhatsApp, whatsappConfigured } from "@/lib/whatsapp";
 import { sendEmail, emailConfigured } from "@/lib/email";
 import { emailLayout, esc } from "@/lib/email-templates";
+import { signApptToken } from "@/lib/appt-token";
 import { siteUrl } from "@/lib/site-url";
 
 export async function fetchSlotsAction(opts: {
@@ -269,6 +271,40 @@ export async function createAppointmentAction(opts: {
           body: `${custName || "Misafir"} • ${dateLabel} ${timeLabel}`,
           url: "/panel/bildirimler",
         });
+
+        // Müşteriye ANLIK WhatsApp randevu onayı (WaMessage kuruluysa; girişli/misafir
+        // farketmez, telefon varsa). Salon + tarih/saat + personel + hizmet + kod + iptal linki.
+        if (custPhone && whatsappConfigured()) {
+          try {
+            const appt = await db.appointment.findUnique({
+              where: { code },
+              select: {
+                id: true,
+                staff: { select: { name: true } },
+                items: { select: { name: true } },
+              },
+            });
+            const staffName = appt?.staff?.name ?? "";
+            const svcNames = (appt?.items ?? []).map((i) => i.name).join(", ");
+            const token = appt ? await signApptToken(appt.id) : null;
+            const link = token ? `${siteUrl()}/r/${token}` : "";
+            const msg = [
+              "✅ Randevunuz alındı!",
+              biz.name,
+              `📅 ${dateLabel} ${timeLabel}`,
+              svcNames ? `💇 ${svcNames}` : "",
+              staffName ? `👤 ${staffName}` : "",
+              `Onay kodu: ${code}`,
+              link ? `İptal veya teyit: ${link}` : "",
+            ]
+              .filter(Boolean)
+              .join("\n");
+            await sendWhatsApp(custPhone, msg);
+          } catch (e) {
+            console.error("randevu WhatsApp onay hatası:", e);
+          }
+        }
+
         // Girişli müşteriye randevu onay bildirimi.
         if (session?.userId) {
           await notifyUser(session.userId, {
